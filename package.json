@@ -1,0 +1,29 @@
+{
+  "name": "feats",
+  "version": "1.0.0",
+  "description": "Feature extraction library, written in TypeScript.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "mocha test/*.ts --require ts-node/register",
+    "postinstall": "typings install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/LTDSP/feats.git"
+  },
+  "keywords": [
+    "feature-extraction",
+    "audio",
+    "web-audio",
+    "features",
+    "mir"
+  ],
+  "author": "Lucas Thompson",
+  "license": "GPL-2.0",
+  "homepage": "https://bitbucket.org/LTDSP/feats#readme",
+  "devDependencies": {
+    "mocha": "^3.0.2",
+    "ts-node": "^1.3.0",
+    "typescript": "^1.8.10"
+  }
+}
