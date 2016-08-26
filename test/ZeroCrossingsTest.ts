@@ -23,5 +23,14 @@ describe('ZeroCrossings', () => {
             let features = zc.process(block);
             features[0].values[0].should.equal(5);
         });
+
+        it('Should keep the last sample from the previous block', () => {
+            let zc = new ZeroCrossings();
+            let block = new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]);
+            zc.process(block);
+            block.fill(0);
+            let features = zc.process(block);
+            features[0].values[0].should.equal(1);
+        });
     })
 });
