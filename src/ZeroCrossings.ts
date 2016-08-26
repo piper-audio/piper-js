@@ -12,28 +12,22 @@ export class ZeroCrossings implements FeatureExtractor {
     }
 
     process(block: Float32Array): Feature[] {
-        let prev: number = this.previousSample;
         let count: number = 0;
         let returnFeatures: Feature[] = [];
 
         block.forEach((sample) => {
-            let crossing: boolean = false;
-
-            if (sample <= 0.0) {
-                if (prev > 0.0) crossing = true;
-            } else if (sample > 0.0) {
-                if (prev <= 0.0) crossing = true;
-            }
-
-            if (crossing) {
+            if (this.hasCrossedAxis(sample))
                 ++count;
-            }
-
-            prev = sample;
+            this.previousSample = sample;
         });
 
-        this.previousSample = prev;
         returnFeatures.push({values: [count]});
         return returnFeatures;
+    }
+
+    private hasCrossedAxis(sample: number) {
+        const hasCrossedFromAbove = this.previousSample > 0.0 && sample <= 0.0;
+        const hasCrossedFromBelow  = this.previousSample <= 0.0 && sample > 0.0;
+        return hasCrossedFromBelow || hasCrossedFromAbove;
     }
 }
