@@ -4,7 +4,7 @@
   "description": "Feature extraction library, written in TypeScript.",
   "main": "dist/index.js",
   "scripts": {
-    "test": "mocha test/*.ts --require ts-node/register",
+    "test": "mocha test/*Test.ts --require ts-node/register",
     "postinstall": "typings install"
   },
   "repository": {
@@ -22,6 +22,7 @@
   "license": "GPL-2.0",
   "homepage": "https://bitbucket.org/LTDSP/feats#readme",
   "devDependencies": {
+    "chai": "^3.5.0",
     "mocha": "^3.0.2",
     "ts-node": "^1.3.0",
     "typescript": "^1.8.10"
