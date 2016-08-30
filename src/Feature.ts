@@ -7,6 +7,6 @@ export interface Feature {
     timestamp?: Timestamp,
     duration?: Timestamp,
     label?: string,
-    values?: Array<Number>,
+    values?: number[]
     b64values?: string
 }
