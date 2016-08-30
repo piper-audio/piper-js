@@ -27,7 +27,7 @@ export class ZeroCrossings implements FeatureExtractor {
 
     private hasCrossedAxis(sample: number) {
         const hasCrossedFromAbove = this.previousSample > 0.0 && sample <= 0.0;
-        const hasCrossedFromBelow  = this.previousSample <= 0.0 && sample > 0.0;
+        const hasCrossedFromBelow = this.previousSample <= 0.0 && sample > 0.0;
         return hasCrossedFromBelow || hasCrossedFromAbove;
     }
 }
