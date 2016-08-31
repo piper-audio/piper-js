@@ -16,4 +16,10 @@ describe('EmscriptenPluginServer', () => {
         const expectedList: StaticData[] = <StaticData[]>require('./fixtures/expected-plugin-list.json');
         return server.listPlugins().should.eventually.deep.equal(expectedList);
     });
+
+    it('Can load an available plugin', () => {
+        server.listPlugins().then((plugins) => {
+
+        });
+    });
 });
