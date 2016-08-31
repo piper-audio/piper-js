@@ -20,8 +20,8 @@ export class EmscriptenPluginServer implements PluginServer {
 
     constructor() {
         this.server = ExampleModule();
-        this.doRequest = <(ptr: number) => number> this.server.cwrap('vampipeRequestJson', 'number', ['number']);
-        this.freeJson = <(ptr: number) => void> this.server.cwrap('vampipeFreeJson', 'void', ['number']);
+        this.doRequest = this.server.cwrap('vampipeRequestJson', 'number', ['number']) as (ptr: number) => number;
+        this.freeJson =  this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
     }
 
     private request(request: Request): Response { // TODO this should be a Promise of a Request as this is the async work
@@ -36,7 +36,7 @@ export class EmscriptenPluginServer implements PluginServer {
 
     listPlugins(): Promise<StaticData[]> {
         return new Promise<StaticData[]>((resolve, reject) => { // TODO .then chain of this.request
-            const response: Response = this.request(<Response>{"type": "list"});
+            const response: Response = this.request({"type": "list"} as Response);
             if (!response.success) reject(response.errorText);
 
             const pluginList: StaticData[] = response.content.plugins; // TODO this isn't declared in any type

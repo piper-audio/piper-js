@@ -13,7 +13,7 @@ describe('EmscriptenPluginServer', () => {
     const server = new EmscriptenPluginServer();
 
     it('Can list available plugins in the module', () => {
-        const expectedList: StaticData[] = <StaticData[]>require('./fixtures/expected-plugin-list.json');
+        const expectedList: StaticData[] = require('./fixtures/expected-plugin-list.json') as StaticData[];
         return server.listPlugins().should.eventually.deep.equal(expectedList);
     });
 
