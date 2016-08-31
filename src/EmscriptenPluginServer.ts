@@ -15,23 +15,23 @@ import {Allocator, EmscriptenModule} from "./Emscripten";
 
 export class EmscriptenPluginServer implements PluginServer {
     private server: EmscriptenModule;
-    private doRequest: Function;
-    private freeJson: Function;
+    private doRequest: (ptr: number) => number;
+    private freeJson: (ptr: number) => void;
 
     constructor() {
         this.server = ExampleModule();
-        this.doRequest = this.server.cwrap('vampipeRequestJson', 'number', ['number']);
-        this.freeJson = this.server.cwrap('vampipeFreeJson', 'void', ['number']);
+        this.doRequest = <(ptr: number) => number> this.server.cwrap('vampipeRequestJson', 'number', ['number']);
+        this.freeJson = <(ptr: number) => void> this.server.cwrap('vampipeFreeJson', 'void', ['number']);
     }
 
     private request(request: Request): Response { // TODO this should be a Promise of a Request as this is the async work
-        const jsonStr = JSON.stringify(request);
-        const inCstr = this.server.allocate(this.server.intArrayFromString(jsonStr), 'i8', Allocator.ALLOC_NORMAL);
-        const outCstr = this.doRequest(inCstr);
-        this.server._free(inCstr);
-        var response = JSON.parse(this.server.Pointer_stringify(outCstr));
-        this.freeJson(outCstr);
-        return <Response>response;
+        const requestJson: string = JSON.stringify(request);
+        const requestJsonPtr: number = this.server.allocate(this.server.intArrayFromString(requestJson), 'i8', Allocator.ALLOC_NORMAL);
+        const responseJsonPtr: number = this.doRequest(requestJsonPtr);
+        this.server._free(requestJsonPtr);
+        var response: Response = JSON.parse(this.server.Pointer_stringify(responseJsonPtr));
+        this.freeJson(responseJsonPtr);
+        return response;
     }
 
     listPlugins(): Promise<StaticData[]> {
