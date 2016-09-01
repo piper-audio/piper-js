@@ -51,7 +51,9 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        return undefined;
+        return this.request({type: 'configure', content: request}).then((response) => {
+            return response.content as ConfigurationResponse;
+        });
     }
 
     process(request: ProcessRequest): Promise<Feature[]> {

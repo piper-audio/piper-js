@@ -29,7 +29,7 @@ export interface LoadResponse {
 
 export interface ConfigurationRequest {
     pluginHandle: number,
-    Configuration: Configuration
+    configuration: Configuration
 }
 
 export interface ConfigurationResponse {

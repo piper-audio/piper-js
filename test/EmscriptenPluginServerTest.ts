@@ -5,7 +5,10 @@
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 import {EmscriptenPluginServer} from "../src/EmscriptenPluginServer";
-import {Response, StaticData, LoadRequest, AdapterFlags, LoadResponse} from "../src/PluginServer";
+import {
+    Response, StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
+    Configuration, ConfigurationResponse
+} from "../src/PluginServer";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -17,16 +20,34 @@ describe('EmscriptenPluginServer', () => {
         return server.listPlugins().should.eventually.deep.equal(expectedList);
     });
 
+    const loadResponse: Promise<LoadResponse> = server.listPlugins().then((plugins) => {
+        const loadRequest: LoadRequest = {
+            pluginKey: plugins.pop().pluginKey,
+            inputSampleRate: 16,
+            adapterFlags: [AdapterFlags.AdaptAllSafe]
+        } as LoadRequest;
+        return server.loadPlugin(loadRequest);
+    });
+
     it('Can load an available plugin', () => {
         const expectedResponse = require('./fixtures/expected-load-response.json');
-        const loadResponse: Promise<LoadResponse> = server.listPlugins().then((plugins) => {
-            const loadRequest: LoadRequest = {
-                pluginKey: plugins.pop().pluginKey,
-                inputSampleRate: 16,
-                adapterFlags: [AdapterFlags.AdaptAllSafe]
-            } as LoadRequest;
-            return server.loadPlugin(loadRequest);
-        });
         return loadResponse.should.eventually.deep.equal(expectedResponse);
+    });
+
+    const configResponse: Promise<ConfigurationResponse> = loadResponse.then((response) => {
+        const configRequest: ConfigurationRequest = {
+            pluginHandle: response.pluginHandle,
+            configuration: {
+                blockSize: 8,
+                channelCount: 1,
+                stepSize: 8
+            } as Configuration
+        } as ConfigurationRequest;
+        return server.configurePlugin(configRequest);
+    });
+
+    it('Can configure a loaded plugin', () => {
+        const expectedResponse = require('./fixtures/expected-configuration-response.json');
+        return configResponse.should.eventually.deep.equal(expectedResponse);
     });
 });
