@@ -7,8 +7,10 @@ import chaiAsPromised = require('chai-as-promised');
 import {EmscriptenPluginServer} from "../src/EmscriptenPluginServer";
 import {
     Response, StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse
+    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock
 } from "../src/PluginServer";
+import {Feature} from "../src/Feature";
+import {Timestamp} from "../src/Timestamp";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -34,8 +36,10 @@ describe('EmscriptenPluginServer', () => {
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });
 
+    const pluginHandles: number[] = [];
     const config = (): Promise<ConfigurationResponse> => {
         return loadResponse.then((response) => {
+            pluginHandles.push(response.pluginHandle);
             const configRequest: ConfigurationRequest = {
                 pluginHandle: response.pluginHandle,
                 configuration: {
@@ -48,13 +52,30 @@ describe('EmscriptenPluginServer', () => {
         });
     };
 
+    const configResponse: Promise<ConfigurationResponse> = config();
+
     it('Can configure a loaded plugin', () => {
         const expectedResponse = require('./fixtures/expected-configuration-response.json');
-        return config().should.eventually.deep.equal(expectedResponse);
+        return configResponse.should.eventually.deep.equal(expectedResponse);
     });
 
     it('Reports an error when trying to configure an already configured plugin', () => {
         const batchConfig = Promise.all([config(), config()]);
         return batchConfig.should.be.rejected;
-    })
+    });
+
+    it('Can process a single block', () => {
+        const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
+        const features: Promise<Feature[][]> = configResponse.then(() => {
+            const processRequest: ProcessRequest = {
+                pluginHandle: pluginHandles[0],
+                processInput: {
+                    timestamp: {s: 0, n: 0} as Timestamp,
+                    inputBuffers: [{values: [new Float32Array([0,1,-1,0,1,-1,0,1])]}]
+                } as ProcessBlock
+            } as ProcessRequest;
+            return server.process(processRequest);
+        });
+        return features.should.eventually.deep.equal(expectedFeatures.one);
+    });
 });

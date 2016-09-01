@@ -111,7 +111,7 @@ export interface Configuration {
 
 export interface ProcessBlock {
     timestamp: Timestamp,
-    inputBuffers: Float32Array[];
+    inputBuffers: {values: Float32Array[]}[];
 }
 
 export interface ProcessRequest {
@@ -123,7 +123,7 @@ export interface PluginServer {
     listPlugins(): Promise<StaticData[]>,
     loadPlugin(request: LoadRequest): Promise<LoadResponse>,
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>,
-    process(request: ProcessRequest): Promise<Feature[]>,
-    finish(pluginHandle: number): Promise<Feature[]>
+    process(request: ProcessRequest): Promise<Feature[][]>,
+    finish(pluginHandle: number): Promise<Feature[][]>
 }
 

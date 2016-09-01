@@ -21,7 +21,7 @@ export class EmscriptenPluginServer implements PluginServer {
     constructor() {
         this.server = VamPipeServer();
         this.doRequest = this.server.cwrap('vampipeRequestJson', 'number', ['number']) as (ptr: number) => number;
-        this.freeJson =  this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
+        this.freeJson = this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
     }
 
     private request(request: Request): Promise<Response> {
@@ -56,11 +56,22 @@ export class EmscriptenPluginServer implements PluginServer {
         });
     }
 
-    process(request: ProcessRequest): Promise<Feature[]> {
-        return undefined;
+    process(request: ProcessRequest): Promise<Feature[][]> {
+        request.processInput.inputBuffers.forEach((val) => {
+            (val as any).values = JSON.parse('[' + val.values.join(',') + ']'); // TODO this is stupid, is there good reason for using a Float32Array?
+        });
+        return this.request({type: 'process', content: request}).then((response) => {
+            const featureList: Feature[][] = [];
+            const featureObj = response.content;
+            // TODO consider revising types returned, as this is ugly
+            for (let index in featureObj)
+                if (featureObj.hasOwnProperty(index))
+                    featureList.push(featureObj[index]);
+            return featureList;
+        });
     }
 
-    finish(pluginHandle: number): Promise<Feature[]> {
+    finish(pluginHandle: number): Promise<Feature[][]> {
         return undefined;
     }
 }
