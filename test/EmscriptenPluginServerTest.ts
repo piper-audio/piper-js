@@ -34,20 +34,27 @@ describe('EmscriptenPluginServer', () => {
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });
 
-    const configResponse: Promise<ConfigurationResponse> = loadResponse.then((response) => {
-        const configRequest: ConfigurationRequest = {
-            pluginHandle: response.pluginHandle,
-            configuration: {
-                blockSize: 8,
-                channelCount: 1,
-                stepSize: 8
-            } as Configuration
-        } as ConfigurationRequest;
-        return server.configurePlugin(configRequest);
-    });
+    const config = (): Promise<ConfigurationResponse> => {
+        return loadResponse.then((response) => {
+            const configRequest: ConfigurationRequest = {
+                pluginHandle: response.pluginHandle,
+                configuration: {
+                    blockSize: 8,
+                    channelCount: 1,
+                    stepSize: 8
+                } as Configuration
+            } as ConfigurationRequest;
+            return server.configurePlugin(configRequest);
+        });
+    };
 
     it('Can configure a loaded plugin', () => {
         const expectedResponse = require('./fixtures/expected-configuration-response.json');
-        return configResponse.should.eventually.deep.equal(expectedResponse);
+        return config().should.eventually.deep.equal(expectedResponse);
     });
+
+    it('Reports an error when trying to configure an already configured plugin', () => {
+        const batchConfig = Promise.all([config(), config()]);
+        return batchConfig.should.be.rejected;
+    })
 });
