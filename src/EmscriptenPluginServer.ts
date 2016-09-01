@@ -7,7 +7,7 @@ import {
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
-    Response, Request
+    Response, Request, AdapterFlags
 } from './PluginServer';
 import {Feature} from "./Feature";
 import VamPipeServer = require('../ext/ExampleModule');
@@ -32,19 +32,22 @@ export class EmscriptenPluginServer implements PluginServer {
             this.server._free(requestJsonPtr);
             var response: Response = JSON.parse(this.server.Pointer_stringify(responseJsonPtr));
             this.freeJson(responseJsonPtr);
+            if (!response.success) throw new Error(response.errorText);
             resolve(response);
         });
     }
 
     listPlugins(): Promise<StaticData[]> {
-        return this.request({"type": "list"} as Request).then((response) => {
-            if (!response.success) throw new Error(response.errorText);
+        return this.request({type: 'list'} as Request).then((response) => {
             return response.content.plugins as StaticData[];
         });
     }
 
     loadPlugin(request: LoadRequest): Promise<LoadResponse> {
-        return undefined;
+        (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
+        return this.request({type: 'load', content: request} as Request).then((response) => {
+            return response.content as LoadResponse;
+        });
     }
 
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
