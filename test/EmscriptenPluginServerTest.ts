@@ -78,4 +78,10 @@ describe('EmscriptenPluginServer', () => {
         });
         return features.should.eventually.deep.equal(expectedFeatures.one);
     });
+
+    it('Can get the remaining features and clean up the plugin', () => {
+        const remainingFeatures: Promise<Feature[][]> = server.finish(pluginHandles[0]);
+        const expectedFeatures: Feature[][] = [];
+        return remainingFeatures.should.eventually.deep.equal(expectedFeatures);
+    });
 });

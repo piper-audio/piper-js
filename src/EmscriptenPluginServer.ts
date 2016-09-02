@@ -61,18 +61,24 @@ export class EmscriptenPluginServer implements PluginServer {
             (val as any).values = JSON.parse('[' + val.values.join(',') + ']'); // TODO this is stupid, is there good reason for using a Float32Array?
         });
         return this.request({type: 'process', content: request}).then((response) => {
-            const featureList: Feature[][] = [];
-            const featureObj = response.content;
-            // TODO consider revising types returned, as this is ugly
-            for (let index in featureObj)
-                if (featureObj.hasOwnProperty(index))
-                    featureList.push(featureObj[index]);
-            return featureList;
+            return EmscriptenPluginServer.responseToFeatureSet(response);
         });
     }
 
     finish(pluginHandle: number): Promise<Feature[][]> {
-        return undefined;
+        return this.request({type: 'finish', content: {pluginHandle: pluginHandle}}).then((response) => {
+            return EmscriptenPluginServer.responseToFeatureSet(response);
+        });
+    }
+
+    private static responseToFeatureSet(response: Response): Feature[][] {
+        const featureList: Feature[][] = [];
+        const featureObj = response.content;
+        // TODO consider revising types returned, as this is ugly
+        for (let index in featureObj)
+            if (featureObj.hasOwnProperty(index))
+                featureList.push(featureObj[index]);
+        return featureList;
     }
 }
 
