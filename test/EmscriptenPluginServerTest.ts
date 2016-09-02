@@ -22,14 +22,18 @@ describe('EmscriptenPluginServer', () => {
         return server.listPlugins().should.eventually.deep.equal(expectedList);
     });
 
-    const loadResponse: Promise<LoadResponse> = server.listPlugins().then((plugins) => {
-        const loadRequest: LoadRequest = {
-            pluginKey: plugins.pop().pluginKey,
-            inputSampleRate: 16,
-            adapterFlags: [AdapterFlags.AdaptAllSafe]
-        } as LoadRequest;
-        return server.loadPlugin(loadRequest);
-    });
+    const loadZeroCrossings = () => {
+        return server.listPlugins().then((plugins) => {
+            const loadRequest: LoadRequest = {
+                pluginKey: plugins[plugins.length - 1].pluginKey, // zero crossings
+                inputSampleRate: 16,
+                adapterFlags: [AdapterFlags.AdaptAllSafe]
+            } as LoadRequest;
+            return server.loadPlugin(loadRequest);
+        });
+    };
+
+    const loadResponse: Promise<LoadResponse> = loadZeroCrossings();
 
     it('Can load an available plugin', () => {
         const expectedResponse = require('./fixtures/expected-load-response.json');
@@ -37,7 +41,7 @@ describe('EmscriptenPluginServer', () => {
     });
 
     const pluginHandles: number[] = [];
-    const config = (): Promise<ConfigurationResponse> => {
+    const config = (loadResponse: Promise<LoadResponse>): Promise<ConfigurationResponse> => {
         return loadResponse.then((response) => {
             pluginHandles.push(response.pluginHandle);
             const configRequest: ConfigurationRequest = {
@@ -52,7 +56,7 @@ describe('EmscriptenPluginServer', () => {
         });
     };
 
-    const configResponse: Promise<ConfigurationResponse> = config();
+    const configResponse: Promise<ConfigurationResponse> = config(loadResponse);
 
     it('Can configure a loaded plugin', () => {
         const expectedResponse = require('./fixtures/expected-configuration-response.json');
@@ -60,7 +64,7 @@ describe('EmscriptenPluginServer', () => {
     });
 
     it('Reports an error when trying to configure an already configured plugin', () => {
-        const batchConfig = Promise.all([config(), config()]);
+        const batchConfig = Promise.all([config(loadResponse), config(loadResponse)]);
         return batchConfig.should.be.rejected;
     });
 
@@ -76,20 +80,13 @@ describe('EmscriptenPluginServer', () => {
         return features.should.eventually.deep.equal(expectedFeatures.one);
     });
 
-    // flush state of zero crossings, should probably just setup the tests better with a beforeEach
-    const flushZeroCrossings = () => {
-        server.process({
-            pluginHandle: pluginHandles[0],
-            processInput: {
-                timestamp: {s: 0, n: 0} as Timestamp,
-                inputBuffers: [{values: [new Float32Array([0, 0, 0, 0, 0, 0, 0, 0])]}]
-            }
-        } as ProcessRequest);
-    };
+    it('Can get the remaining features and clean up the plugin', () => {
+        const remainingFeatures: Promise<Feature[][]> = server.finish(pluginHandles[0]);
+        const expectedFeatures: Feature[][] = [];
+        return remainingFeatures.should.eventually.deep.equal(expectedFeatures);
+    });
 
     it('Can process multiple blocks of audio, consecutively', () => {
-        flushZeroCrossings();
-        const zcHandle = pluginHandles[0];
         const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
         const blocks: ProcessBlock[] = [];
 
@@ -109,22 +106,16 @@ describe('EmscriptenPluginServer', () => {
             });
         };
 
-        const features: Promise<Feature[][]> = server.process({
-            pluginHandle: zcHandle,
-            processInput: blocks[0]
-        } as ProcessRequest)
-        .then((prevBlockFeatures) => {
-            return concatFeatures(prevBlockFeatures, server.process({
-                pluginHandle: zcHandle,
-                processInput: blocks[1]
-            } as ProcessRequest));
-        });
-        return features.should.eventually.deep.equal(expectedFeatures.one.concat(expectedFeatures.two));
-    });
+        const processBlocks: () => Promise<Feature[][]> = () => {
+            const zcHandle: number = pluginHandles[pluginHandles.length - 1];
+            return server.process({pluginHandle: zcHandle, processInput: blocks[0]})
+                .then((prevBlockFeatures) => {
+                    return concatFeatures
+                    (prevBlockFeatures, server.process({pluginHandle: zcHandle, processInput: blocks[1]}));
+                });
+        };
 
-    it('Can get the remaining features and clean up the plugin', () => {
-        const remainingFeatures: Promise<Feature[][]> = server.finish(pluginHandles[0]);
-        const expectedFeatures: Feature[][] = [];
-        return remainingFeatures.should.eventually.deep.equal(expectedFeatures);
+        const features: Promise<Feature[][]> = config(loadZeroCrossings()).then(processBlocks);
+        return features.should.eventually.deep.equal(expectedFeatures.one.concat(expectedFeatures.two));
     });
 });
