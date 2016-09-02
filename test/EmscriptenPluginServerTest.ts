@@ -66,16 +66,13 @@ describe('EmscriptenPluginServer', () => {
 
     it('Can process a single block', () => {
         const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
-        const features: Promise<Feature[][]> = configResponse.then(() => {
-            const processRequest: ProcessRequest = {
-                pluginHandle: pluginHandles[0],
-                processInput: {
-                    timestamp: {s: 0, n: 0} as Timestamp,
-                    inputBuffers: [{values: [new Float32Array([0,1,-1,0,1,-1,0,1])]}]
-                } as ProcessBlock
-            } as ProcessRequest;
-            return server.process(processRequest);
-        });
+        const features: Promise<Feature[][]> = server.process({
+            pluginHandle: pluginHandles[0],
+            processInput: {
+                timestamp: {s: 0, n: 0} as Timestamp,
+                inputBuffers: [{values: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]}]
+            } as ProcessBlock
+        } as ProcessRequest);
         return features.should.eventually.deep.equal(expectedFeatures.one);
     });
 
