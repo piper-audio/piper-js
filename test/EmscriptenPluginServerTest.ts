@@ -24,12 +24,11 @@ describe('EmscriptenPluginServer', () => {
 
     const loadZeroCrossings = () => {
         return server.listPlugins().then((plugins) => {
-            const loadRequest: LoadRequest = {
+            return server.loadPlugin({
                 pluginKey: plugins[plugins.length - 1].pluginKey, // zero crossings
                 inputSampleRate: 16,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]
-            } as LoadRequest;
-            return server.loadPlugin(loadRequest);
+            } as LoadRequest);
         });
     };
 
@@ -44,15 +43,14 @@ describe('EmscriptenPluginServer', () => {
     const config = (loadResponse: Promise<LoadResponse>): Promise<ConfigurationResponse> => {
         return loadResponse.then((response) => {
             pluginHandles.push(response.pluginHandle);
-            const configRequest: ConfigurationRequest = {
+            return server.configurePlugin({
                 pluginHandle: response.pluginHandle,
                 configuration: {
                     blockSize: 8,
                     channelCount: 1,
                     stepSize: 8
                 } as Configuration
-            } as ConfigurationRequest;
-            return server.configurePlugin(configRequest);
+            } as ConfigurationRequest);
         });
     };
 
