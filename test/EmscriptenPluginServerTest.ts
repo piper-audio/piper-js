@@ -76,6 +76,40 @@ describe('EmscriptenPluginServer', () => {
         return features.should.eventually.deep.equal(expectedFeatures.one);
     });
 
+
+    it('Can process multiple blocks of audio, consecutively', () => {
+        const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
+        const blocks: ProcessBlock[] = [];
+
+        blocks.push({
+            timestamp: {s: 0, n: 0} as Timestamp,
+            inputBuffers: [{values: [new Float32Array([0,1,-1,0,1,-1,0,1])]}]
+        } as ProcessBlock);
+
+        blocks.push({
+            timestamp: {s: 0, n: 500000000} as Timestamp,
+            inputBuffers: [{values: [new Float32Array([0,1,-1,0,1,-1,0,1])]}]
+        } as ProcessBlock);
+
+        const concatFeatures = (running: Feature[][], nextBlock: Promise<Feature[][]>) => {
+            return nextBlock.then((block) => {
+                return running.concat(block);
+            });
+        };
+
+        const features: Promise<Feature[][]> = server.process({
+            pluginHandle: pluginHandles[0],
+            processInput: blocks[0]
+        } as ProcessRequest)
+        .then((prevBlockFeatures) => {
+            return concatFeatures(prevBlockFeatures, server.process({
+                pluginHandle: pluginHandles[0],
+                processInput: blocks[1]
+            } as ProcessRequest));
+        });
+        return features.should.eventually.deep.equal(expectedFeatures.one.concat(expectedFeatures.two));
+    });
+
     it('Can get the remaining features and clean up the plugin', () => {
         const remainingFeatures: Promise<Feature[][]> = server.finish(pluginHandles[0]);
         const expectedFeatures: Feature[][] = [];
