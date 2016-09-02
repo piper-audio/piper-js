@@ -22,7 +22,7 @@ describe('EmscriptenPluginServer', () => {
         return server.listPlugins().should.eventually.deep.equal(expectedList);
     });
 
-    const loadZeroCrossings = () => {
+    const loadZeroCrossings = (): Promise<LoadResponse> => {
         return server.listPlugins().then((plugins) => {
             return server.loadPlugin({
                 pluginKey: plugins[plugins.length - 1].pluginKey, // zero crossings
@@ -40,21 +40,19 @@ describe('EmscriptenPluginServer', () => {
     });
 
     const pluginHandles: number[] = [];
-    const config = (loadResponse: Promise<LoadResponse>): Promise<ConfigurationResponse> => {
-        return loadResponse.then((response) => {
-            pluginHandles.push(response.pluginHandle);
-            return server.configurePlugin({
-                pluginHandle: response.pluginHandle,
-                configuration: {
-                    blockSize: 8,
-                    channelCount: 1,
-                    stepSize: 8
-                } as Configuration
-            } as ConfigurationRequest);
-        });
+    const config = (response: LoadResponse): Promise<ConfigurationResponse> => {
+        pluginHandles.push(response.pluginHandle);
+        return server.configurePlugin({
+            pluginHandle: response.pluginHandle,
+            configuration: {
+                blockSize: 8,
+                channelCount: 1,
+                stepSize: 8
+            } as Configuration
+        } as ConfigurationRequest);
     };
 
-    const configResponse: Promise<ConfigurationResponse> = config(loadResponse);
+    const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
 
     it('Can configure a loaded plugin', () => {
         const expectedResponse = require('./fixtures/expected-configuration-response.json');
@@ -62,7 +60,7 @@ describe('EmscriptenPluginServer', () => {
     });
 
     it('Reports an error when trying to configure an already configured plugin', () => {
-        const batchConfig = Promise.all([config(loadResponse), config(loadResponse)]);
+        const batchConfig = Promise.all([loadResponse.then(config), loadResponse.then(config)]);
         return batchConfig.should.be.rejected;
     });
 
@@ -113,7 +111,7 @@ describe('EmscriptenPluginServer', () => {
                 });
         };
 
-        const features: Promise<Feature[][]> = config(loadZeroCrossings()).then(processBlocks);
+        const features: Promise<Feature[][]> = loadZeroCrossings().then(config).then(processBlocks);
         return features.should.eventually.deep.equal(expectedFeatures.one.concat(expectedFeatures.two));
     });
 });
