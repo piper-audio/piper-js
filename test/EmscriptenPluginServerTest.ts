@@ -76,8 +76,20 @@ describe('EmscriptenPluginServer', () => {
         return features.should.eventually.deep.equal(expectedFeatures.one);
     });
 
+    // flush state of zero crossings, should probably just setup the tests better with a beforeEach
+    const flushZeroCrossings = () => {
+        server.process({
+            pluginHandle: pluginHandles[0],
+            processInput: {
+                timestamp: {s: 0, n: 0} as Timestamp,
+                inputBuffers: [{values: [new Float32Array([0, 0, 0, 0, 0, 0, 0, 0])]}]
+            }
+        } as ProcessRequest);
+    };
 
     it('Can process multiple blocks of audio, consecutively', () => {
+        flushZeroCrossings();
+        const zcHandle = pluginHandles[0];
         const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
         const blocks: ProcessBlock[] = [];
 
@@ -98,12 +110,12 @@ describe('EmscriptenPluginServer', () => {
         };
 
         const features: Promise<Feature[][]> = server.process({
-            pluginHandle: pluginHandles[0],
+            pluginHandle: zcHandle,
             processInput: blocks[0]
         } as ProcessRequest)
         .then((prevBlockFeatures) => {
             return concatFeatures(prevBlockFeatures, server.process({
-                pluginHandle: pluginHandles[0],
+                pluginHandle: zcHandle,
                 processInput: blocks[1]
             } as ProcessRequest));
         });
