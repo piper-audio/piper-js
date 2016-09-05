@@ -11,6 +11,7 @@ import {
 } from "../src/PluginServer";
 import {Feature} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
+import {batchProcess} from "../src/AudioUtilities";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -70,7 +71,7 @@ describe('EmscriptenPluginServer', () => {
             pluginHandle: pluginHandles[0],
             processInput: {
                 timestamp: {s: 0, n: 0} as Timestamp,
-                inputBuffers: [{values: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]}]
+                inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
             } as ProcessBlock
         } as ProcessRequest);
         return features.should.eventually.deep.equal(expectedFeatures.one);
@@ -88,27 +89,18 @@ describe('EmscriptenPluginServer', () => {
 
         blocks.push({
             timestamp: {s: 0, n: 0} as Timestamp,
-            inputBuffers: [{values: [new Float32Array([0,1,-1,0,1,-1,0,1])]}]
+            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
         } as ProcessBlock);
 
         blocks.push({
             timestamp: {s: 0, n: 500000000} as Timestamp,
-            inputBuffers: [{values: [new Float32Array([0,1,-1,0,1,-1,0,1])]}]
+            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
         } as ProcessBlock);
 
-        const concatFeatures = (running: Feature[][], nextBlock: Promise<Feature[][]>) => {
-            return nextBlock.then((block) => {
-                return running.concat(block);
-            });
-        };
 
         const processBlocks: () => Promise<Feature[][]> = () => {
             const zcHandle: number = pluginHandles[pluginHandles.length - 1];
-            return server.process({pluginHandle: zcHandle, processInput: blocks[0]})
-                .then((prevBlockFeatures) => {
-                    return concatFeatures
-                    (prevBlockFeatures, server.process({pluginHandle: zcHandle, processInput: blocks[1]}));
-                });
+            return batchProcess(blocks, (block) => server.process({pluginHandle: zcHandle, processInput: block}));
         };
 
         const features: Promise<Feature[][]> = loadZeroCrossings().then(config).then(processBlocks);

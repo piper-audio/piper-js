@@ -30,7 +30,7 @@ describe('some async', function () {
         const p = nums.reduce(
             (promise, item) => {
                 return promise.then(() => {
-                    return someAsyncWork(item * 100, () => {
+                    return someAsyncWork(100 / item, () => {
                         order.push(item);
                     });
                 });

@@ -5,32 +5,44 @@
 /// <reference path="../typings/modules/chai/index.d.ts" />
 
 import {ZeroCrossings} from "../src/ZeroCrossings";
-import {should} from 'chai';
-should();
+import {Feature} from "../src/Feature"
+import chai = require('chai');
+import chaiAsPromised = require('chai-as-promised');
+import {Timestamp} from "../src/Timestamp";
+import {ProcessBlock} from "../src/PluginServer";
+chai.should();
+chai.use(chaiAsPromised);
 
 describe('ZeroCrossings', () => {
+    const toProcessBlock = (buffer: Float32Array) => {
+        return {
+            timestamp: {s: 0, n: 0} as Timestamp,
+            inputBuffers: [{values: buffer}]
+        } as ProcessBlock;
+    };
+
     describe('.process()', () => {
         it('Should return a count of zero for a buffer of zeros', () => {
             let zc = new ZeroCrossings();
-            let block = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0]);
-            let features = zc.process(block);
-            features[0].values[0].should.equal(0);
+            let block = toProcessBlock(new Float32Array(8));
+            let features: Promise<Feature[][]> = zc.process(block);
+            return features.should.eventually.deep.equal([[{values: [0]}]]);
         });
 
         it('Should return a count of 5 for small ', () => {
             let zc = new ZeroCrossings();
-            let block = new Float32Array([0, 1, -1, 0, 1, -1, 0, 1]);
-            let features = zc.process(block);
-            features[0].values[0].should.equal(5);
+            let block = toProcessBlock(new Float32Array([0, 1, -1, 0, 1, -1, 0, 1]));
+            let features: Promise<Feature[][]> = zc.process(block);
+            return features.should.eventually.deep.equal([[{values: [5]}]]);
         });
 
         it('Should keep the last sample from the previous block', () => {
             let zc = new ZeroCrossings();
-            let block = new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]);
+            let block = toProcessBlock(new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]));
             zc.process(block);
-            block.fill(0);
-            let features = zc.process(block);
-            features[0].values[0].should.equal(1);
+            block.inputBuffers[0].values.fill(0);
+            let features: Promise<Feature[][]> = zc.process(block);
+            return features.should.eventually.deep.equal([[{values: [1]}]]);
         });
     })
 });

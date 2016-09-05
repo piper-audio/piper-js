@@ -111,7 +111,7 @@ export interface Configuration {
 
 export interface ProcessBlock {
     timestamp: Timestamp,
-    inputBuffers: {values: Float32Array[]}[];
+    inputBuffers: {values: Float32Array}[];
 }
 
 export interface ProcessRequest {
