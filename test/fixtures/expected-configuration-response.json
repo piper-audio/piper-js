@@ -1,0 +1,32 @@
+{
+  "outputList": [
+    {
+      "basic": {
+        "description": "The number of zero crossing points per processing block",
+        "identifier": "counts",
+        "name": "Zero Crossing Counts"
+      },
+      "binCount": 1,
+      "binNames": [],
+      "hasDuration": false,
+      "quantizeStep": 1,
+      "sampleRate": 0,
+      "sampleType": "OneSamplePerStep",
+      "unit": "crossings"
+    },
+    {
+      "basic": {
+        "description": "The locations of zero crossing points",
+        "identifier": "zerocrossings",
+        "name": "Zero Crossings"
+      },
+      "binCount": 0,
+      "binNames": [],
+      "hasDuration": false,
+      "quantizeStep": 1,
+      "sampleRate": 16,
+      "sampleType": "VariableSampleRate",
+      "unit": ""
+    }
+  ]
+}

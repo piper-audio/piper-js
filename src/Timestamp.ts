@@ -2,6 +2,6 @@
  * Created by lucas on 26/08/2016.
  */
 export interface Timestamp {
-    m: number,
+    s: number,
     n: number
 }
