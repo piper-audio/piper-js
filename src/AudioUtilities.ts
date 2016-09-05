@@ -33,7 +33,11 @@ export class FrameCutter implements IterableIterator<Float32Array> {
     next(value?: any): IteratorResult<Float32Array> {
         const start: number = this.nStep++ * this.stepSize;
         const stop: number = start + this.blockSize;
-        return {value: this.audioData.subarray(start, stop), done: this.nStep > this.nSteps}; // TODO this won't work for streaming input
+        const isDone: boolean = this.nStep >= this.nSteps;
+        let subArray: Float32Array = this.audioData.subarray(start, stop);
+        if (isDone)
+            subArray = Float32Array.of(...subArray, ...new Float32Array(this.blockSize - subArray.length));
+        return {value: subArray, done: isDone}; // TODO this won't work for streaming input
     }
 
     [Symbol.iterator](): IterableIterator<Float32Array> {

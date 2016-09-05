@@ -52,6 +52,11 @@ describe('FrameCutter', () => {
         cutter = new FrameCutter(blockSize, stepSize, audioData)
     });
 
+    it('Should zero pad the block when there are no more samples', () => {
+        cutter = new FrameCutter(blockSize, stepSize, new Float32Array(0));
+        cutter.next().value.should.deep.equal(new Float32Array(blockSize));
+    });
+
     it('Can be used as an iterator', () => {
         cutter.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 0, 0, 0, 0]));
         cutter.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]));
@@ -60,7 +65,7 @@ describe('FrameCutter', () => {
         cutter.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 2, 2, 2, 2]));
         cutter.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 3, 3, 3, 3]));
         cutter.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 3, 3, 3, 3]));
-        cutter.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3]));
+        cutter.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 0, 0, 0, 0]));
         cutter.next().done.should.be.true;
     });
 
@@ -73,8 +78,8 @@ describe('FrameCutter', () => {
             [ 2, 2, 2, 2, 2, 2, 2, 2 ],
             [ 2, 2, 2, 2, 3, 3, 3, 3 ],
             [ 3, 3, 3, 3, 3, 3, 3, 3 ],
-            [ 3, 3, 3, 3 ]
-        ]
+            [ 3, 3, 3, 3, 0, 0, 0, 0 ]
+        ];
         let i = 0;
         for (let block of cutter)
             Array.from(block).should.deep.equal(expectedBlocks[i++]);
