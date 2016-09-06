@@ -41,12 +41,22 @@ describe('ProcessPerformanceTest', () => {
 		    channelCount : 1
 		}
 	    }).then(response => {
-		const blockCount = 1000;
+		const blockCount = 100;
+		const theBuffer = new Float32Array(
+		    Array.from(Array(blockSize).keys(),
+			       n => 1.1));
+		const theOtherBuffer = new Float32Array(blockSize);
 		const makeBlock = ((n : number) => { 
 		    return {
 			timestamp : frame2timestamp(n * blockSize, rate),
 			inputBuffers : [
-			    { values : new Float32Array(blockSize) }
+
+			    { values : theBuffer }
+
+//			    { values : new Float32Array(blockSize) }
+//			    { values : new Float32Array(
+//				Array.from(Array(blockSize).keys(),
+//					   n => n / blockSize)) }
 			],
 		    }
 		});
@@ -59,7 +69,8 @@ describe('ProcessPerformanceTest', () => {
 			pluginHandle : centroidHandle,
 			processInput : b
 		    }));
-		results.then(() => {
+		results.then(features => {
+		    console.log("have " + features.length + " feature(s)");
 		    done();
 		});
 	    })
