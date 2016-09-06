@@ -33,6 +33,33 @@ describe('BatchBlockProcess', () => {
         const features: Promise<Feature[][]> = batchProcess(blocks, (block) => zc.process(block));
         return features.should.eventually.deep.equal(expectedFeatures);
     });
+
+    it('processes the blocks sequentially', () => {
+        const expectedFeatures: Feature[][] = [];
+        expectedFeatures.push([{values: [1]} as Feature]);
+        expectedFeatures.push([{values: [1]} as Feature]);
+
+        const blocks: ProcessBlock[] = [];
+
+        blocks.push({
+            timestamp: {s: 0, n: 0},
+            inputBuffers: [{values: new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])}]
+        });
+
+        blocks.push({
+            timestamp: {s: 0, n: 500000000},
+            inputBuffers: [{values: new Float32Array([0, 0, 0, 0, 0, 0, 0, 0])}]
+        });
+
+        const zc: FeatureExtractor = new ZeroCrossings();
+        const times = [100, 1000]; // pop the times out, so the first call takes longer than the second
+        const features: Promise<Feature[][]> = batchProcess(blocks, (block) => {
+            return new Promise((resolve) => {
+                setTimeout(() => { resolve(zc.process(block)) }, times.pop());
+            });
+        });
+        return features.should.eventually.deep.equal(expectedFeatures);
+    });
 });
 
 describe('FrameCutter', () => {
@@ -66,7 +93,7 @@ describe('FrameCutter', () => {
         cutter.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 3, 3, 3, 3]));
         cutter.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 3, 3, 3, 3]));
         cutter.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 0, 0, 0, 0]));
-        cutter.next().done.should.be.true;
+        return cutter.next().done.should.be.true;
     });
 
     it('Can be looped over', () => {
