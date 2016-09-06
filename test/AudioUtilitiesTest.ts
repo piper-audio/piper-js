@@ -8,7 +8,7 @@ chai.use(chaiAsPromised);
 import {Feature} from '../src/Feature';
 import {ZeroCrossings} from "../src/ZeroCrossings";
 import {ProcessBlock} from '../src/PluginServer';
-import {batchProcess, FrameCutter} from '../src/AudioUtilities'
+import {batchProcess, segmentAudio} from '../src/AudioUtilities'
 import {FeatureExtractor} from "../src/FeatureExtractor";
 
 describe('BatchBlockProcess', () => {
@@ -62,7 +62,7 @@ describe('BatchBlockProcess', () => {
     });
 });
 
-describe('FrameCutter', () => {
+describe('SegmentAudio', () => {
     const blockSize: number = 8;
     const stepSize: number = 4;
     const nBlocks: number = 4;
@@ -73,27 +73,27 @@ describe('FrameCutter', () => {
     };
 
     fillBlocksWithConsecutiveIntegers(audioData);
-    let cutter: IterableIterator<Float32Array>;
+    let frames: IterableIterator<Float32Array>;
 
-    beforeEach('reset cutter', () => {
-        cutter = new FrameCutter(blockSize, stepSize, audioData)
+    beforeEach('reset segmentAudio', () => {
+        frames = segmentAudio(blockSize, stepSize, audioData)
     });
 
     it('Should zero pad the block when there are no more samples', () => {
-        cutter = new FrameCutter(blockSize, stepSize, new Float32Array(0));
-        cutter.next().value.should.deep.equal(new Float32Array(blockSize));
+        frames = segmentAudio(blockSize, stepSize, new Float32Array(0));
+        frames.next().value.should.deep.equal(new Float32Array(blockSize));
     });
 
     it('Can be used as an iterator', () => {
-        cutter.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 0, 0, 0, 0]));
-        cutter.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]));
-        cutter.next().value.should.deep.equal(new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]));
-        cutter.next().value.should.deep.equal(new Float32Array([1, 1, 1, 1, 2, 2, 2, 2]));
-        cutter.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 2, 2, 2, 2]));
-        cutter.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 3, 3, 3, 3]));
-        cutter.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 3, 3, 3, 3]));
-        cutter.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 0, 0, 0, 0]));
-        return cutter.next().done.should.be.true;
+        frames.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 0, 0, 0, 0]));
+        frames.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]));
+        frames.next().value.should.deep.equal(new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]));
+        frames.next().value.should.deep.equal(new Float32Array([1, 1, 1, 1, 2, 2, 2, 2]));
+        frames.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 2, 2, 2, 2]));
+        frames.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 3, 3, 3, 3]));
+        frames.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 3, 3, 3, 3]));
+        frames.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 0, 0, 0, 0]));
+        return frames.next().done.should.be.true;
     });
 
     it('Can be looped over', () => {
@@ -108,7 +108,7 @@ describe('FrameCutter', () => {
             [ 3, 3, 3, 3, 0, 0, 0, 0 ]
         ];
         let i = 0;
-        for (let block of cutter)
+        for (let block of frames)
             Array.from(block).should.deep.equal(expectedBlocks[i++]);
     });
 });

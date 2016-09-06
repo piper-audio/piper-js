@@ -20,27 +20,17 @@ function concatFeatures(running: Feature[][], nextBlock: Promise<Feature[][]>): 
     });
 }
 
-export class FrameCutter implements IterableIterator<Float32Array> {
-    private nStep: number;
-    private nSteps: number;
+export function* segmentAudio(blockSize: number, stepSize: number, audioData: Float32Array): IterableIterator<Float32Array> {
+    let nStep: number = 0;
+    const nSteps: number = audioData.length / stepSize; // TODO this won't work for streaming input
+    const isDone = (step: number) => step >= nSteps;
 
-    constructor(public blockSize: number, public stepSize: number, private audioData: Float32Array) {
-        this.nStep = 0;
-        this.nSteps = audioData.length / this.stepSize; // TODO this won't work for streaming input
-    };
-
-
-    next(value?: any): IteratorResult<Float32Array> {
-        const start: number = this.nStep++ * this.stepSize;
-        const stop: number = start + this.blockSize;
-        const isDone: boolean = this.nStep >= this.nSteps;
-        let subArray: Float32Array = this.audioData.subarray(start, stop);
-        if (isDone)
-            subArray = Float32Array.of(...subArray, ...new Float32Array(this.blockSize - subArray.length));
-        return {value: subArray, done: isDone}; // TODO this won't work for streaming input
-    }
-
-    [Symbol.iterator](): IterableIterator<Float32Array> {
-        return this;
-    }
+    do {
+        const start: number = nStep++ * stepSize;
+        const stop: number = start + blockSize;
+        let subArray: Float32Array = audioData.subarray(start, stop);
+        if (isDone(nStep))
+            subArray = Float32Array.of(...subArray, ...new Float32Array(blockSize - subArray.length));
+        yield subArray;
+    } while(!isDone(nStep))
 }
