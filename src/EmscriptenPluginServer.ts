@@ -72,13 +72,7 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     private static responseToFeatureSet(response: Response): Feature[][] {
-        const featureList: Feature[][] = [];
-        const featureObj = response.content;
-        // TODO consider revising types returned, as this is ugly
-        for (let index in featureObj)
-            if (featureObj.hasOwnProperty(index))
-                featureList.push(featureObj[index]);
-        return featureList;
+        return Object.keys(response.content).map(key => response.content[key]);
     }
 }
 
