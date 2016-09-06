@@ -29,7 +29,7 @@ describe('ZeroCrossings', () => {
             return features.should.eventually.deep.equal([[{values: [0]}]]);
         });
 
-        it('Should return a count of 5 for small ', () => {
+        it('Should return a count of 5 for an input which crosses 5 times', () => {
             let zc = new ZeroCrossings();
             let block = toProcessBlock(new Float32Array([0, 1, -1, 0, 1, -1, 0, 1]));
             let features: Promise<Feature[][]> = zc.process(block);
