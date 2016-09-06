@@ -9,13 +9,13 @@ export function batchProcess(blocks: ProcessBlock[],
 			     process: (block: ProcessBlock) => Promise<Feature[][]>)
 : Promise<Feature[][]> {
 
-    const processPromises: (Promise<Feature[][]>)[] =
-	blocks.map((block) => process(block));
+    const processPromises: (() => Promise<Feature[][]>)[] =
+	blocks.map((block) => () => process(block));
     
     return processPromises.reduce(
 	(runningFeatures, nextBlock) => {
             return runningFeatures.then((features) => {
-		return concatFeatures(features, nextBlock);
+		return concatFeatures(features, nextBlock());
             });
 	},
 	Promise.resolve([]));
