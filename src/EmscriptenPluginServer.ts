@@ -58,7 +58,7 @@ export class EmscriptenPluginServer implements PluginServer {
 
     process(request: ProcessRequest): Promise<Feature[][]> {
         request.processInput.inputBuffers.forEach((val) => {
-            (val as any).values = JSON.parse('[' + val.values.join(',') + ']'); // TODO this is stupid, is there good reason for using a Float32Array?
+            (val as any).values = [...val.values]; // TODO is there a better way to change Float32Array's JSON representation
         });
         return this.request({type: 'process', content: request}).then((response) => {
             return EmscriptenPluginServer.responseToFeatureSet(response);
