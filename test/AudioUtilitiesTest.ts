@@ -8,7 +8,7 @@ chai.use(chaiAsPromised);
 import {Feature} from '../src/Feature';
 import {ZeroCrossings} from "../src/ZeroCrossings";
 import {ProcessBlock} from '../src/PluginServer';
-import {batchProcess, segmentAudio} from '../src/AudioUtilities'
+import {batchProcess, lfo, segmentAudio} from '../src/AudioUtilities'
 import {FeatureExtractor} from "../src/FeatureExtractor";
 
 describe('BatchBlockProcess', () => {
@@ -110,5 +110,16 @@ describe('SegmentAudio', () => {
         let i = 0;
         for (let block of frames)
             Array.from(block).should.deep.equal(expectedBlocks[i++]);
+    });
+});
+
+describe('lfo', () => {
+    it('Can lazily generate a sine wave', () => {
+        const expectedSine = require('./fixtures/expected-sine.json');
+        const sineA: IterableIterator<number> = lfo(8000.0, 440.0, 0.5);
+        const isRoughlyEqual = (value: number, expected: number) => value.should.be.approximately(expected, 0.00001);
+        expectedSine.forEach((sample: number) => {
+            isRoughlyEqual(sineA.next().value, sample);
+        });
     });
 });

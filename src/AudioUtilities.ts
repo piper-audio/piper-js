@@ -34,3 +34,19 @@ export function* segmentAudio(blockSize: number, stepSize: number, audioData: Fl
         yield subArray;
     } while(!isDone(nStep))
 }
+
+export function* lfo(sampleRate: number, frequency: number, amplitude: number = 1.0): IterableIterator<number> {
+    const inverseSampleRate = 1.0 / sampleRate;
+    let phase = 0.0;
+    while (true) {
+        yield amplitude * Math.sin(2.0 * Math.PI * phase);
+        phase += frequency * inverseSampleRate;
+        if (phase >= 1.0)
+            phase -= 1.0;
+    }
+}
+
+export function generateSineWave(frequency: number, lengthSeconds: number, sampleRate: number, amplitude: number = 1.0): Float32Array {
+    const lfoGen: IterableIterator<number> = lfo(sampleRate, frequency, amplitude);
+    return new Float32Array(Math.ceil(sampleRate * lengthSeconds)).map(() => lfoGen.next().value);
+}
