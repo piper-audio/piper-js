@@ -1,6 +1,7 @@
 /**
  * Created by lucast on 31/08/2016.
  */
+
 import {
     PluginServer,
     StaticData,
@@ -12,6 +13,7 @@ import {
 import {Feature} from "./Feature";
 import VamPipeServer = require('../ext/ExampleModule');
 import {Allocator, EmscriptenModule} from "./Emscripten";
+import base64 = require('base64-js');
 
 export class EmscriptenPluginServer implements PluginServer {
     private server: EmscriptenModule;
