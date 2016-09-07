@@ -65,7 +65,7 @@ describe('ProcessPerformanceTest', () => {
 		    Array.from(Array(blockCount).keys(), makeBlock);
 		const results = batchProcess(
 		    blocks,
-		    b => server.process({
+		    b => server.processb64({
 			pluginHandle : centroidHandle,
 			processInput : b
 		    }));

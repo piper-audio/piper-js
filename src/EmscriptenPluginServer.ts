@@ -67,6 +67,31 @@ export class EmscriptenPluginServer implements PluginServer {
         });
     }
 
+    processb64(request: ProcessRequest): Promise<Feature[][]> {
+	// Request.inputBuffers is an array of { values } where each
+	// values is a Float32Array. We want an array of base-64
+	// encodings of the raw memory backing these typed arrays. We
+	// assume byte order will be the same when the base-64 stuff
+	// is decoded, but I guess that might not be true in a network
+	// situation. The Float32Array docs say "If control over byte
+	// order is needed, use DataView instead" so I guess that's a
+	// !!! todo
+	const encoded = request.processInput.inputBuffers.map(channel => {
+	    const b64 = base64.fromByteArray(new Uint8Array(channel.values.buffer));
+	    return { b64values: b64 }
+	});
+	const encReq = {
+	    pluginHandle: request.pluginHandle,
+	    processInput: {
+		timestamp: request.processInput.timestamp,
+		inputBuffers: encoded
+	    }
+	};
+        return this.request({type: 'process', content: encReq }).then((response) => {
+            return EmscriptenPluginServer.responseToFeatureSet(response);
+        });
+    }
+
     finish(pluginHandle: number): Promise<Feature[][]> {
         return this.request({type: 'finish', content: {pluginHandle: pluginHandle}}).then((response) => {
             return EmscriptenPluginServer.responseToFeatureSet(response);

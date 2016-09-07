@@ -124,6 +124,7 @@ export interface PluginServer {
     loadPlugin(request: LoadRequest): Promise<LoadResponse>,
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>,
     process(request: ProcessRequest): Promise<Feature[][]>,
+    processb64(request: ProcessRequest): Promise<Feature[][]>,
     finish(pluginHandle: number): Promise<Feature[][]>
 }
 
