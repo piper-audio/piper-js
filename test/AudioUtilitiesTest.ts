@@ -8,8 +8,9 @@ chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
 import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {ProcessBlock} from "../src/ClientServer.ts";
-import {batchProcess, lfo, segmentAudio} from "../src/AudioUtilities";
+import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment} from "../src/AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
+import {FeatsAudioBuffer} from "../src/AudioBuffer";
 
 describe("BatchBlockProcess", () => {
     it("should aggregate features extracted from multiple blocks", () => {
@@ -64,9 +65,17 @@ describe("BatchBlockProcess", () => {
             aggregate.get(0).should.deep.equal(expectedFeatures);
         });
     });
+
+    it("can consume blocks from a generator", () => {
+        const audioData: AudioBuffer = FeatsAudioBuffer.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
+        const frames: IterableIterator<ProcessBlock> = segmentAudioBuffer(256, 64, audioData);
+        const zc: FeatureExtractor = new ZeroCrossings();
+        const featureSet: Promise<Feature[][]> = batchProcess(frames, block => zc.process(block));
+        return featureSet.should.eventually.have.length((10.0 * 8000.0) / 64.0);
+    });
 });
 
-describe("SegmentAudio", () => {
+describe("Segment", () => {
     const blockSize: number = 8;
     const stepSize: number = 4;
     const nBlocks: number = 4;
@@ -79,16 +88,16 @@ describe("SegmentAudio", () => {
     fillBlocksWithConsecutiveIntegers(audioData);
     let frames: IterableIterator<Float32Array>;
 
-    beforeEach("reset segmentAudio", () => {
-        frames = segmentAudio(blockSize, stepSize, audioData);
+    beforeEach("reset segment generator", () => {
+        frames = segment(blockSize, stepSize, audioData)
     });
 
     it("Should zero pad the block when there are no more samples", () => {
-        frames = segmentAudio(blockSize, stepSize, new Float32Array(0));
+        frames = segment(blockSize, stepSize, new Float32Array(0));
         frames.next().value.should.deep.equal(new Float32Array(blockSize));
     });
 
-    it("Can be used as an iterator", () => {
+    it('Can be used as an iterator', () => {
         frames.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 0, 0, 0, 0]));
         frames.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]));
         frames.next().value.should.deep.equal(new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]));
@@ -100,7 +109,7 @@ describe("SegmentAudio", () => {
         return frames.next().done.should.be.true;
     });
 
-    it("Can be looped over", () => {
+    it('Can be looped over', () => {
         const expectedBlocks: number[][] = [
             [ 0, 0, 0, 0, 0, 0, 0, 0 ],
             [ 0, 0, 0, 0, 1, 1, 1, 1 ],
