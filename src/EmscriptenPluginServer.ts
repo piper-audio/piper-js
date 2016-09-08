@@ -34,8 +34,12 @@ export class EmscriptenPluginServer implements PluginServer {
             this.server._free(requestJsonPtr);
             var response: Response = JSON.parse(this.server.Pointer_stringify(responseJsonPtr));
             this.freeJson(responseJsonPtr);
-            if (!response.success) throw new Error(response.errorText);
-            resolve(response);
+	    
+            if (!response.success) {
+		throw new Error(response.errorText);
+	    } else {
+		resolve(response);
+	    }
         });
     }
 
@@ -99,6 +103,8 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     private static responseToFeatureSet(response: Response): Feature[][] {
+	//!!! not right, this will fail if the feature set has any "holes"
+	// e.g. { "0": [{"values": []}], "2": [{"values": []}]}
         return Object.keys(response.content).map(key => response.content[key]);
     }
 }
