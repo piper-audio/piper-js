@@ -30,7 +30,7 @@ describe('BatchBlockProcess', () => {
         });
 
         const zc: FeatureExtractor = new ZeroCrossings();
-        const features: Promise<Feature[][]> = batchProcess(blocks, (block) => zc.process(block));
+        const features: Promise<Feature[][]> = batchProcess(blocks, (block) => Promise.resolve(zc.process(block)));
         return features.should.eventually.deep.equal(expectedFeatures);
     });
 

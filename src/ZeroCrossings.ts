@@ -12,21 +12,19 @@ export class ZeroCrossings implements FeatureExtractor {
         this.previousSample = 0;
     }
 
-    process(block: ProcessBlock): Promise<Feature[][]> {
-        return new Promise((resolve) => {
-            let count: number = 0;
-            let returnFeatures: Feature[][] = [];
+    process(block: ProcessBlock): Feature[][] {
+        let count: number = 0;
+        let returnFeatures: Feature[][] = [];
 
-            const channel = block.inputBuffers[0].values; // ignore stereo channels
-            channel.forEach((sample) => {
-                if (this.hasCrossedAxis(sample))
-                    ++count;
-                this.previousSample = sample;
-            });
-
-            returnFeatures.push([{values: [count]}]);
-            resolve(returnFeatures);
+        const channel = block.inputBuffers[0].values; // ignore stereo channels
+        channel.forEach((sample) => {
+            if (this.hasCrossedAxis(sample))
+                ++count;
+            this.previousSample = sample;
         });
+
+        returnFeatures.push([{values: [count]}]);
+        return returnFeatures;
     }
 
     private hasCrossedAxis(sample: number) {

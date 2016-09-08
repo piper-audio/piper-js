@@ -5,5 +5,5 @@ import {Feature} from "./Feature";
 import {ProcessBlock} from "./PluginServer";
 
 export interface FeatureExtractor {
-    process(block: ProcessBlock): Promise<Feature[][]>;
+    process(block: ProcessBlock): Feature[][];
 }
