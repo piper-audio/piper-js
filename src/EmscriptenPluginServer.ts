@@ -25,14 +25,14 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     private request(request: Request): Promise<Response> {
-        return new Promise<Response>((resolve) => {
+        return new Promise<Response>((resolve, reject) => {
             const requestJson: string = JSON.stringify(request);
             const requestJsonPtr: number = this.server.allocate(this.server.intArrayFromString(requestJson), 'i8', Allocator.ALLOC_NORMAL);
             const responseJsonPtr: number = this.doRequest(requestJsonPtr);
             this.server._free(requestJsonPtr);
             var response: Response = JSON.parse(this.server.Pointer_stringify(responseJsonPtr));
             this.freeJson(responseJsonPtr);
-            if (!response.success) throw new Error(response.errorText);
+            if (!response.success) reject(response.errorText);
             resolve(response);
         });
     }
