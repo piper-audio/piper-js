@@ -21,14 +21,16 @@ export interface LoadRequest {
     adapterFlags: AdapterFlags[]
 }
 
+export type PluginHandle = number;
+
 export interface LoadResponse {
-    pluginHandle: number,
+    pluginHandle: PluginHandle,
     staticData: StaticData,
     defaultConfiguration: Configuration
 }
 
 export interface ConfigurationRequest {
-    pluginHandle: number,
+    pluginHandle: PluginHandle,
     configuration: Configuration
 }
 
@@ -115,16 +117,36 @@ export interface ProcessBlock {
 }
 
 export interface ProcessRequest {
-    pluginHandle: number,
+    pluginHandle: PluginHandle,
     processInput: ProcessBlock
 }
 
+export interface ListFunction {
+    (): Promise<StaticData[]>
+}
+
+export interface LoadFunction {
+    (request: LoadRequest) : Promise<LoadResponse>
+}
+
+export interface ConfigurationFunction {
+    (request: ConfigurationRequest): Promise<ConfigurationResponse>
+}
+
+export interface ProcessFunction {
+    (request: ProcessRequest): Promise<Feature[][]>
+}
+
+export interface FinishFunction {
+    (pluginHandle: PluginHandle): Promise<Feature[][]>
+}
+
 export interface PluginServer {
-    listPlugins(): Promise<StaticData[]>,
-    loadPlugin(request: LoadRequest): Promise<LoadResponse>,
-    configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>,
-    process(request: ProcessRequest): Promise<Feature[][]>,
-    processb64(request: ProcessRequest): Promise<Feature[][]>,
-    finish(pluginHandle: number): Promise<Feature[][]>
+    listPlugins: ListFunction,
+    loadPlugin: LoadFunction,
+    configurePlugin: ConfigurationFunction,
+    process: ProcessFunction,
+    processb64: ProcessFunction,
+    finish: FinishFunction
 }
 
