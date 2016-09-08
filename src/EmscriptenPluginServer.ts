@@ -71,18 +71,24 @@ export class EmscriptenPluginServer implements PluginServer {
         });
     }
 
+    private static toBase64(values: Float32Array) : string {
+	// We want a base-64 encoding of the raw memory backing the
+	// typed array. We assume byte order will be the same when the
+	// base-64 stuff is decoded, but I guess that might not be
+	// true in a network situation. The Float32Array docs say "If
+	// control over byte order is needed, use DataView instead" so
+	// I guess that's a !!! todo item
+	return base64.fromByteArray(new Uint8Array(values.buffer));
+    }
+
+    private static fromBase64(b64: string): Float32Array {
+	//!!! as above.
+	return new Float32Array(base64.toByteArray(b64).buffer);
+    }
+    
     processb64(request: ProcessRequest): Promise<Feature[][]> {
-	// Request.inputBuffers is an array of { values } where each
-	// values is a Float32Array. We want an array of base-64
-	// encodings of the raw memory backing these typed arrays. We
-	// assume byte order will be the same when the base-64 stuff
-	// is decoded, but I guess that might not be true in a network
-	// situation. The Float32Array docs say "If control over byte
-	// order is needed, use DataView instead" so I guess that's a
-	// !!! todo
 	const encoded = request.processInput.inputBuffers.map(channel => {
-	    const b64 = base64.fromByteArray(new Uint8Array(channel.values.buffer));
-	    return { b64values: b64 }
+	    return { b64values: EmscriptenPluginServer.toBase64(channel.values) }
 	});
 	const encReq = {
 	    pluginHandle: request.pluginHandle,
@@ -101,7 +107,7 @@ export class EmscriptenPluginServer implements PluginServer {
             return EmscriptenPluginServer.responseToFeatureSet(response);
         });
     }
-
+    
     private static responseToFeatureSet(response: Response): Feature[][] {
 	//!!! not right, this will fail if the feature set has any "holes"
 	// e.g. { "0": [{"values": []}], "2": [{"values": []}]}
