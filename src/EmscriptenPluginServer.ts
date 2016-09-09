@@ -82,8 +82,36 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     private static fromBase64(b64: string): Float32Array {
-	//!!! as above.
+	// The base64 module expects input to be padded to a
+	// 4-character boundary, but the C++ VampJson code does not do
+	// that, so let's do it here
+	while (b64.length % 4 > 0) {
+	    b64 += "=";
+	}
+	//!!! endianness, as above.
 	return new Float32Array(base64.toByteArray(b64).buffer);
+    }
+
+    private static convertFeatureValues(feature: Feature): Feature {
+
+	// Just converts b64values to values, does nothing else at this point
+	
+	if (feature.b64values == null || // NB double-equals intended,
+	                                 // want to check for null or undef
+	    feature.b64values === "") {
+	    return feature; // must be using the values array, or have no values
+	} else {
+	    return {
+		timestamp: feature.timestamp,
+		duration: feature.duration,
+		label: feature.label,
+		values: EmscriptenPluginServer.fromBase64(feature.b64values)
+	    }
+	};
+    }
+
+    private static convertFeatureList(features: Feature[]): Feature[] {
+	return features.map(EmscriptenPluginServer.convertFeatureValues);
     }
     
     processb64(request: ProcessRequest): Promise<Feature[][]> {
@@ -111,7 +139,9 @@ export class EmscriptenPluginServer implements PluginServer {
     private static responseToFeatureSet(response: Response): Feature[][] {
 	//!!! not right, this will fail if the feature set has any "holes"
 	// e.g. { "0": [{"values": []}], "2": [{"values": []}]}
-        return Object.keys(response.content).map(key => response.content[key]);
+        return Object.keys(response.content).map(
+	    key => EmscriptenPluginServer.convertFeatureList(
+		response.content[key]));
     }
 }
 
