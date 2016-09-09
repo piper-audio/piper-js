@@ -4,7 +4,9 @@
 export interface EmscriptenModule {
     cwrap(ident: string, returnType: string, argTypes: string[]): Function;
     intArrayFromString(stringy: string): number[];
+    _malloc(sz: number): number;
     _free(ptr: number): void;
+    HEAPU8: Uint8Array;
     allocate(slab: number[], type: string, allocator: Allocator): number;
     Pointer_stringify(ptr: number): string;
 }

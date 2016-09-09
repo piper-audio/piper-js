@@ -18,11 +18,13 @@ import base64 = require('base64-js');
 export class EmscriptenPluginServer implements PluginServer {
     private server: EmscriptenModule;
     private doRequest: (ptr: number) => number;
+    private doProcess: (handle: number, bufs: number, sec: number, nsec: number) => number;
     private freeJson: (ptr: number) => void;
 
     constructor() {
         this.server = VamPipeServer();
         this.doRequest = this.server.cwrap('vampipeRequestJson', 'number', ['number']) as (ptr: number) => number;
+	this.doProcess = this.server.cwrap('vampipeProcess', 'number', ['number','number','number','number']) as (handle: number, bufs: number, sec: number, nsec: number) => number;
         this.freeJson = this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
     }
 
@@ -63,6 +65,10 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     process(request: ProcessRequest): Promise<Feature[][]> {
+	return this.processJson(request);
+    }
+
+    processJson(request: ProcessRequest): Promise<Feature[][]> {
         request.processInput.inputBuffers.forEach((val) => {
             (val as any).values = [...val.values]; // TODO is there a better way to change Float32Array's JSON representation
         });
@@ -71,6 +77,53 @@ export class EmscriptenPluginServer implements PluginServer {
         });
     }
 
+    private makeProcessCall(request: ProcessRequest): Promise<Response> {
+	return new Promise<Response>((resolve) => {
+
+	    const nchannels = request.processInput.inputBuffers.length;
+	    const nframes = request.processInput.inputBuffers[0].values.length;
+
+	    const bufsPtr = this.server._malloc(nchannels * 4);
+	    const bufs = new Uint32Array(
+		this.server.HEAPU8.buffer, bufsPtr, nchannels);
+	    
+	    for (let i = 0; i < nchannels; ++i) {
+		const framesPtr = this.server._malloc(nframes * 4);
+		const frames = new Float32Array(
+		    this.server.HEAPU8.buffer, framesPtr, nframes);
+		frames.set(request.processInput.inputBuffers[i].values);
+		bufs[i] = framesPtr;
+	    }
+		
+	    const responseJsonPtr: number = this.doProcess(
+		request.pluginHandle,
+		bufsPtr,
+		request.processInput.timestamp.s,
+		request.processInput.timestamp.n);
+
+	    for (let i = 0; i < nchannels; ++i) {
+		this.server._free(bufs[i]);
+	    }
+	    this.server._free(bufsPtr);
+	    
+            var response: Response = JSON.parse(
+		this.server.Pointer_stringify(responseJsonPtr));
+            this.freeJson(responseJsonPtr);
+	    
+            if (!response.success) {
+		throw new Error(response.errorText);
+	    } else {
+		resolve(response);
+	    }
+	});
+    }
+    
+    processRaw(request: ProcessRequest): Promise<Feature[][]> {
+        return this.makeProcessCall(request).then((response) => {
+	    return EmscriptenPluginServer.responseToFeatureSet(response);
+        });
+    }
+	
     private static toBase64(values: Float32Array) : string {
 	// We want a base-64 encoding of the raw memory backing the
 	// typed array. We assume byte order will be the same when the
@@ -115,7 +168,7 @@ export class EmscriptenPluginServer implements PluginServer {
 	return features.map(EmscriptenPluginServer.convertFeatureValues);
     }
     
-    processB64(request: ProcessRequest): Promise<Feature[][]> {
+    processBase64(request: ProcessRequest): Promise<Feature[][]> {
 	const encoded = request.processInput.inputBuffers.map(channel => {
 	    return { b64values: EmscriptenPluginServer.toBase64(channel.values) }
 	});
