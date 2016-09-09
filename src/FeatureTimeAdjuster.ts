@@ -1,5 +1,5 @@
 import {Timestamp, makeTimestamp, toSeconds, frame2timestamp} from "./Timestamp";
-import {OutputDescriptor} from "./PluginServer";
+import {OutputDescriptor, SampleType} from "./PluginServer";
 import {Feature} from "./Feature";
 /**
  * Created by lucast on 08/09/2016.
@@ -33,5 +33,21 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
         feature.timestamp = frame2timestamp(frame, sr);
         feature.duration = feature.hasOwnProperty('duration') ? frame2timestamp(Math.round(toSeconds(feature.duration) * sr), sr) : {s: 0, n: 0};
         this.lastTimestamp = {s: feature.timestamp.s, n: feature.timestamp.n};
+    }
+}
+
+export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster {
+    adjust(feature: Feature): void {} // This doesn't need to do anything, is this pointless?
+}
+
+export function createFeatureTimeAdjuster(descriptor: OutputDescriptor): FeatureTimeAdjuster {
+
+    switch (descriptor.sampleType) {
+        case SampleType.OneSamplePerStep:
+            return new OneSamplePerStepFeatureTimeAdjuster();
+        case SampleType.VariableSampleRate:
+            return new VariableSampleRateFeatureTimeAdjuster(descriptor);
+        case SampleType.FixedSampleRate:
+            return new FixedSampleRateFeatureTimeAdjuster(descriptor);
     }
 }

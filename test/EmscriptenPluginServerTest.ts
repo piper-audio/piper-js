@@ -7,7 +7,7 @@ import chaiAsPromised = require('chai-as-promised');
 import {EmscriptenPluginServer} from "../src/EmscriptenPluginServer";
 import {
     Response, StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock
+    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType, OutputDescriptor
 } from "../src/PluginServer";
 import {Feature} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
@@ -56,7 +56,8 @@ describe('EmscriptenPluginServer', () => {
     const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
 
     it('Can configure a loaded plugin', () => {
-        const expectedResponse = require('./fixtures/expected-configuration-response.json');
+        let expectedResponse = require('./fixtures/expected-configuration-response.json');
+        expectedResponse.outputList.forEach((output: any) => output.sampleType = SampleType[output.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });
 
@@ -67,6 +68,8 @@ describe('EmscriptenPluginServer', () => {
 
     it('Can process a single block', () => {
         const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
+        const expectedTimestamps = (expectedFeatures.one[1] as Feature[]).map(feature => feature.timestamp);
+
         const features: Promise<Feature[][]> = server.process({
             pluginHandle: pluginHandles[0],
             processInput: {
@@ -74,7 +77,12 @@ describe('EmscriptenPluginServer', () => {
                 inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
             } as ProcessBlock
         } as ProcessRequest);
-        return features.should.eventually.deep.equal(expectedFeatures.one);
+
+        return features.then((features: Feature[][]) => {
+            const timestamps = features[1].map(feature => feature.timestamp);
+            timestamps.should.deep.equal(expectedTimestamps);
+            features[0].should.deep.equal(expectedFeatures.one[0]);
+        })
     });
 
     it('Can get the remaining features and clean up the plugin', () => {
