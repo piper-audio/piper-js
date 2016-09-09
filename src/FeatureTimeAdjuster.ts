@@ -29,10 +29,8 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
 
     adjust(feature: Feature): void {
         const sr: number = this.descriptor.sampleRate;
-        if (!feature.hasOwnProperty('timestamp'))
-            feature.timestamp = frame2timestamp(Math.round(toSeconds(this.lastTimestamp) * sr) + 1, sr);
-        else
-            feature.timestamp = frame2timestamp(Math.round(toSeconds(feature.timestamp) * sr), sr);
+        const frame: number = feature.hasOwnProperty('timestamp') ? Math.round(toSeconds(feature.timestamp) * sr) : Math.round(toSeconds(this.lastTimestamp) * sr) + 1;
+        feature.timestamp = frame2timestamp(frame, sr);
         feature.duration = feature.hasOwnProperty('duration') ? frame2timestamp(Math.round(toSeconds(feature.duration) * sr), sr) : {s: 0, n: 0};
         this.lastTimestamp = {s: feature.timestamp.s, n: feature.timestamp.n};
     }
