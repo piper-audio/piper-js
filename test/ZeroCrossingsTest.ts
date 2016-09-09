@@ -26,14 +26,14 @@ describe('ZeroCrossings', () => {
             let zc = new ZeroCrossings();
             let block = toProcessBlock(new Float32Array(8));
             let features: Promise<Feature[][]> = zc.process(block);
-            return features.should.eventually.deep.equal([[{values: [0]}]]);
+            return features.should.eventually.deep.equal([[{values: new Float32Array([0])}]]);
         });
 
         it('Should return a count of 5 for an input which crosses 5 times', () => {
             let zc = new ZeroCrossings();
             let block = toProcessBlock(new Float32Array([0, 1, -1, 0, 1, -1, 0, 1]));
             let features: Promise<Feature[][]> = zc.process(block);
-            return features.should.eventually.deep.equal([[{values: [5]}]]);
+            return features.should.eventually.deep.equal([[{values: new Float32Array([5])}]]);
         });
 
         it('Should keep the last sample from the previous block', () => {
@@ -42,7 +42,7 @@ describe('ZeroCrossings', () => {
             zc.process(block);
             block.inputBuffers[0].values.fill(0);
             let features: Promise<Feature[][]> = zc.process(block);
-            return features.should.eventually.deep.equal([[{values: [1]}]]);
+            return features.should.eventually.deep.equal([[{values: new Float32Array([1])}]]);
         });
     })
 });

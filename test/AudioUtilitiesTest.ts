@@ -14,8 +14,8 @@ import {FeatureExtractor} from "../src/FeatureExtractor";
 describe('BatchBlockProcess', () => {
     it('should aggregate features extracted from multiple blocks', () => {
         const expectedFeatures: Feature[][] = [];
-        expectedFeatures.push([{values: [5]} as Feature]);
-        expectedFeatures.push([{values: [6]} as Feature]);
+        expectedFeatures.push([{values: new Float32Array([5])} as Feature]);
+        expectedFeatures.push([{values: new Float32Array([6])} as Feature]);
 
         const blocks: ProcessBlock[] = [];
 
@@ -36,8 +36,8 @@ describe('BatchBlockProcess', () => {
 
     it('processes the blocks sequentially', () => {
         const expectedFeatures: Feature[][] = [];
-        expectedFeatures.push([{values: [1]} as Feature]);
-        expectedFeatures.push([{values: [1]} as Feature]);
+        expectedFeatures.push([{values: new Float32Array([1])} as Feature]);
+        expectedFeatures.push([{values: new Float32Array([1])} as Feature]);
 
         const blocks: ProcessBlock[] = [];
 
