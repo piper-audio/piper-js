@@ -23,7 +23,7 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
     private lastTimestamp: Timestamp;
 
     constructor(private descriptor: OutputDescriptor) {
-        if (!descriptor.hasOwnProperty('sampleRate') || descriptor.sampleRate == 0.0) throw new Error('OutputDescriptor must provide a sample rate.')
+        if (!descriptor.hasOwnProperty('sampleRate') || descriptor.sampleRate == 0.0) throw new Error('OutputDescriptor must provide a sample rate.');
         this.lastTimestamp = frame2timestamp(-1, this.descriptor.sampleRate);
     }
 
