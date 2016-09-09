@@ -1,4 +1,4 @@
-import {Timestamp} from "./Timestamp";
+import {Timestamp, makeTimestamp, toSeconds, frame2timestamp} from "./Timestamp";
 import {OutputDescriptor} from "./PluginServer";
 import {Feature} from "./Feature";
 /**
@@ -12,12 +12,14 @@ export class VariableSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuste
     constructor(private descriptor: OutputDescriptor) {}
 
     adjust(feature: Feature): void {
-        feature.timestamp = undefined;
+        if (!feature.hasOwnProperty('timestamp')) throw new Error('Feature must have a timestamp');
+        const hasSampleRate: boolean = this.descriptor.hasOwnProperty('sampleRate') && this.descriptor.sampleRate != 0.0;
+        if (!feature.hasOwnProperty('duration'))
+            feature.duration = hasSampleRate ? frame2timestamp(1, this.descriptor.sampleRate) : {s: 0, n: 0};
     }
 }
 
 export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
-    private lastTimestamp: Timestamp
 
     constructor(private descriptor: OutputDescriptor) {}
 

@@ -23,3 +23,8 @@ export function makeTimestamp(seconds : number) : Timestamp {
 export function frame2timestamp(frame : number, rate : number) : Timestamp {
     return makeTimestamp(frame / rate);
 }
+
+export function toSeconds(timestamp: Timestamp): number
+{
+    return timestamp.s + (timestamp.n + 1) / 1000000000.0; // why plus one?
+}
