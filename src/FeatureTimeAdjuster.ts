@@ -20,10 +20,20 @@ export class VariableSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuste
 }
 
 export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
+    private lastTimestamp: Timestamp;
 
-    constructor(private descriptor: OutputDescriptor) {}
+    constructor(private descriptor: OutputDescriptor) {
+        if (!descriptor.hasOwnProperty('sampleRate') || descriptor.sampleRate == 0.0) throw new Error('OutputDescriptor must provide a sample rate.')
+        this.lastTimestamp = frame2timestamp(-1, this.descriptor.sampleRate);
+    }
 
     adjust(feature: Feature): void {
-        feature.timestamp = undefined;
+        const sr: number = this.descriptor.sampleRate;
+        if (!feature.hasOwnProperty('timestamp'))
+            feature.timestamp = frame2timestamp(Math.round(toSeconds(this.lastTimestamp) * sr) + 1, sr);
+        else
+            feature.timestamp = frame2timestamp(Math.round(toSeconds(feature.timestamp) * sr), sr);
+        feature.duration = feature.hasOwnProperty('duration') ? frame2timestamp(Math.round(toSeconds(feature.duration) * sr), sr) : {s: 0, n: 0};
+        this.lastTimestamp = {s: feature.timestamp.s, n: feature.timestamp.n};
     }
 }

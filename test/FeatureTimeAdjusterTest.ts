@@ -173,10 +173,21 @@ describe('FixedSampleRateFeatureTimeAdjuster', () => {
     });
 
     describe('It indicates invalid OutputDescriptor / Features', () => {
-        const descriptor: OutputDescriptor = createOutputDescriptor(false, 0.0, SampleType.FixedSampleRate);
-        const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor);
+        it('Throws on construction if the OutputDescriptor has a zero sampleRate', () => {
+            const descriptor: OutputDescriptor = createOutputDescriptor(false, 0.0, SampleType.FixedSampleRate);
+            chai.expect(() => new FixedSampleRateFeatureTimeAdjuster(descriptor)).to.throw(Error);
+        });
         it('Throws on construction if the OutputDescriptor has no sampleRate', () => {
-            chai.expect(() => adjuster.adjust({})).to.throw(Error);
+            const descriptor: OutputDescriptor = {
+                basic: {
+                    description: "Not a real output",
+                    identifier: "stub",
+                    name: "Stub OutputDescriptor"
+                },
+                hasDuration: false,
+                sampleType: SampleType.FixedSampleRate,
+            };
+            chai.expect(() => new FixedSampleRateFeatureTimeAdjuster(descriptor)).to.throw(Error);
         })
     });
 });
