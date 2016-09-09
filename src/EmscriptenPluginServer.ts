@@ -75,7 +75,7 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     process(request: ProcessRequest): Promise<Feature[][]> {
-	return this.processBase64(request);
+	return this.processJson(request);
     }
 
     processJson(request: ProcessRequest): Promise<Feature[][]> {
@@ -156,32 +156,27 @@ export class EmscriptenPluginServer implements PluginServer {
 	return new Float32Array(base64.toByteArray(b64).buffer);
     }
 
-    private static convertFeatureValues(feature: WireFeature): Feature {
-
-	// Just converts b64values to values, does nothing else at this point
-	
-	if (feature.b64values == null || // NB double-equals intended,
-	                                 // want to check for null or undef
-	    feature.b64values === "") {
-	    return feature; // must be using the values array, or have no values
-	} else {
-	    let out : Feature = {};
-	    if (feature.timestamp != null) {
-		out.timestamp = feature.timestamp;
-	    }
-	    if (feature.duration != null) {
-		out.duration = feature.duration;
-	    }
-	    if (feature.label != null) {
-		out.label = feature.label;
-	    }
-	    out.values = EmscriptenPluginServer.fromBase64(feature.b64values);
-	    return out;
-	};
+    private static convertWireFeature(wfeature: WireFeature): Feature {
+	let out : Feature = {};
+	if (wfeature.timestamp != null) {
+	    out.timestamp = wfeature.timestamp;
+	}
+	if (wfeature.duration != null) {
+	    out.duration = wfeature.duration;
+	}
+	if (wfeature.label != null) {
+	    out.label = wfeature.label;
+	}
+	if (wfeature.b64values != null && wfeature.b64values !== "") {
+	    out.values = EmscriptenPluginServer.fromBase64(wfeature.b64values);
+	} else if (wfeature.values != null) {
+	    out.values = new Float32Array(wfeature.values);
+	}
+	return out;
     }
 
-    private static convertFeatureList(features: WireFeature[]): Feature[] {
-	return features.map(EmscriptenPluginServer.convertFeatureValues);
+    private static convertWireFeatureList(wfeatures: WireFeature[]): Feature[] {
+	return wfeatures.map(EmscriptenPluginServer.convertWireFeature);
     }
     
     processBase64(request: ProcessRequest): Promise<Feature[][]> {
@@ -228,7 +223,7 @@ export class EmscriptenPluginServer implements PluginServer {
 	//!!! not right, this will fail if the feature set has any "holes"
 	// e.g. { "0": [{"values": []}], "2": [{"values": []}]}
         return Object.keys(response.content).map(
-	    key => EmscriptenPluginServer.convertFeatureList(
+	    key => EmscriptenPluginServer.convertWireFeatureList(
 		response.content[key]));
     }
 }
