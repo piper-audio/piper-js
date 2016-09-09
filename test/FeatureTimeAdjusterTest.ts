@@ -37,7 +37,7 @@ describe('VariableSampleRateFeatureTimeAdjuster', () => {
                 duration: {s: 1, n: 0}
             };
             adjuster.adjust(feature);
-            feature.timestamp.should.equal(expectedTimestamp);
+            feature.timestamp.should.deep.equal(expectedTimestamp);
         });
 
         it('Assigns the minimum duration to the Feature when not conforming to the OutputDescriptor', () => {
@@ -46,7 +46,7 @@ describe('VariableSampleRateFeatureTimeAdjuster', () => {
                 timestamp: {s: 1, n: 0}
             };
             adjuster.adjust(feature);
-            feature.duration.should.equal(expectedDuration);
+            feature.duration.should.deep.equal(expectedDuration);
         });
     });
 
@@ -59,7 +59,7 @@ describe('VariableSampleRateFeatureTimeAdjuster', () => {
                 timestamp: {s: 1, n: 0}
             };
             adjuster.adjust(feature);
-            feature.duration.should.equal(expectedDuration);
+            feature.duration.should.deep.equal(expectedDuration);
         });
 
         describe('OutputDescriptor has no sample rate', () => {
@@ -79,7 +79,7 @@ describe('VariableSampleRateFeatureTimeAdjuster', () => {
                     timestamp: {s: 1, n: 0}
                 };
                 adjuster.adjust(feature);
-                feature.duration.should.equal(expectedDuration);
+                feature.duration.should.deep.equal(expectedDuration);
             });
 
             it('Assigns 0 as the duration when there the sample rate is 0 in the OutputDescriptor', () => {
@@ -99,7 +99,7 @@ describe('VariableSampleRateFeatureTimeAdjuster', () => {
                     timestamp: {s: 1, n: 0}
                 };
                 adjuster.adjust(feature);
-                feature.duration.should.equal(expectedDuration);
+                feature.duration.should.deep.equal(expectedDuration);
             });
         });
     });
@@ -122,7 +122,7 @@ describe('FixedSampleRateFeatureTimeAdjuster', () => {
                 timestamp: {s: 1, n: 550000000.0}
             };
             adjuster.adjust(feature);
-            feature.timestamp.should.equal({s: 1, n: 600000000.0});
+            feature.timestamp.should.deep.equal({s: 1, n: 600000000.0});
         })
     });
 
@@ -134,14 +134,14 @@ describe('FixedSampleRateFeatureTimeAdjuster', () => {
             features.push({});
             for (let feature of features)
                 adjuster.adjust(feature);
-            features[1].timestamp.should.equal({s: 1, n: 700000000.0})
+            features[1].timestamp.should.deep.equal({s: 1, n: 700000000.0})
         });
 
         it('Sets the first timestamp to zero if not provided by the Feature', () => {
             const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor);
             const feature: Feature = {};
             adjuster.adjust(feature);
-            feature.timestamp.should.equal({s: 0, n: 0});
+            feature.timestamp.should.deep.equal({s: 0, n: 0});
         });
     });
 
@@ -152,13 +152,13 @@ describe('FixedSampleRateFeatureTimeAdjuster', () => {
                 duration: {s: 1, n: 550000000.0}
             };
             adjuster.adjust(feature);
-            feature.duration.should.equal({s: 1, n: 600000000.0});
+            feature.duration.should.deep.equal({s: 1, n: 600000000.0});
         });
 
         it('Sets the duration to 0 if the Feature does not match the OutputDescriptor', () => {
             const feature: Feature = {};
             adjuster.adjust(feature);
-            feature.duration.should.equal({s: 0, n: 0});
+            feature.duration.should.deep.equal({s: 0, n: 0});
         });
     });
 
@@ -168,7 +168,7 @@ describe('FixedSampleRateFeatureTimeAdjuster', () => {
         it('Sets the duration to 0', () => {
             const feature: Feature = {};
             adjuster.adjust(feature);
-            feature.duration.should.equal({s: 0, n: 0});
+            feature.duration.should.deep.equal({s: 0, n: 0});
         });
     });
 
