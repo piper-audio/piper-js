@@ -165,12 +165,18 @@ export class EmscriptenPluginServer implements PluginServer {
 	    feature.b64values === "") {
 	    return feature; // must be using the values array, or have no values
 	} else {
-	    return {
-		timestamp: feature.timestamp,
-		duration: feature.duration,
-		label: feature.label,
-		values: EmscriptenPluginServer.fromBase64(feature.b64values)
+	    let out : Feature = {};
+	    if (feature.timestamp != null) {
+		out.timestamp = feature.timestamp;
 	    }
+	    if (feature.duration != null) {
+		out.duration = feature.duration;
+	    }
+	    if (feature.label != null) {
+		out.label = feature.label;
+	    }
+	    out.values = EmscriptenPluginServer.fromBase64(feature.b64values);
+	    return out;
 	};
     }
 

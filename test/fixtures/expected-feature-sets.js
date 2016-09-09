@@ -1,5 +1,5 @@
 module.exports.one = [
-    [{"values": [5]}],
+    [{"values": new Float32Array([5])}],
     [{"timestamp": {"n": 62500000, "s": 0}}, {
         "timestamp": {
             "n": 125000000,
@@ -14,7 +14,7 @@ module.exports.one = [
 ];
 
 module.exports.two = [
-    [{"values": [6]}],
+    [{"values": new Float32Array([6])}],
     [{"timestamp": {"n": 500000000, "s": 0}}, {
         "timestamp": {
             "n": 562500000,
