@@ -4,24 +4,24 @@ import {Feature} from "./Feature";
 /**
  * Created by lucast on 08/09/2016.
  */
-export interface FeatureConverter {
-    convert(feature: Feature): void ;
+export interface FeatureTimeAdjuster {
+    adjust(feature: Feature): void ;
 }
 
-export class VariableSampleRateFeatureConverter implements FeatureConverter {
+export class VariableSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
     constructor(private descriptor: OutputDescriptor) {}
 
-    convert(feature: Feature): void {
+    adjust(feature: Feature): void {
         feature.timestamp = undefined;
     }
 }
 
-export class FixedSampleRateFeatureConverter implements FeatureConverter {
+export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
     private lastTimestamp: Timestamp
 
     constructor(private descriptor: OutputDescriptor) {}
 
-    convert(feature: Feature): void {
+    adjust(feature: Feature): void {
         feature.timestamp = undefined;
     }
 }

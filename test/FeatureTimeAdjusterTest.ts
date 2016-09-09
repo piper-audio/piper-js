@@ -5,7 +5,7 @@ import chai = require('chai');
 import {OutputDescriptor, BasicDescriptor, SampleType} from "../src/PluginServer";
 import {Timestamp} from "../src/Timestamp";
 import {Feature} from "../src/Feature";
-import {FeatureConverter, VariableSampleRateFeatureConverter} from "../src/FeatureConverter";
+import {FeatureTimeAdjuster, VariableSampleRateFeatureTimeAdjuster} from "../src/FeatureTimeAdjuster";
 
 chai.should();
 
@@ -22,18 +22,18 @@ function createOutputDescriptor(hasDuration: boolean, sampleRate: number, sample
     }
 }
 
-describe('VariableSampleRateFeatureConverter', () => {
+describe('VariableSampleRateFeatureTimeAdjuster', () => {
 
     describe('Feature has a duration', () => {
         const descriptor: OutputDescriptor = createOutputDescriptor(true, 0.0, SampleType.VariableSampleRate);
-        const converter: FeatureConverter = new VariableSampleRateFeatureConverter(descriptor);
+        const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
         it('Uses the timestamp as-is when the Feature conforms to the OutputDescriptor', () => {
             const expectedTimestamp: Timestamp = {s: 2, n: 0};
             const feature: Feature = {
                 timestamp: expectedTimestamp,
                 duration: {s: 1, n: 0}
             };
-            converter.convert(feature);
+            adjuster.adjust(feature);
             feature.timestamp.should.equal(expectedTimestamp);
         });
 
@@ -42,7 +42,7 @@ describe('VariableSampleRateFeatureConverter', () => {
             const feature: Feature = {
                 timestamp: {s: 1, n: 0}
             };
-            converter.convert(feature);
+            adjuster.adjust(feature);
             feature.duration.should.equal(expectedDuration);
         });
     });
@@ -50,12 +50,12 @@ describe('VariableSampleRateFeatureConverter', () => {
     describe('Feature has no duration / Minimal duration spec', ()  => {
         it('Assigns 1 / sampleRate as the duration when the OutputDescriptor defines a sample rate', () => {
             const descriptor: OutputDescriptor = createOutputDescriptor(false, 100.0, SampleType.VariableSampleRate);
-            const converter: FeatureConverter = new VariableSampleRateFeatureConverter(descriptor);
+            const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
             const expectedDuration: Timestamp = {s: 0, n: 10000000};
             const feature: Feature = {
                 timestamp: {s: 1, n: 0}
             };
-            converter.convert(feature);
+            adjuster.adjust(feature);
             feature.duration.should.equal(expectedDuration);
         });
 
@@ -69,26 +69,26 @@ describe('VariableSampleRateFeatureConverter', () => {
                 hasDuration: false,
                 sampleType: SampleType.VariableSampleRate,
             };
-            const converter: FeatureConverter = new VariableSampleRateFeatureConverter(descriptor);
+            const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
             const expectedDuration: Timestamp = {s: 0, n: 0};
             const feature: Feature = {
                 timestamp: {s: 1, n: 0}
             };
-            converter.convert(feature);
+            adjuster.adjust(feature);
             feature.duration.should.equal(expectedDuration);
         });
     });
 
     describe('Indicates invalid Features', () => {
         const descriptor: OutputDescriptor = createOutputDescriptor(true, 0.0, SampleType.VariableSampleRate);
-        const converter: FeatureConverter = new VariableSampleRateFeatureConverter(descriptor);
+        const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
         it('Throws when no Timestamp present', () => {
-            chai.expect(() => converter.convert({})).to.throw(Error);
+            chai.expect(() => adjuster.adjust({})).to.throw(Error);
         })
     });
 });
 
-describe('FixedSampleRateFeatureConverter', () => {
+describe('FixedSampleRateFeatureTimeAdjuster', () => {
     describe('Feature has a timestamp', () => {
         it('Rounds the timestamp to the nearest 1 / sampleRate', () => {
 
