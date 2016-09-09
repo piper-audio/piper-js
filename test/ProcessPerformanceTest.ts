@@ -85,7 +85,13 @@ describe('ProcessPerformanceTest', () => {
     it('Process ' + iterations + ' freq-domain blocks with base-64 serialisation', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:spectralcentroid",
-			req => server.processb64(req), done);
+			req => server.processB64(req), done);
+    });
+	
+    it('Process ' + iterations + ' freq-domain blocks with fake serialisation', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:spectralcentroid",
+			req => server.processFake(req), done);
     });
 	
     it('Process ' + iterations + ' time-domain blocks with JSON array serialisation', function (done) {
@@ -97,7 +103,13 @@ describe('ProcessPerformanceTest', () => {
     it('Process ' + iterations + ' time-domain blocks with base-64 serialisation', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing",
-			req => server.processb64(req), done);
+			req => server.processB64(req), done);
+    });
+    
+    it('Process ' + iterations + ' time-domain blocks with fake serialisation', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:zerocrossing",
+			req => server.processFake(req), done);
     });
 	
 });

@@ -146,7 +146,7 @@ export interface PluginServer {
     loadPlugin: LoadFunction,
     configurePlugin: ConfigurationFunction,
     process: ProcessFunction,
-    processb64: ProcessFunction,
+    processB64: ProcessFunction,
     finish: FinishFunction
 }
 
