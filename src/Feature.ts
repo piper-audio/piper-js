@@ -8,5 +8,4 @@ export interface Feature {
     duration?: Timestamp,
     label?: string,
     values?: Float32Array,
-    b64values?: string
 }

@@ -10,10 +10,20 @@ import {
     ProcessRequest,
     Response, Request, AdapterFlags
 } from './PluginServer';
+
+import {Timestamp} from "./Timestamp";
 import {Feature} from "./Feature";
 import VamPipeServer = require('../ext/ExampleModule');
 import {Allocator, EmscriptenModule} from "./Emscripten";
 import base64 = require('base64-js');
+
+interface WireFeature {
+    timestamp?: Timestamp,
+    duration?: Timestamp,
+    label?: string,
+    values?: Float32Array,
+    b64values?: string,
+}
 
 export class EmscriptenPluginServer implements PluginServer {
     private server: EmscriptenModule;
@@ -65,7 +75,7 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     process(request: ProcessRequest): Promise<Feature[][]> {
-	return this.processJson(request);
+	return this.processBase64(request);
     }
 
     processJson(request: ProcessRequest): Promise<Feature[][]> {
@@ -146,7 +156,7 @@ export class EmscriptenPluginServer implements PluginServer {
 	return new Float32Array(base64.toByteArray(b64).buffer);
     }
 
-    private static convertFeatureValues(feature: Feature): Feature {
+    private static convertFeatureValues(feature: WireFeature): Feature {
 
 	// Just converts b64values to values, does nothing else at this point
 	
@@ -164,7 +174,7 @@ export class EmscriptenPluginServer implements PluginServer {
 	};
     }
 
-    private static convertFeatureList(features: Feature[]): Feature[] {
+    private static convertFeatureList(features: WireFeature[]): Feature[] {
 	return features.map(EmscriptenPluginServer.convertFeatureValues);
     }
     
