@@ -69,6 +69,11 @@ describe('ProcessPerformanceTest', () => {
                         processInput : b
                     }));
                 results.then(features => {
+                    let sum = features[0].reduce(
+                        (acc, f) => {
+                            return acc + f.values.reduce((acc, v) => acc + v, 0.0);
+                        }, 0.0);
+                    if (sum === 0) throw("This should not happen");
                     done();
                 }, err => { console.log("failure: " + err); })
 	    })
