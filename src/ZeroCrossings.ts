@@ -2,7 +2,7 @@
  * Created by lucas on 25/08/2016.
  */
 import {FeatureExtractor} from "./FeatureExtractor";
-import {Feature} from "./Feature";
+import {FeatureSet} from "./Feature";
 import {ProcessBlock} from "./PluginServer";
 
 export class ZeroCrossings implements FeatureExtractor {
@@ -12,9 +12,9 @@ export class ZeroCrossings implements FeatureExtractor {
         this.previousSample = 0;
     }
 
-    process(block: ProcessBlock): Feature[][] {
+    process(block: ProcessBlock): FeatureSet {
         let count: number = 0;
-        let returnFeatures: Feature[][] = [];
+        let returnFeatures: FeatureSet = new Map();
 
         const channel = block.inputBuffers[0].values; // ignore stereo channels
         channel.forEach((sample) => {
@@ -23,7 +23,7 @@ export class ZeroCrossings implements FeatureExtractor {
             this.previousSample = sample;
         });
 
-        returnFeatures.push([{values: [count]}]);
+        returnFeatures.set(0, [{values: [count]}]);
         return returnFeatures;
     }
 

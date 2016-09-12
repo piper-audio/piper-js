@@ -5,7 +5,7 @@
 /// <reference path="../typings/modules/chai/index.d.ts" />
 
 import {ZeroCrossings} from "../src/ZeroCrossings";
-import {Feature} from "../src/Feature"
+import {Feature, FeatureSet} from "../src/Feature"
 import chai = require('chai');
 import {Timestamp} from "../src/Timestamp";
 import {ProcessBlock} from "../src/PluginServer";
@@ -23,15 +23,15 @@ describe('ZeroCrossings', () => {
         it('Should return a count of zero for a buffer of zeros', () => {
             let zc = new ZeroCrossings();
             let block = toProcessBlock(new Float32Array(8));
-            let features: Feature[][] = zc.process(block);
-            features.should.deep.equal([[{values: [0]}]]);
+            let features: FeatureSet = zc.process(block);
+            features.get(0).should.deep.equal([{values: [0]}]);
         });
 
         it('Should return a count of 5 for an input which crosses 5 times', () => {
             let zc = new ZeroCrossings();
             let block = toProcessBlock(new Float32Array([0, 1, -1, 0, 1, -1, 0, 1]));
-            let features: Feature[][] = zc.process(block);
-            features.should.deep.equal([[{values: [5]}]]);
+            let features: FeatureSet = zc.process(block);
+            features.get(0).should.deep.equal([{values: [5]}]);
         });
 
         it('Should keep the last sample from the previous block', () => {
@@ -39,8 +39,8 @@ describe('ZeroCrossings', () => {
             let block = toProcessBlock(new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]));
             zc.process(block);
             block.inputBuffers[0].values.fill(0);
-            let features: Feature[][] = zc.process(block);
-            return features.should.deep.equal([[{values: [1]}]]);
+            let features: FeatureSet = zc.process(block);
+            return features.get(0).should.deep.equal([{values: [1]}]);
         });
     })
 });
