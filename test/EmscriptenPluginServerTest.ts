@@ -9,7 +9,7 @@ import {
     Response, StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
     Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType, OutputDescriptor
 } from "../src/PluginServer";
-import {Feature} from "../src/Feature";
+import {Feature, FeatureSet, AggregateFeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
 chai.should();
@@ -67,8 +67,8 @@ describe('EmscriptenPluginServer', () => {
     });
 
     it('Can process a single block', () => {
-        const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
-        const expectedTimestamps = (expectedFeatures.one[1] as Feature[]).map(feature => feature.timestamp);
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: AggregateFeatureSet} = require('./fixtures/expected-feature-sets');
+        const expectedTimestamps = (expectedFeatures.one.get(1) as FeatureList).map(feature => feature.timestamp);
 
         const features: Promise<Feature[][]> = server.process({
             pluginHandle: pluginHandles[0],
@@ -81,7 +81,7 @@ describe('EmscriptenPluginServer', () => {
         return features.then((features: Feature[][]) => {
             const timestamps = features[1].map(feature => feature.timestamp);
             timestamps.should.deep.equal(expectedTimestamps);
-            features[0].should.deep.equal(expectedFeatures.one[0]);
+            features[0].should.deep.equal(expectedFeatures.one.get(0));
         })
     });
 
@@ -92,7 +92,7 @@ describe('EmscriptenPluginServer', () => {
     });
 
     it('Can process multiple blocks of audio, consecutively', () => {
-        const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: AggregateFeatureSet} = require('./fixtures/expected-feature-sets');
         const blocks: ProcessBlock[] = [];
 
         blocks.push({
@@ -106,12 +106,16 @@ describe('EmscriptenPluginServer', () => {
         } as ProcessBlock);
 
 
-        const processBlocks: () => Promise<Feature[][]> = () => {
+        const processBlocks: () => Promise<AggregateFeatureSet> = () => {
             const zcHandle: number = pluginHandles[pluginHandles.length - 1];
             return batchProcess(blocks, (block) => server.process({pluginHandle: zcHandle, processInput: block}));
         };
 
-        const features: Promise<Feature[][]> = loadZeroCrossings().then(config).then(processBlocks);
-        return features.should.eventually.deep.equal(expectedFeatures.one.concat(expectedFeatures.two));
+        const features: Promise<AggregateFeatureSet> = loadZeroCrossings().then(config).then(processBlocks);
+        const getTimestamps = (features: FeatureList[]) => features.map(list => list.map(feature => feature.timestamp));
+        return features.then((aggregateFeatures) => {
+            aggregateFeatures.get(0).should.deep.equal(expectedFeatures.merged.get(0));
+            getTimestamps(aggregateFeatures.get(1)).should.deep.equal(getTimestamps(expectedFeatures.merged.get(1)));
+        });
     });
 });
