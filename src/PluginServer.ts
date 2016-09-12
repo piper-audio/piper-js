@@ -1,5 +1,5 @@
 import {Timestamp} from "./Timestamp";
-import {Feature} from "./Feature";
+import {FeatureSet} from "./Feature";
 /**
  * Created by lucast on 30/08/2016.
  */
@@ -123,7 +123,7 @@ export interface PluginServer {
     listPlugins(): Promise<StaticData[]>,
     loadPlugin(request: LoadRequest): Promise<LoadResponse>,
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>,
-    process(request: ProcessRequest): Promise<Feature[][]>,
-    finish(pluginHandle: number): Promise<Feature[][]>
+    process(request: ProcessRequest): Promise<FeatureSet>,
+    finish(pluginHandle: number): Promise<FeatureSet>
 }
 
