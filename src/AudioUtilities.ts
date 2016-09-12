@@ -1,11 +1,11 @@
-import {Feature, AggregateFeatureSet, FeatureList} from "./Feature";
+import {Feature, AggregateFeatureSet, FeatureList, FeatureSet} from "./Feature";
 import {ProcessBlock} from "./PluginServer";
 /**
  * Created by lucas on 02/09/2016.
  */
 
-export function batchProcess(blocks: ProcessBlock[], process: (block: any) => Promise<Feature[][]>): Promise<AggregateFeatureSet> {
-    const processPromises: (() => Promise<Feature[][]>)[] = blocks.map((block) => () => process(block));
+export function batchProcess(blocks: ProcessBlock[], process: (block: any) => Promise<FeatureSet>): Promise<AggregateFeatureSet> {
+    const processPromises: (() => Promise<FeatureSet>)[] = blocks.map((block) => () => process(block));
     return processPromises.reduce((runningFeatures, nextBlock) => {
         return runningFeatures.then((features) => {
             return concatFeatures(features, nextBlock());
@@ -13,7 +13,7 @@ export function batchProcess(blocks: ProcessBlock[], process: (block: any) => Pr
     }, Promise.resolve(new Map() as AggregateFeatureSet));
 }
 
-function concatFeatures(running: AggregateFeatureSet, nextBlock: Promise<Feature[][]>): Promise<AggregateFeatureSet> {
+function concatFeatures(running: AggregateFeatureSet, nextBlock: Promise<FeatureSet>): Promise<AggregateFeatureSet> {
     return nextBlock.then((block) => {
         for (let [i, feature] of block.entries()) {
             addOrAppend(feature, i, running);

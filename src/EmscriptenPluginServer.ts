@@ -7,9 +7,9 @@ import {
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
-    Response, Request, AdapterFlags, SampleType, OutputDescriptor
+    Response, Request, AdapterFlags, SampleType
 } from './PluginServer';
-import {Feature} from "./Feature";
+import {FeatureSet} from "./Feature";
 import VamPipeServer = require('../ext/ExampleModule');
 import {Allocator, EmscriptenModule} from "./Emscripten";
 import {
@@ -65,33 +65,32 @@ export class EmscriptenPluginServer implements PluginServer {
         });
     }
 
-    process(request: ProcessRequest): Promise<Feature[][]> {
+    process(request: ProcessRequest): Promise<FeatureSet> {
         request.processInput.inputBuffers.forEach((val) => {
             (val as any).values = [...val.values]; // TODO is there a better way to change Float32Array's JSON representation
         });
         return this.request({type: 'process', content: request}).then((response) => {
-            const features: Feature[][] = EmscriptenPluginServer.responseToFeatureSet(response);
+            const features: FeatureSet = EmscriptenPluginServer.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
             return features;
         });
     }
 
-    finish(pluginHandle: number): Promise<Feature[][]> {
+    finish(pluginHandle: number): Promise<FeatureSet> {
         return this.request({type: 'finish', content: {pluginHandle: pluginHandle}}).then((response) => {
-            const features: Feature[][] = EmscriptenPluginServer.responseToFeatureSet(response);
+            const features: FeatureSet = EmscriptenPluginServer.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
             return features;
         });
     }
 
-    private static responseToFeatureSet(response: Response): Feature[][] {
-        return Object.keys(response.content).map(key => response.content[key]); // TODO change this back to use a key, not number
+    private static responseToFeatureSet(response: Response): FeatureSet {
+        const features: FeatureSet = new Map();
+        Object.keys(response.content).forEach(key => features.set(Number.parseInt(key), response.content[key])); // TODO seems awkward and inefficient converting an object to a map
+        return features;
     }
 
-    private adjustFeatureTimes(features: Feature[][]) {
-        // TODO as Chris pointed out, there isn't actually any guarantee that the order
-        // TODO of the returned features aligns with the order of the OutputDescriptors, or there could be gaps
-
+    private adjustFeatureTimes(features: FeatureSet) {
         for (let [i, featureList] of features.entries()) {
             const adjuster: FeatureTimeAdjuster = this.timeAdjusters.get(i);
             featureList.map(feature => adjuster.adjust(feature));

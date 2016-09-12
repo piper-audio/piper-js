@@ -6,10 +6,10 @@ import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 import {EmscriptenPluginServer} from "../src/EmscriptenPluginServer";
 import {
-    Response, StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType, OutputDescriptor
+    StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
+    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType
 } from "../src/PluginServer";
-import {Feature, FeatureSet, AggregateFeatureSet, FeatureList} from "../src/Feature";
+import {FeatureSet, AggregateFeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
 chai.should();
@@ -70,7 +70,7 @@ describe('EmscriptenPluginServer', () => {
         const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: AggregateFeatureSet} = require('./fixtures/expected-feature-sets');
         const expectedTimestamps = (expectedFeatures.one.get(1) as FeatureList).map(feature => feature.timestamp);
 
-        const features: Promise<Feature[][]> = server.process({
+        const features: Promise<FeatureSet> = server.process({
             pluginHandle: pluginHandles[0],
             processInput: {
                 timestamp: {s: 0, n: 0} as Timestamp,
@@ -78,17 +78,16 @@ describe('EmscriptenPluginServer', () => {
             } as ProcessBlock
         } as ProcessRequest);
 
-        return features.then((features: Feature[][]) => {
-            const timestamps = features[1].map(feature => feature.timestamp);
+        return features.then((features: FeatureSet) => {
+            const timestamps = features.get(1).map(feature => feature.timestamp);
             timestamps.should.deep.equal(expectedTimestamps);
-            features[0].should.deep.equal(expectedFeatures.one.get(0));
+            features.get(0).should.deep.equal(expectedFeatures.one.get(0));
         })
     });
 
     it('Can get the remaining features and clean up the plugin', () => {
-        const remainingFeatures: Promise<Feature[][]> = server.finish(pluginHandles[0]);
-        const expectedFeatures: Feature[][] = [];
-        return remainingFeatures.should.eventually.deep.equal(expectedFeatures);
+        const remainingFeatures: Promise<FeatureSet> = server.finish(pluginHandles[0]);
+        return remainingFeatures.then(features => features.size.should.eql(0));
     });
 
     it('Can process multiple blocks of audio, consecutively', () => {
