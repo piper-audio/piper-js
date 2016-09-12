@@ -79,80 +79,111 @@ describe('ProcessPerformanceTest', () => {
 	    })
 	})
     };
-    
+
     it('Process ' + iterations + ' freq-domain blocks with JSON array serialisation', function (done) {
         this.timeout(0); // Suppress the timeout. Only possible when
 			 // using a classic function rather than arrow
 	runProcessTest ("vamp-example-plugins:spectralcentroid",
 			req => server.process(req), done);
     });
-    
+    it('Process ' + iterations + ' freq-domain blocks with JSON array serialisation (run 2)', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:spectralcentroid",
+			req => server.process(req), done);
+    });
+
     it('Process ' + iterations + ' freq-domain blocks with base-64 serialisation', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:spectralcentroid",
 			req => server.processBase64(req), done);
     });
-	
-    it('Process ' + iterations + ' freq-domain blocks with fake serialisation', function (done) {
+    it('Process ' + iterations + ' freq-domain blocks with base-64 serialisation (run 2)', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:spectralcentroid",
-			req => server.processFake(req), done);
+			req => server.processBase64(req), done);
     });
-		
+
     it('Process ' + iterations + ' freq-domain blocks with raw memory transfer', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:spectralcentroid",
 			req => server.processRaw(req), done);
     });
-	
+    it('Process ' + iterations + ' freq-domain blocks with raw memory transfer (run 2)', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:spectralcentroid",
+			req => server.processRaw(req), done);
+    });
+
     it('Process ' + iterations + ' time-domain blocks with JSON array serialisation', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing",
 			req => server.process(req), done);
     });
-    
+
+    it('Process ' + iterations + ' time-domain blocks with JSON array serialisation (run 2)', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:zerocrossing",
+			req => server.process(req), done);
+    });
+
     it('Process ' + iterations + ' time-domain blocks with base-64 serialisation', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing",
 			req => server.processBase64(req), done);
     });
-    
-    it('Process ' + iterations + ' time-domain blocks with fake serialisation', function (done) {
+
+    it('Process ' + iterations + ' time-domain blocks with base-64 serialisation (run 2)', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing",
-			req => server.processFake(req), done);
+			req => server.processBase64(req), done);
     });
-	
+
     it('Process ' + iterations + ' time-domain blocks with raw memory transfer', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing",
 			req => server.processRaw(req), done);
     });
-	
+    it('Process ' + iterations + ' time-domain blocks with raw memory transfer (run 2)', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:zerocrossing",
+			req => server.processRaw(req), done);
+    });
+
     it('Process ' + iterations + ' spectrogram blocks with JSON array serialisation', function (done) {
         this.timeout(0); // Suppress the timeout. Only possible when
 			 // using a classic function rather than arrow
 	runProcessTest ("vamp-example-plugins:powerspectrum",
 			req => server.process(req), done);
     });
-    
+
+    it('Process ' + iterations + ' spectrogram blocks with JSON array serialisation (run 2)', function (done) {
+        this.timeout(0); // Suppress the timeout. Only possible when
+			 // using a classic function rather than arrow
+	runProcessTest ("vamp-example-plugins:powerspectrum",
+			req => server.process(req), done);
+    });
+
     it('Process ' + iterations + ' spectrogram blocks with base-64 serialisation', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:powerspectrum",
 			req => server.processBase64(req), done);
     });
-	
-    it('Process ' + iterations + ' spectrogram blocks with fake serialisation', function (done) {
+    it('Process ' + iterations + ' spectrogram blocks with base-64 serialisation (run 2)', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:powerspectrum",
-			req => server.processFake(req), done);
+			req => server.processBase64(req), done);
     });
-		
+
     it('Process ' + iterations + ' spectrogram blocks with raw memory transfer', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:powerspectrum",
 			req => server.processRaw(req), done);
     });
-	
+    it('Process ' + iterations + ' spectrogram blocks with raw memory transfer (run 2)', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:powerspectrum",
+			req => server.processRaw(req), done);
+    });
+
 });
 
