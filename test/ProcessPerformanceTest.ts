@@ -84,12 +84,12 @@ describe('ProcessPerformanceTest', () => {
         this.timeout(0); // Suppress the timeout. Only possible when
 			 // using a classic function rather than arrow
 	runProcessTest ("vamp-example-plugins:spectralcentroid",
-			req => server.process(req), done);
+			req => server.processJson(req), done);
     });
     it('Process ' + iterations + ' freq-domain blocks with JSON array serialisation (run 2)', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:spectralcentroid",
-			req => server.process(req), done);
+			req => server.processJson(req), done);
     });
 
     it('Process ' + iterations + ' freq-domain blocks with base-64 serialisation', function (done) {
@@ -117,13 +117,13 @@ describe('ProcessPerformanceTest', () => {
     it('Process ' + iterations + ' time-domain blocks with JSON array serialisation', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing",
-			req => server.process(req), done);
+			req => server.processJson(req), done);
     });
 
     it('Process ' + iterations + ' time-domain blocks with JSON array serialisation (run 2)', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing",
-			req => server.process(req), done);
+			req => server.processJson(req), done);
     });
 
     it('Process ' + iterations + ' time-domain blocks with base-64 serialisation', function (done) {
@@ -153,14 +153,14 @@ describe('ProcessPerformanceTest', () => {
         this.timeout(0); // Suppress the timeout. Only possible when
 			 // using a classic function rather than arrow
 	runProcessTest ("vamp-example-plugins:powerspectrum",
-			req => server.process(req), done);
+			req => server.processJson(req), done);
     });
 
     it('Process ' + iterations + ' spectrogram blocks with JSON array serialisation (run 2)', function (done) {
         this.timeout(0); // Suppress the timeout. Only possible when
 			 // using a classic function rather than arrow
 	runProcessTest ("vamp-example-plugins:powerspectrum",
-			req => server.process(req), done);
+			req => server.processJson(req), done);
     });
 
     it('Process ' + iterations + ' spectrogram blocks with base-64 serialisation', function (done) {

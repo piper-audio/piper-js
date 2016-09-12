@@ -39,12 +39,21 @@ export class EmscriptenPluginServer implements PluginServer {
         this.freeJson = this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
     }
 
-    private requestJsonString(requestJson: string): Promise<Response> {
+    private request(request: Request): Promise<Response> {
         return new Promise<Response>((resolve) => {
-            const requestJsonPtr: number = this.server.allocate(this.server.intArrayFromString(requestJson), 'i8', Allocator.ALLOC_NORMAL);
+
+	    const requestJson: string = JSON.stringify(request);
+            const requestJsonPtr: number = this.server.allocate(
+		this.server.intArrayFromString(requestJson), 'i8',
+		Allocator.ALLOC_NORMAL);
+
             const responseJsonPtr: number = this.doRequest(requestJsonPtr);
+
             this.server._free(requestJsonPtr);
-            var response: Response = JSON.parse(this.server.Pointer_stringify(responseJsonPtr));
+
+            var response: Response = JSON.parse(
+		this.server.Pointer_stringify(responseJsonPtr));
+
             this.freeJson(responseJsonPtr);
             
             if (!response.success) {
@@ -53,10 +62,6 @@ export class EmscriptenPluginServer implements PluginServer {
                 resolve(response);
             }
         });
-    }
-
-    private request(request: Request): Promise<Response> {
-        return this.requestJsonString(JSON.stringify(request));
     }
 
     listPlugins(): Promise<StaticData[]> {
@@ -79,7 +84,7 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     process(request: ProcessRequest): Promise<Feature[][]> {
-        return this.processJson(request);
+        return this.processRaw(request);
     }
 
     processJson(request: ProcessRequest): Promise<Feature[][]> {
@@ -90,8 +95,36 @@ export class EmscriptenPluginServer implements PluginServer {
             return EmscriptenPluginServer.responseToFeatureSet(response);
         });
     }
+    
+    processBase64(request: ProcessRequest): Promise<Feature[][]> {
+        const encoded = request.processInput.inputBuffers.map(channel => {
+            return { b64values: EmscriptenPluginServer.toBase64(channel.values) }
+        });
+        const encReq = {
+            pluginHandle: request.pluginHandle,
+            processInput: {
+                timestamp: request.processInput.timestamp,
+                inputBuffers: encoded
+            }
+        };
+        return this.request({type: 'process', content: encReq }).then((response) => {
+            return EmscriptenPluginServer.responseToFeatureSet(response);
+        });
+    }
+    
+    processRaw(request: ProcessRequest): Promise<Feature[][]> {
+        return this.makeRawProcessCall(request).then((response) => {
+            return EmscriptenPluginServer.responseToFeatureSet(response);
+        });
+    }
 
-    private makeProcessCall(request: ProcessRequest): Promise<Response> {
+    finish(pluginHandle: number): Promise<Feature[][]> {
+        return this.request({type: 'finish', content: {pluginHandle: pluginHandle}}).then((response) => {
+            return EmscriptenPluginServer.responseToFeatureSet(response);
+        });
+    }
+
+    private makeRawProcessCall(request: ProcessRequest): Promise<Response> {
         return new Promise<Response>((resolve) => {
 
             const nchannels = request.processInput.inputBuffers.length;
@@ -129,12 +162,6 @@ export class EmscriptenPluginServer implements PluginServer {
             } else {
                 resolve(response);
             }
-        });
-    }
-    
-    processRaw(request: ProcessRequest): Promise<Feature[][]> {
-        return this.makeProcessCall(request).then((response) => {
-            return EmscriptenPluginServer.responseToFeatureSet(response);
         });
     }
         
@@ -181,30 +208,6 @@ export class EmscriptenPluginServer implements PluginServer {
 
     private static convertWireFeatureList(wfeatures: WireFeature[]): Feature[] {
         return wfeatures.map(EmscriptenPluginServer.convertWireFeature);
-    }
-    
-    processBase64(request: ProcessRequest): Promise<Feature[][]> {
-        let requestJson : string =
-            '{"type":"process","content":{"pluginHandle":' + request.pluginHandle +
-            ',"processInput":{"inputBuffers":[';
-        requestJson += 
-            request.processInput.inputBuffers.map(channel => {
-                return '{"b64values":"' +
-                    EmscriptenPluginServer.toBase64(channel.values) +
-                    '"}';
-            }).join();
-        requestJson += '],"timestamp":{"s":' +
-            request.processInput.timestamp.s +
-            ',"n":' + request.processInput.timestamp.n + '}}}}';
-        return this.requestJsonString(requestJson).then((response) => {
-            return EmscriptenPluginServer.responseToFeatureSet(response);
-        });
-    }
-
-    finish(pluginHandle: number): Promise<Feature[][]> {
-        return this.request({type: 'finish', content: {pluginHandle: pluginHandle}}).then((response) => {
-            return EmscriptenPluginServer.responseToFeatureSet(response);
-        });
     }
     
     private static responseToFeatureSet(response: Response): Feature[][] {
