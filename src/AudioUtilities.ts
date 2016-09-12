@@ -1,29 +1,29 @@
-import {Feature, AggregateFeatureSet, FeatureList, FeatureSet} from "./Feature";
+import {FeatureList, FeatureSet} from "./Feature";
 import {ProcessBlock} from "./PluginServer";
 /**
  * Created by lucas on 02/09/2016.
  */
 
-export function batchProcess(blocks: ProcessBlock[], process: (block: any) => Promise<FeatureSet>): Promise<AggregateFeatureSet> {
+export function batchProcess(blocks: ProcessBlock[], process: (block: any) => Promise<FeatureSet>): Promise<FeatureSet> {
     const processPromises: (() => Promise<FeatureSet>)[] = blocks.map((block) => () => process(block));
     return processPromises.reduce((runningFeatures, nextBlock) => {
         return runningFeatures.then((features) => {
             return concatFeatures(features, nextBlock());
         });
-    }, Promise.resolve(new Map() as AggregateFeatureSet));
+    }, Promise.resolve(new Map() as FeatureSet));
 }
 
-function concatFeatures(running: AggregateFeatureSet, nextBlock: Promise<FeatureSet>): Promise<AggregateFeatureSet> {
+function concatFeatures(running: FeatureSet, nextBlock: Promise<FeatureSet>): Promise<FeatureSet> {
     return nextBlock.then((block) => {
         for (let [i, feature] of block.entries()) {
-            addOrAppend(feature, i, running);
+            createOrConcat(feature, i, running);
         }
         return running;
     });
 }
 
-function addOrAppend(data: FeatureList, key: number, map: AggregateFeatureSet) {
-    map.has(key) ? map.get(key).push(data) : map.set(key, [data]);
+function createOrConcat(data: FeatureList, key: number, map: FeatureSet) {
+    map.has(key) ? map.set(key, map.get(key).concat(data)) : map.set(key, data);
 }
 
 export function* segmentAudio(blockSize: number, stepSize: number, audioData: Float32Array): IterableIterator<Float32Array> {

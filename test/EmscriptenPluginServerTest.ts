@@ -9,7 +9,7 @@ import {
     StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
     Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType
 } from "../src/PluginServer";
-import {FeatureSet, AggregateFeatureSet, FeatureList} from "../src/Feature";
+import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
 chai.should();
@@ -67,7 +67,7 @@ describe('EmscriptenPluginServer', () => {
     });
 
     it('Can process a single block', () => {
-        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: AggregateFeatureSet} = require('./fixtures/expected-feature-sets');
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require('./fixtures/expected-feature-sets');
         const expectedTimestamps = (expectedFeatures.one.get(1) as FeatureList).map(feature => feature.timestamp);
 
         const features: Promise<FeatureSet> = server.process({
@@ -91,7 +91,7 @@ describe('EmscriptenPluginServer', () => {
     });
 
     it('Can process multiple blocks of audio, consecutively', () => {
-        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: AggregateFeatureSet} = require('./fixtures/expected-feature-sets');
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require('./fixtures/expected-feature-sets');
         const blocks: ProcessBlock[] = [];
 
         blocks.push({
@@ -105,16 +105,16 @@ describe('EmscriptenPluginServer', () => {
         } as ProcessBlock);
 
 
-        const processBlocks: () => Promise<AggregateFeatureSet> = () => {
+        const processBlocks: () => Promise<FeatureSet> = () => {
             const zcHandle: number = pluginHandles[pluginHandles.length - 1];
             return batchProcess(blocks, (block) => server.process({pluginHandle: zcHandle, processInput: block}));
         };
 
-        const features: Promise<AggregateFeatureSet> = loadZeroCrossings().then(config).then(processBlocks);
-        const getTimestamps = (features: FeatureList[]) => features.map(list => list.map(feature => feature.timestamp));
-        return features.then((aggregateFeatures) => {
-            aggregateFeatures.get(0).should.deep.equal(expectedFeatures.merged.get(0));
-            getTimestamps(aggregateFeatures.get(1)).should.deep.equal(getTimestamps(expectedFeatures.merged.get(1)));
+        const features: Promise<FeatureSet> = loadZeroCrossings().then(config).then(processBlocks);
+        const getTimestamps = (features: FeatureList) => features.map(feature => feature.timestamp);
+        return features.then((features) => {
+            features.get(0).should.deep.equal(expectedFeatures.merged.get(0));
+            getTimestamps(features.get(1)).should.deep.equal(getTimestamps(expectedFeatures.merged.get(1)));
         });
     });
 });

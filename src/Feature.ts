@@ -13,4 +13,3 @@ export interface Feature {
 
 export type FeatureList = Feature[];
 export type FeatureSet = Map<number, FeatureList>
-export type AggregateFeatureSet = Map<number, FeatureList[]>
