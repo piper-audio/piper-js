@@ -6,10 +6,10 @@ import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 import {EmscriptenPluginServer} from "../src/EmscriptenPluginServer";
 import {
-    Response, StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock
+    StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
+    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType
 } from "../src/PluginServer";
-import {Feature} from "../src/Feature";
+import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
 chai.should();
@@ -56,7 +56,8 @@ describe('EmscriptenPluginServer', () => {
     const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
 
     it('Can configure a loaded plugin', () => {
-        const expectedResponse = require('./fixtures/expected-configuration-response.json');
+        let expectedResponse = require('./fixtures/expected-configuration-response.json');
+        expectedResponse.outputList.forEach((output: any) => output.sampleType = SampleType[output.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });
 
@@ -66,25 +67,31 @@ describe('EmscriptenPluginServer', () => {
     });
 
     it('Can process a single block', () => {
-        const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
-        const features: Promise<Feature[][]> = server.process({
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require('./fixtures/expected-feature-sets');
+        const expectedTimestamps = (expectedFeatures.one.get(1) as FeatureList).map(feature => feature.timestamp);
+
+        const features: Promise<FeatureSet> = server.process({
             pluginHandle: pluginHandles[0],
             processInput: {
                 timestamp: {s: 0, n: 0} as Timestamp,
                 inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
             } as ProcessBlock
         } as ProcessRequest);
-        return features.should.eventually.deep.equal(expectedFeatures.one);
+
+        return features.then((features: FeatureSet) => {
+            const timestamps = features.get(1).map(feature => feature.timestamp);
+            timestamps.should.deep.equal(expectedTimestamps);
+            features.get(0).should.deep.equal(expectedFeatures.one.get(0));
+        })
     });
 
     it('Can get the remaining features and clean up the plugin', () => {
-        const remainingFeatures: Promise<Feature[][]> = server.finish(pluginHandles[0]);
-        const expectedFeatures: Feature[][] = [];
-        return remainingFeatures.should.eventually.deep.equal(expectedFeatures);
+        const remainingFeatures: Promise<FeatureSet> = server.finish(pluginHandles[0]);
+        return remainingFeatures.then(features => features.size.should.eql(0));
     });
 
     it('Can process multiple blocks of audio, consecutively', () => {
-        const expectedFeatures: {one: any, two: any} = require('./fixtures/expected-feature-sets');
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require('./fixtures/expected-feature-sets');
         const blocks: ProcessBlock[] = [];
 
         blocks.push({
@@ -98,12 +105,16 @@ describe('EmscriptenPluginServer', () => {
         } as ProcessBlock);
 
 
-        const processBlocks: () => Promise<Feature[][]> = () => {
+        const processBlocks: () => Promise<FeatureSet> = () => {
             const zcHandle: number = pluginHandles[pluginHandles.length - 1];
             return batchProcess(blocks, (block) => server.process({pluginHandle: zcHandle, processInput: block}));
         };
 
-        const features: Promise<Feature[][]> = loadZeroCrossings().then(config).then(processBlocks);
-        return features.should.eventually.deep.equal(expectedFeatures.one.concat(expectedFeatures.two));
+        const features: Promise<FeatureSet> = loadZeroCrossings().then(config).then(processBlocks);
+        const getTimestamps = (features: FeatureList) => features.map(feature => feature.timestamp);
+        return features.then((features) => {
+            features.get(0).should.deep.equal(expectedFeatures.merged.get(0));
+            getTimestamps(features.get(1)).should.deep.equal(getTimestamps(expectedFeatures.merged.get(1)));
+        });
     });
 });

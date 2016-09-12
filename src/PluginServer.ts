@@ -1,5 +1,5 @@
 import {Timestamp} from "./Timestamp";
-import {Feature} from "./Feature";
+import {FeatureSet} from "./Feature";
 /**
  * Created by lucast on 30/08/2016.
  */
@@ -134,11 +134,11 @@ export interface ConfigurationFunction {
 }
 
 export interface ProcessFunction {
-    (request: ProcessRequest): Promise<Feature[][]>
+    (request: ProcessRequest): Promise<FeatureSet>
 }
 
 export interface FinishFunction {
-    (pluginHandle: PluginHandle): Promise<Feature[][]>
+    (pluginHandle: PluginHandle): Promise<FeatureSet>
 }
 
 export interface PluginServer {

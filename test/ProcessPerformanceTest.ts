@@ -69,7 +69,7 @@ describe('ProcessPerformanceTest', () => {
                         processInput : b
                     }));
                 results.then(features => {
-                    let sum = features[0].reduce(
+                    let sum = features.get(0).reduce(
                         (acc, f) => {
                             return acc + f.values.reduce((acc, v) => acc + v, 0.0);
                         }, 0.0);

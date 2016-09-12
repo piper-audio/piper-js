@@ -1,33 +1,32 @@
-import {Feature} from "./Feature";
+/* -*- c-basic-offset: 4 indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
+
+import {FeatureList, FeatureSet} from "./Feature";
 import {ProcessBlock} from "./PluginServer";
 
 /**
  * Created by lucas on 02/09/2016.
  */
 
-export function batchProcess(blocks: ProcessBlock[],
-			     process: (block: ProcessBlock) => Promise<Feature[][]>)
-: Promise<Feature[][]> {
-
-    const processPromises: (() => Promise<Feature[][]>)[] =
-	blocks.map((block) => () => process(block));
-    
-    return processPromises.reduce(
-	(runningFeatures, nextBlock) => {
-            return runningFeatures.then((features) => {
-		return concatFeatures(features, nextBlock());
-            });
-	},
-	Promise.resolve([]));
+export function batchProcess(blocks: ProcessBlock[], process: (block: ProcessBlock) => Promise<FeatureSet>): Promise<FeatureSet> {
+    const processPromises: (() => Promise<FeatureSet>)[] = blocks.map((block) => () => process(block));
+    return processPromises.reduce((runningFeatures, nextBlock) => {
+        return runningFeatures.then((features) => {
+            return concatFeatures(features, nextBlock());
+        });
+    }, Promise.resolve(new Map() as FeatureSet));
 }
 
-function concatFeatures(running: Feature[][],
-			nextBlock: Promise<Feature[][]>)
-: Promise<Feature[][]> {
-
+function concatFeatures(running: FeatureSet, nextBlock: Promise<FeatureSet>): Promise<FeatureSet> {
     return nextBlock.then((block) => {
-        return running.concat(block);
+        for (const [i, feature] of block.entries()) {
+            createOrConcat(feature, i, running);
+        }
+        return running;
     });
+}
+
+function createOrConcat(data: FeatureList, key: number, map: FeatureSet) {
+    map.has(key) ? map.set(key, map.get(key).concat(data)) : map.set(key, data);
 }
 
 export function* segmentAudio(blockSize: number, stepSize: number, audioData: Float32Array): IterableIterator<Float32Array> {

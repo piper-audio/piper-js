@@ -9,14 +9,18 @@ import {
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
-    Response, Request, AdapterFlags
+    Response, Request, AdapterFlags, SampleType
 } from './PluginServer';
 
 import {Timestamp} from "./Timestamp";
-import {Feature} from "./Feature";
+import {Feature, FeatureSet} from "./Feature";
 import VamPipeServer = require('../ext/ExampleModule');
 import {Allocator, EmscriptenModule} from "./Emscripten";
 import base64 = require('base64-js');
+
+import {
+    FeatureTimeAdjuster, createFeatureTimeAdjuster
+} from "./FeatureTimeAdjuster";
 
 interface WireFeature {
     timestamp?: Timestamp,
@@ -31,16 +35,19 @@ export class EmscriptenPluginServer implements PluginServer {
     private doRequest: (ptr: number) => number;
     private doProcess: (handle: number, bufs: number, sec: number, nsec: number) => number;
     private freeJson: (ptr: number) => void;
+    private timeAdjusters: Map<number, FeatureTimeAdjuster>;
 
     constructor() {
         this.server = VamPipeServer();
         this.doRequest = this.server.cwrap('vampipeRequestJson', 'number', ['number']) as (ptr: number) => number;
         this.doProcess = this.server.cwrap('vampipeProcessRaw', 'number', ['number','number','number','number']) as (handle: number, bufs: number, sec: number, nsec: number) => number;
         this.freeJson = this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
+        this.timeAdjusters = new Map();
     }
 
     private request(request: Request): Promise<Response> {
-        return new Promise<Response>((resolve) => {
+
+        return new Promise<Response>((resolve, reject) => {
 
 	    const requestJson: string = JSON.stringify(request);
             const requestJsonPtr: number = this.server.allocate(
@@ -55,12 +62,10 @@ export class EmscriptenPluginServer implements PluginServer {
 		this.server.Pointer_stringify(responseJsonPtr));
 
             this.freeJson(responseJsonPtr);
-            
-            if (!response.success) {
-                throw new Error(response.errorText);
-            } else {
-                resolve(response);
-            }
+
+            if (!response.success) reject(response.errorText);
+            //!!! should this be "*else* resolve(response)" or do we do this always?
+            resolve(response);
         });
     }
 
@@ -79,24 +84,30 @@ export class EmscriptenPluginServer implements PluginServer {
 
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
         return this.request({type: 'configure', content: request}).then((response) => {
+            for (let [i, output] of response.content.outputList.entries()) {
+                (output as any).sampleType = SampleType[output.sampleType];
+                this.timeAdjusters.set(i, createFeatureTimeAdjuster(output));
+            }
             return response.content as ConfigurationResponse;
         });
     }
 
-    process(request: ProcessRequest): Promise<Feature[][]> {
+    process(request: ProcessRequest): Promise<FeatureSet> {
         return this.processRaw(request);
     }
 
-    processJson(request: ProcessRequest): Promise<Feature[][]> {
+    processJson(request: ProcessRequest): Promise<FeatureSet> {
         request.processInput.inputBuffers.forEach((val) => {
             (val as any).values = [...val.values]; // TODO is there a better way to change Float32Array's JSON representation
         });
         return this.request({type: 'process', content: request}).then((response) => {
-            return EmscriptenPluginServer.responseToFeatureSet(response);
+            let features: FeatureSet = EmscriptenPluginServer.responseToFeatureSet(response);
+            this.adjustFeatureTimes(features);
+            return features;
         });
     }
     
-    processBase64(request: ProcessRequest): Promise<Feature[][]> {
+    processBase64(request: ProcessRequest): Promise<FeatureSet> {
         const encoded = request.processInput.inputBuffers.map(channel => {
             return { b64values: EmscriptenPluginServer.toBase64(channel.values) }
         });
@@ -108,19 +119,25 @@ export class EmscriptenPluginServer implements PluginServer {
             }
         };
         return this.request({type: 'process', content: encReq }).then((response) => {
-            return EmscriptenPluginServer.responseToFeatureSet(response);
+            let features: FeatureSet = EmscriptenPluginServer.responseToFeatureSet(response);
+            this.adjustFeatureTimes(features);
+            return features;
         });
     }
     
-    processRaw(request: ProcessRequest): Promise<Feature[][]> {
+    processRaw(request: ProcessRequest): Promise<FeatureSet> {
         return this.makeRawProcessCall(request).then((response) => {
-            return EmscriptenPluginServer.responseToFeatureSet(response);
+            let features: FeatureSet = EmscriptenPluginServer.responseToFeatureSet(response);
+            this.adjustFeatureTimes(features);
+            return features;
         });
     }
 
-    finish(pluginHandle: number): Promise<Feature[][]> {
+    finish(pluginHandle: number): Promise<FeatureSet> {
         return this.request({type: 'finish', content: {pluginHandle: pluginHandle}}).then((response) => {
-            return EmscriptenPluginServer.responseToFeatureSet(response);
+            const features: FeatureSet = EmscriptenPluginServer.responseToFeatureSet(response);
+            this.adjustFeatureTimes(features);
+            return features;
         });
     }
 
@@ -210,12 +227,21 @@ export class EmscriptenPluginServer implements PluginServer {
         return wfeatures.map(EmscriptenPluginServer.convertWireFeature);
     }
     
-    private static responseToFeatureSet(response: Response): Feature[][] {
-        //!!! not right, this will fail if the feature set has any "holes"
-        // e.g. { "0": [{"values": []}], "2": [{"values": []}]}
-        return Object.keys(response.content).map(
-            key => EmscriptenPluginServer.convertWireFeatureList(
-                response.content[key]));
+    private static responseToFeatureSet(response: Response): FeatureSet {
+        const features: FeatureSet = new Map();
+        Object.keys(response.content).forEach(
+            key => features.set(Number.parseInt(key),
+                                EmscriptenPluginServer.convertWireFeatureList(
+                                    response.content[key])));
+        // TODO seems awkward and inefficient converting an object to a map
+        return features;
+    }
+
+    private adjustFeatureTimes(features: FeatureSet) {
+        for (let [i, featureList] of features.entries()) {
+            const adjuster: FeatureTimeAdjuster = this.timeAdjusters.get(i);
+            featureList.map(feature => adjuster.adjust(feature));
+        }
     }
 }
 
