@@ -5,7 +5,7 @@ import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 chai.should();
 chai.use(chaiAsPromised);
-import {Feature} from '../src/Feature';
+import {Feature, AggregateFeatureSet, FeatureList} from '../src/Feature';
 import {ZeroCrossings} from "../src/ZeroCrossings";
 import {ProcessBlock} from '../src/PluginServer';
 import {batchProcess, lfo, segmentAudio} from '../src/AudioUtilities'
@@ -13,7 +13,7 @@ import {FeatureExtractor} from "../src/FeatureExtractor";
 
 describe('BatchBlockProcess', () => {
     it('should aggregate features extracted from multiple blocks', () => {
-        const expectedFeatures: Feature[][] = [];
+        const expectedFeatures: FeatureList[] = [];
         expectedFeatures.push([{values: [5]} as Feature]);
         expectedFeatures.push([{values: [6]} as Feature]);
 
@@ -30,12 +30,14 @@ describe('BatchBlockProcess', () => {
         });
 
         const zc: FeatureExtractor = new ZeroCrossings();
-        const features: Promise<Feature[][]> = batchProcess(blocks, (block) => Promise.resolve(zc.process(block)));
-        return features.should.eventually.deep.equal(expectedFeatures);
+        const features: Promise<AggregateFeatureSet> = batchProcess(blocks, (block) => Promise.resolve(zc.process(block)));
+        return features.then((aggregate) => {
+            aggregate.get(0).should.deep.equal(expectedFeatures)
+        });
     });
 
     it('processes the blocks sequentially', () => {
-        const expectedFeatures: Feature[][] = [];
+        const expectedFeatures: FeatureList[] = [];
         expectedFeatures.push([{values: [1]} as Feature]);
         expectedFeatures.push([{values: [1]} as Feature]);
 
@@ -53,12 +55,14 @@ describe('BatchBlockProcess', () => {
 
         const zc: FeatureExtractor = new ZeroCrossings();
         const times = [100, 1000]; // pop the times out, so the first call takes longer than the second
-        const features: Promise<Feature[][]> = batchProcess(blocks, (block) => {
+        const features: Promise<AggregateFeatureSet> = batchProcess(blocks, (block) => {
             return new Promise((resolve) => {
                 setTimeout(() => { resolve(zc.process(block)) }, times.pop());
             });
         });
-        return features.should.eventually.deep.equal(expectedFeatures);
+        return features.then((aggregate) => {
+            aggregate.get(0).should.deep.equal(expectedFeatures);
+        });
     });
 });
 

@@ -10,3 +10,7 @@ export interface Feature {
     values?: number[]
     b64values?: string
 }
+
+export type FeatureList = Feature[];
+export type FeatureSet = Map<number, FeatureList>
+export type AggregateFeatureSet = Map<number, FeatureList[]>
