@@ -4,7 +4,7 @@ import {ProcessBlock} from "./PluginServer";
  * Created by lucas on 02/09/2016.
  */
 
-export function batchProcess(blocks: ProcessBlock[], process: (block: any) => Promise<FeatureSet>): Promise<FeatureSet> {
+export function batchProcess(blocks: ProcessBlock[], process: (block: ProcessBlock) => Promise<FeatureSet>): Promise<FeatureSet> {
     const processPromises: (() => Promise<FeatureSet>)[] = blocks.map((block) => () => process(block));
     return processPromises.reduce((runningFeatures, nextBlock) => {
         return runningFeatures.then((features) => {
