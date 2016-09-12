@@ -15,7 +15,7 @@ export function batchProcess(blocks: ProcessBlock[], process: (block: any) => Pr
 
 function concatFeatures(running: FeatureSet, nextBlock: Promise<FeatureSet>): Promise<FeatureSet> {
     return nextBlock.then((block) => {
-        for (let [i, feature] of block.entries()) {
+        for (const [i, feature] of block.entries()) {
             createOrConcat(feature, i, running);
         }
         return running;
