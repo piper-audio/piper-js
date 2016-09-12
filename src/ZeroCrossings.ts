@@ -23,7 +23,7 @@ export class ZeroCrossings implements FeatureExtractor {
             this.previousSample = sample;
         });
 
-        returnFeatures.set(0, [{values: [count]}]);
+        returnFeatures.set(0, [{values: new Float32Array([count])}]);
         return returnFeatures;
     }
 

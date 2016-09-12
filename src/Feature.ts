@@ -7,8 +7,7 @@ export interface Feature {
     timestamp?: Timestamp,
     duration?: Timestamp,
     label?: string,
-    values?: number[]
-    b64values?: string
+    values?: Float32Array
 }
 
 export type FeatureList = Feature[];

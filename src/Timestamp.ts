@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 4 indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 /**
  * Created by lucas on 26/08/2016.
  */
@@ -28,3 +29,4 @@ export function toSeconds(timestamp: Timestamp): number
 {
     return timestamp.s + (timestamp.n) / 1000000000.0;
 }
+
