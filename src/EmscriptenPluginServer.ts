@@ -63,9 +63,11 @@ export class EmscriptenPluginServer implements PluginServer {
 
             this.freeJson(responseJsonPtr);
 
-            if (!response.success) reject(response.errorText);
-            //!!! should this be "*else* resolve(response)" or do we do this always?
-            resolve(response);
+            if (!response.success) {
+                reject(response.errorText);
+            } else {
+                resolve(response);
+            }
         });
     }
 
@@ -142,7 +144,7 @@ export class EmscriptenPluginServer implements PluginServer {
     }
 
     private makeRawProcessCall(request: ProcessRequest): Promise<Response> {
-        return new Promise<Response>((resolve) => {
+        return new Promise<Response>((resolve, reject) => {
 
             const nchannels = request.processInput.inputBuffers.length;
             const nframes = request.processInput.inputBuffers[0].values.length;
@@ -175,7 +177,7 @@ export class EmscriptenPluginServer implements PluginServer {
             this.freeJson(responseJsonPtr);
 
             if (!response.success) {
-                throw new Error(response.errorText);
+                reject(response.errorText);
             } else {
                 resolve(response);
             }
