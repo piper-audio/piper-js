@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
-    "postinstall": "typings install"
+    "postinstall": "typings install",
+    "build": "browserify -p tsify src/feats.ts -t babelify --standalone feats -o ./dist/bundle.js"
   },
   "repository": {
     "type": "git",
