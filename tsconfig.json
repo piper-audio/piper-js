@@ -2,9 +2,13 @@
   "compilerOptions": {
     "target": "es6",
     "sourceMap": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "outDir": "dist/ts"
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "ext",
+    "test"
   ]
 }
