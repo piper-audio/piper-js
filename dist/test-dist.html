@@ -7,11 +7,11 @@
 <body>
 <ul id="plugins"></ul>
 </body>
-<script src="../ext/ExampleModule.js"></script>
+<script src="../ext/VampExamplePlugins.js"></script>
 <script src="bundle.js"></script>
 <script>
     var pluginList = document.getElementById('plugins');
-    var server = new feats.EmscriptenPluginServer(ExampleModule());
+    var server = new feats.EmscriptenPluginServer(VampExamplePluginsModule());
     server.listPlugins().then(function (plugins) {
         plugins.forEach(function (plugin) {
             var pluginName = document.createElement('li');
