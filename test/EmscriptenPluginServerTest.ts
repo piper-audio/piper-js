@@ -12,12 +12,12 @@ import {
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
-import VampipeServer = require('../ext/ExampleModule');
+import VampExamplePlugins = require('../ext/VampExamplePlugins');
 chai.should();
 chai.use(chaiAsPromised);
 
 describe('EmscriptenPluginServer', () => {
-    const server = new EmscriptenPluginServer(VampipeServer());
+    const server = new EmscriptenPluginServer(VampExamplePlugins());
 
     it('Can list available plugins in the module', () => {
         const expectedList: StaticData[] = require('./fixtures/expected-plugin-list.json') as StaticData[];
