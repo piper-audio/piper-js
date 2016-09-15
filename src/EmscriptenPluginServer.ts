@@ -15,7 +15,7 @@ import {
 import {Timestamp} from "./Timestamp";
 import {Feature, FeatureSet} from "./Feature";
 import {Allocator, EmscriptenModule} from "./Emscripten";
-import base64 = require('base64-js');
+import * as base64 from 'base64-js';
 
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
