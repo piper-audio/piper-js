@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<ul id="plugins"></ul>
+</body>
+<script src="../ext/ExampleModule.js"></script>
+<script src="bundle.js"></script>
+<script>
+    var pluginList = document.getElementById('plugins');
+    var server = new feats.EmscriptenPluginServer(ExampleModule());
+    server.listPlugins().then(function (plugins) {
+        plugins.forEach(function (plugin) {
+            var pluginName = document.createElement('li');
+            pluginName.textContent = plugin.basic.name;
+            pluginList.appendChild(pluginName);
+        });
+    })
+</script>
+</html>

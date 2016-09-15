@@ -27,4 +27,4 @@ var qb=[dA,Us,Zs,Ut,Vt,cu,du,wq,Xq,dA,dA,dA,dA,dA,dA,dA];var rb=[eA,ku,qu,eA];va
 
   return Module;
 };
-module.exports=ExampleModule;
+if (typeof process === 'object') module.exports=ExampleModule;

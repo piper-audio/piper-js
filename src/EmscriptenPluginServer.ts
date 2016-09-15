@@ -14,9 +14,8 @@ import {
 
 import {Timestamp} from "./Timestamp";
 import {Feature, FeatureSet} from "./Feature";
-import VamPipeServer = require('../ext/ExampleModule');
 import {Allocator, EmscriptenModule} from "./Emscripten";
-import base64 = require('base64-js');
+import * as base64 from 'base64-js';
 
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
@@ -37,8 +36,8 @@ export class EmscriptenPluginServer implements PluginServer {
     private freeJson: (ptr: number) => void;
     private timeAdjusters: Map<number, FeatureTimeAdjuster>;
 
-    constructor() {
-        this.server = VamPipeServer();
+    constructor(pluginModule: EmscriptenModule) {
+        this.server = pluginModule;
         this.doRequest = this.server.cwrap('vampipeRequestJson', 'number', ['number']) as (ptr: number) => number;
         this.doProcess = this.server.cwrap('vampipeProcessRaw', 'number', ['number', 'number', 'number', 'number']) as (handle: number, bufs: number, sec: number, nsec: number) => number;
         this.freeJson = this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
