@@ -3,3 +3,5 @@
  */
 
 export {EmscriptenPluginServer} from './EmscriptenPluginServer';
+export {AdapterFlags} from './PluginServer';
+export {batchProcess} from './AudioUtilities';

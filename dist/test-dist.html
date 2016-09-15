@@ -5,18 +5,72 @@
     <title>Title</title>
 </head>
 <body>
-<ul id="plugins"></ul>
+<select id="plugins">
+    <option></option>
+</select>
+<button>Extract</button>
 </body>
 <script src="../ext/VampExamplePlugins.js"></script>
 <script src="bundle.js"></script>
 <script>
-    var pluginList = document.getElementById('plugins');
+    function extractFeatures(pluginServer, pluginKey, blocks) {
+        var loadPlugin = function (pluginKey) {
+            return pluginServer.loadPlugin({
+                pluginKey: pluginKey,
+                inputSampleRate: 16,
+                adapterFlags: [feats.AdapterFlags.AdaptAllSafe]
+            });
+        };
+
+        var configure = function (response) {
+            return pluginServer.configurePlugin({
+                pluginHandle: response.pluginHandle,
+                configuration: {
+                    blockSize: 8,
+                    channelCount: 1,
+                    stepSize: 8
+                }
+            });
+        };
+
+        var processBlocks = function () {
+            return feats.batchProcess(blocks, function (block) {
+                return pluginServer.process({pluginHandle: pluginKey, processInput: block})
+            });
+        };
+
+        return loadPlugin(pluginKey)
+                .then(configure)
+                .then(processBlocks)
+                .then(function (features) {
+                    console.log(features);
+                })
+                .catch(function (err) {
+                    console.log(err);
+                });
+    }
+
+    var pluginSelect = document.getElementById('plugins');
     var server = new feats.EmscriptenPluginServer(VampExamplePluginsModule());
+    var blocks = [];
+
+    blocks.push({
+        timestamp: {s: 0, n: 0},
+        inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+    });
+
+    for (var i = 0; i < 10000; ++i)
+        blocks.push({
+            timestamp: {s: 0, n: 500000000},
+            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+        });
+
     server.listPlugins().then(function (plugins) {
         plugins.forEach(function (plugin) {
-            var pluginName = document.createElement('li');
-            pluginName.textContent = plugin.basic.name;
-            pluginList.appendChild(pluginName);
+            var option = document.createElement('option');
+            option.value = plugin.pluginKey;
+            option.textContent = plugin.basic.name;
+            pluginSelect.appendChild(option);
         });
     })
 </script>
