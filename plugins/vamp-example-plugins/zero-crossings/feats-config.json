@@ -1,53 +1,32 @@
 {
-  "basic": {
-    "name": "Zero Crossings",
-    "description": "Detect and count zero crossing points",
-    "identifier": "zerocrossing"
-  },
-  "category": [],
-  "pluginKey": "vamp-example-plugins:zerocrossing",
-  "copyright": "Freely redistributable (BSD license)",
-  "inputDomain": "TimeDomain",
-  "maker": "Vamp SDK Example Plugins",
-  "maxChannelCount": 1,
-  "minChannelCount": 1,
-  "parameters": [],
-  "pluginVersion": 2,
-  "programs": [],
-  "outputList": [
-    {
-      "basic": {
+  "main": "src/ZeroCrossings.ts",
+  "description": {
+    "basic": {
+      "description": "Detect and count zero crossing points",
+      "identifier": "zerocrossing",
+      "name": "Zero Crossings"
+    },
+    "basicOutputInfo": [
+      {
         "description": "The number of zero crossing points per processing block",
         "identifier": "counts",
         "name": "Zero Crossing Counts"
       },
-      "binCount": 1,
-      "binNames": [],
-      "hasDuration": false,
-      "quantizeStep": 1,
-      "sampleRate": 0,
-      "sampleType": "OneSamplePerStep",
-      "unit": "crossings"
-    },
-    {
-      "basic": {
+      {
         "description": "The locations of zero crossing points",
         "identifier": "zerocrossings",
         "name": "Zero Crossings"
-      },
-      "binCount": 0,
-      "binNames": [],
-      "hasDuration": false,
-      "quantizeStep": 1,
-      "sampleRate": 16,
-      "sampleType": "VariableSampleRate",
-      "unit": ""
-    }
-  ],
-  "defaultConfiguration": {
-    "blockSize": 0,
-    "channelCount": 1,
-    "parameterValues": {},
-    "stepSize": 0
+      }
+    ],
+    "category": [],
+    "copyright": "Freely redistributable (BSD license)",
+    "inputDomain": "TimeDomain",
+    "maker": "Vamp SDK Example Plugins",
+    "maxChannelCount": 1,
+    "minChannelCount": 1,
+    "parameters": [],
+    "pluginKey": "vamp-example-plugins:zerocrossing",
+    "pluginVersion": 2,
+    "programs": []
   }
 }
