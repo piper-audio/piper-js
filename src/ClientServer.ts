@@ -1,8 +1,11 @@
-import {Timestamp} from "./Timestamp";
-import {FeatureSet} from "./Feature";
 /**
  * Created by lucast on 30/08/2016.
  */
+
+import {Timestamp} from "./Timestamp";
+import {FeatureSet} from "./Feature";
+import * as base64 from 'base64-js';
+
 export interface Request {
     type: string,
     content?: any //TODO create a more meaningful type for this
@@ -113,7 +116,7 @@ export interface Configuration {
 
 export interface ProcessBlock {
     timestamp: Timestamp,
-    inputBuffers: {values: Float32Array}[];
+    inputBuffers: {values?: Float32Array, b64values?: string}[];
 }
 
 export interface ProcessRequest {
@@ -141,14 +144,35 @@ export interface FinishFunction {
     (pluginHandle: PluginHandle): Promise<FeatureSet>
 }
 
-export interface PluginServer {
+export interface ModuleClient {
     listPlugins: ListFunction,
     loadPlugin: LoadFunction,
     configurePlugin: ConfigurationFunction,
     process: ProcessFunction,
-    processJson: ProcessFunction,
-    processBase64: ProcessFunction,
-    processRaw: ProcessFunction,
     finish: FinishFunction
 }
 
+export interface ModuleRequestHandler { // should this just be called Server?
+    handle: (request: Request) => Promise<Response>
+}
+
+export function toBase64(values: Float32Array): string {
+    // We want a base-64 encoding of the raw memory backing the
+    // typed array. We assume byte order will be the same when the
+    // base-64 stuff is decoded, but I guess that might not be
+    // true in a network situation. The Float32Array docs say "If
+    // control over byte order is needed, use DataView instead" so
+    // I guess that's a !!! todo item
+    return base64.fromByteArray(new Uint8Array(values.buffer));
+}
+
+export function fromBase64(b64: string): Float32Array {
+    // The base64 module expects input to be padded to a
+    // 4-character boundary, but the C++ VampJson code does not do
+    // that, so let's do it here
+    while (b64.length % 4 > 0) {
+        b64 += "=";
+    }
+    //!!! endianness, as above.
+    return new Float32Array(base64.toByteArray(b64).buffer);
+}

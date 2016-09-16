@@ -4,20 +4,21 @@
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import {EmscriptenPluginServer} from "../src/EmscriptenPluginServer";
+import {FeatsModuleClient} from "../src/FeatsModuleClient";
 import {
     StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
     Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType
-} from "../src/PluginServer";
+} from "../src/ClientServer";
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
 import VampExamplePlugins = require('../ext/VampExamplePlugins');
+import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
 chai.should();
 chai.use(chaiAsPromised);
 
-describe('EmscriptenPluginServer', () => {
-    const server = new EmscriptenPluginServer(VampExamplePlugins());
+describe('FeatsModuleClient', () => {
+    const server = new FeatsModuleClient(new EmscriptenModuleRequestHandler(VampExamplePlugins()));
 
     it('Can list available plugins in the module', () => {
         const expectedList: StaticData[] = require('./fixtures/expected-plugin-list.json') as StaticData[];

@@ -1,7 +1,7 @@
 /* -*- indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 
 import {FeatureList, FeatureSet} from "./Feature";
-import {ProcessBlock} from "./PluginServer";
+import {ProcessBlock} from "./ClientServer";
 
 /**
  * Created by lucas on 02/09/2016.

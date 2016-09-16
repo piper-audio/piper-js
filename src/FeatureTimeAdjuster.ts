@@ -1,5 +1,5 @@
 import {toSeconds, frame2timestamp} from "./Timestamp";
-import {OutputDescriptor, SampleType} from "./PluginServer";
+import {OutputDescriptor, SampleType} from "./ClientServer";
 import {Feature} from "./Feature";
 /**
  * Created by lucast on 08/09/2016.

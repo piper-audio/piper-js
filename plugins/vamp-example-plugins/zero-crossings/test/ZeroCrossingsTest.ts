@@ -6,7 +6,7 @@ import {ZeroCrossings} from "../src/ZeroCrossings";
 import {Feature, FeatureSet} from "../../../../src/Feature"
 import chai = require('chai');
 import {Timestamp, frame2timestamp} from "../../../../src/Timestamp";
-import {ProcessBlock} from "../../../../src/PluginServer";
+import {ProcessBlock} from "../../../../src/ClientServer";
 chai.should();
 
 describe('ZeroCrossings', () => {

@@ -7,7 +7,7 @@ chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from '../src/Feature';
 import {ZeroCrossings} from "../plugins/vamp-example-plugins/zero-crossings/src/ZeroCrossings";
-import {ProcessBlock} from '../src/PluginServer';
+import {ProcessBlock} from 'ClientServer.ts';
 import {batchProcess, lfo, segmentAudio} from '../src/AudioUtilities'
 import {FeatureExtractor} from "../src/FeatureExtractor";
 

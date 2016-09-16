@@ -53,7 +53,7 @@
     }
 
     var pluginSelect = document.getElementById('plugins');
-    var server = new feats.EmscriptenPluginServer(VampExamplePluginsModule());
+    var server = new feats.FeatsModuleClient(VampExamplePluginsModule());
     var blocks = [];
 
     for (var i = 0; i < 10000; ++i)

@@ -3,7 +3,7 @@
  */
 import {FeatureExtractor} from "../../../../src/FeatureExtractor";
 import {FeatureSet, FeatureList} from "../../../../src/Feature";
-import {ProcessBlock} from "../../../../src/PluginServer";
+import {ProcessBlock} from "../../../../src/ClientServer";
 import {frame2timestamp} from "../../../../src/Timestamp";
 
 export class ZeroCrossings implements FeatureExtractor {
