@@ -8,7 +8,7 @@
 <select id="plugins">
     <option></option>
 </select>
-<button>Extract</button>
+<button id="extract">Extract</button>
 </body>
 <script src="../ext/VampExamplePlugins.js"></script>
 <script src="bundle.js"></script>
@@ -22,7 +22,9 @@
             });
         };
 
+        var handles = [];
         var configure = function (response) {
+            handles.push(response.pluginHandle);
             return pluginServer.configurePlugin({
                 pluginHandle: response.pluginHandle,
                 configuration: {
@@ -35,7 +37,7 @@
 
         var processBlocks = function () {
             return feats.batchProcess(blocks, function (block) {
-                return pluginServer.process({pluginHandle: pluginKey, processInput: block})
+                return pluginServer.process({pluginHandle: handles[handles.length - 1], processInput: block})
             });
         };
 
@@ -54,24 +56,25 @@
     var server = new feats.EmscriptenPluginServer(VampExamplePluginsModule());
     var blocks = [];
 
-    blocks.push({
-        timestamp: {s: 0, n: 0},
-        inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
-    });
-
     for (var i = 0; i < 10000; ++i)
         blocks.push({
-            timestamp: {s: 0, n: 500000000},
-            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+            timestamp: {s: i, n: 500000000},
+            inputBuffers: [{values: new Float32Array([0.4, 0.3, 0.2, 0.1, 0.0, -0.1, -0.2, -0.3])}]
         });
 
-    server.listPlugins().then(function (plugins) {
+    var renderPluginSelectElement = function (plugins) {
         plugins.forEach(function (plugin) {
             var option = document.createElement('option');
             option.value = plugin.pluginKey;
             option.textContent = plugin.basic.name;
             pluginSelect.appendChild(option);
         });
-    })
+    };
+
+    server.listPlugins().then(renderPluginSelectElement);
+
+    document.getElementById('extract').addEventListener('click', function () {
+        extractFeatures(server, pluginSelect.value, blocks);
+    });
 </script>
 </html>
