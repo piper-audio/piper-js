@@ -25,7 +25,7 @@
     "maxChannelCount": 1,
     "minChannelCount": 1,
     "parameters": [],
-    "pluginKey": "vamp-example-plugins:zerocrossing",
+    "pluginKey": "example-module:zerocrossing",
     "pluginVersion": 2,
     "programs": []
   }
