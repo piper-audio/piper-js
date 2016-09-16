@@ -64,7 +64,7 @@ export class FeatsModuleClient implements ModuleClient {
         const block: ProcessBlock = request.processInput;
         const isBase64: boolean = block.inputBuffers[0].b64values != null && block.inputBuffers[0].b64values !== ""; // TODO would there ever be a mix of values and b64values?
         const response: Promise<Response> = isBase64 ? this.processBase64(request) : this.processJson(request);
-        return this.processJson(request).then(response => {
+        return response.then(response => {
             let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
             return features;
