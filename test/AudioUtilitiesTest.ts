@@ -6,7 +6,7 @@ import chaiAsPromised = require('chai-as-promised');
 chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from '../src/Feature';
-import {ZeroCrossings} from "../plugins/vamp-example-plugins/zero-crossings/src/ZeroCrossings";
+import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {ProcessBlock} from '../src/ClientServer.ts';
 import {batchProcess, lfo, segmentAudio} from '../src/AudioUtilities'
 import {FeatureExtractor} from "../src/FeatureExtractor";
