@@ -137,5 +137,3 @@ export class FeatsModuleClient implements ModuleClient {
         }
     }
 }
-
-

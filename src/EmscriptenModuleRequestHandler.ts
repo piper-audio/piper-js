@@ -1,7 +1,6 @@
 /**
  * Created by lucast on 16/09/2016.
  */
-import construct = Reflect.construct;
 import {EmscriptenModule, Allocator} from "./Emscripten";
 import {Response, Request, ModuleRequestHandler, ProcessRequest} from "./ClientServer";
 
