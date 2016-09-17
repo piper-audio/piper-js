@@ -1,11 +1,10 @@
 /* -*- indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
-
-import {FeatureList, FeatureSet} from "./Feature";
-import {ProcessBlock} from "./ClientServer";
-
 /**
  * Created by lucas on 02/09/2016.
  */
+
+import {FeatureList, FeatureSet} from "./Feature";
+import {ProcessBlock} from "./ClientServer";
 
 export function batchProcess(blocks: ProcessBlock[], process: (block: ProcessBlock) => Promise<FeatureSet>): Promise<FeatureSet> {
     const processPromises: (() => Promise<FeatureSet>)[] = blocks.map((block) => () => process(block));

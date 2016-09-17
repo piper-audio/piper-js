@@ -2,7 +2,7 @@
  * Created by lucast on 08/09/2016.
  */
 import chai = require("chai");
-import {OutputDescriptor, BasicDescriptor, SampleType} from "../src/ClientServer";
+import {OutputDescriptor, SampleType} from "../src/ClientServer";
 import {Timestamp} from "../src/Timestamp";
 import {Feature} from "../src/Feature";
 import {
