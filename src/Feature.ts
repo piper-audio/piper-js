@@ -1,13 +1,13 @@
 /**
  * Created by lucas on 26/08/2016.
  */
-import { Timestamp } from './Timestamp'
+import { Timestamp } from "./Timestamp";
 
 export interface Feature {
-    timestamp?: Timestamp,
-    duration?: Timestamp,
-    label?: string,
-    values?: Float32Array
+    timestamp?: Timestamp;
+    duration?: Timestamp;
+    label?: string;
+    values?: Float32Array;
 }
 
 export type FeatureList = Feature[];

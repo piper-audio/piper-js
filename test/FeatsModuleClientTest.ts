@@ -2,8 +2,8 @@
  * Created by lucast on 30/08/2016.
  */
 
-import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
+import chai = require("chai");
+import chaiAsPromised = require("chai-as-promised");
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
 import {
     StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
@@ -12,16 +12,16 @@ import {
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
-import VampExamplePlugins = require('../ext/VampExamplePlugins');
+import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
 chai.should();
 chai.use(chaiAsPromised);
 
-describe('FeatsModuleClient', () => {
+describe("FeatsModuleClient", () => {
     const server = new FeatsModuleClient(new EmscriptenModuleRequestHandler(VampExamplePlugins()));
 
-    it('Can list available plugins in the module', () => {
-        const expectedList: StaticData[] = require('./fixtures/expected-plugin-list.json') as StaticData[];
+    it("Can list available plugins in the module", () => {
+        const expectedList: StaticData[] = require("./fixtures/expected-plugin-list.json") as StaticData[];
         return server.listPlugins().should.eventually.deep.equal(expectedList);
     });
 
@@ -37,8 +37,8 @@ describe('FeatsModuleClient', () => {
 
     const loadResponse: Promise<LoadResponse> = loadZeroCrossings();
 
-    it('Can load an available plugin', () => {
-        const expectedResponse = require('./fixtures/expected-load-response.json');
+    it("Can load an available plugin", () => {
+        const expectedResponse = require("./fixtures/expected-load-response.json");
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });
 
@@ -57,19 +57,19 @@ describe('FeatsModuleClient', () => {
 
     const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
 
-    it('Can configure a loaded plugin', () => {
-        let expectedResponse = require('./fixtures/expected-configuration-response.json');
+    it("Can configure a loaded plugin", () => {
+        let expectedResponse = require("./fixtures/expected-configuration-response.json");
         expectedResponse.outputList.forEach((output: any) => output.sampleType = SampleType[output.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });
 
-    it('Reports an error when trying to configure an already configured plugin', () => {
+    it("Reports an error when trying to configure an already configured plugin", () => {
         const batchConfig = Promise.all([loadResponse.then(config), loadResponse.then(config)]);
         return batchConfig.should.be.rejected;
     });
 
-    it('Can process a single block', () => {
-        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require('./fixtures/expected-feature-sets');
+    it("Can process a single block", () => {
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
         const expectedTimestamps = (expectedFeatures.one.get(1) as FeatureList).map(feature => feature.timestamp);
 
         const features: Promise<FeatureSet> = server.process({
@@ -84,16 +84,16 @@ describe('FeatsModuleClient', () => {
             const timestamps = features.get(1).map(feature => feature.timestamp);
             timestamps.should.deep.equal(expectedTimestamps);
             features.get(0).should.deep.equal(expectedFeatures.one.get(0));
-        })
+        });
     });
 
-    it('Can get the remaining features and clean up the plugin', () => {
+    it("Can get the remaining features and clean up the plugin", () => {
         const remainingFeatures: Promise<FeatureSet> = server.finish(pluginHandles[0]);
         return remainingFeatures.then(features => features.size.should.eql(0));
     });
 
-    it('Can process multiple blocks of audio, consecutively', () => {
-        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require('./fixtures/expected-feature-sets');
+    it("Can process multiple blocks of audio, consecutively", () => {
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
         const blocks: ProcessBlock[] = [];
 
         blocks.push({

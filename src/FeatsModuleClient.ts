@@ -10,21 +10,19 @@ import {
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
     Response, Request, AdapterFlags, SampleType, ModuleRequestHandler, toBase64, fromBase64, ProcessBlock
-} from './ClientServer';
-import {Timestamp} from "./Timestamp";
-interface WireFeature {
-    timestamp?: Timestamp,
-    duration?: Timestamp,
-    label?: string,
-    values?: Float32Array,
-    b64values?: string,
-}
-
-
+} from "./ClientServer";
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
 import {FeatureSet, Feature} from "./Feature";
+import {Timestamp} from "./Timestamp";
+interface WireFeature {
+    timestamp?: Timestamp;
+    duration?: Timestamp;
+    label?: string;
+    values?: Float32Array;
+    b64values?: string;
+}
 
 export class FeatsModuleClient implements ModuleClient {
     private timeAdjusters: Map<number, FeatureTimeAdjuster>;
@@ -38,20 +36,20 @@ export class FeatsModuleClient implements ModuleClient {
     }
 
     listPlugins(): Promise<StaticData[]> {
-        return this.request({type: 'list'} as Request).then((response) => {
+        return this.request({type: "list"} as Request).then((response) => {
             return response.content.plugins as StaticData[];
         });
     }
 
     loadPlugin(request: LoadRequest): Promise<LoadResponse> {
         (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
-        return this.request({type: 'load', content: request} as Request).then((response) => {
+        return this.request({type: "load", content: request} as Request).then((response) => {
             return response.content as LoadResponse;
         });
     }
 
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        return this.request({type: 'configure', content: request}).then((response) => {
+        return this.request({type: "configure", content: request}).then((response) => {
             for (let [i, output] of response.content.outputList.entries()) {
                 (output as any).sampleType = SampleType[output.sampleType];
                 this.timeAdjusters.set(i, createFeatureTimeAdjuster(output));
@@ -73,14 +71,14 @@ export class FeatsModuleClient implements ModuleClient {
 
     private processJson(request: ProcessRequest): Promise<Response> {
         request.processInput.inputBuffers.forEach((val) => {
-            (val as any).values = [...val.values]; // TODO is there a better way to change Float32Array's JSON representation
+            (val as any).values = [...val.values]; // TODO is there a better way to change Float32Array"s JSON representation
         });
-        return this.handler.handle({type: 'process', content: request});
+        return this.handler.handle({type: "process", content: request});
     }
 
     private processBase64(request: ProcessRequest): Promise<Request> {
         const encoded = request.processInput.inputBuffers.map(channel => {
-            return {b64values: toBase64(channel.values)}
+            return {b64values: toBase64(channel.values)};
         });
         const encReq = {
             pluginHandle: request.pluginHandle,
@@ -89,11 +87,11 @@ export class FeatsModuleClient implements ModuleClient {
                 inputBuffers: encoded
             }
         };
-        return this.handler.handle({type: 'process', content: encReq});
+        return this.handler.handle({type: "process", content: encReq});
     }
 
     finish(pluginHandle: number): Promise<FeatureSet> {
-        return this.request({type: 'finish', content: {pluginHandle: pluginHandle}}).then((response) => {
+        return this.request({type: "finish", content: {pluginHandle: pluginHandle}}).then((response) => {
             const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
             return features;

@@ -4,41 +4,41 @@
 
 import {Timestamp} from "./Timestamp";
 import {FeatureSet} from "./Feature";
-import * as base64 from 'base64-js';
+import * as base64 from "base64-js";
 
 export interface Request {
-    type: string,
-    content?: any //TODO create a more meaningful type for this
+    type: string;
+    content?: any; // TODO create a more meaningful type for this
 }
 
 export interface Response {
-    type: string,
-    success: boolean,
-    errorText?: string,
-    content?: any // TODO create a more meaningful type for this
+    type: string;
+    success: boolean;
+    errorText?: string;
+    content?: any; // TODO create a more meaningful type for this
 }
 
 export interface LoadRequest {
-    pluginKey: string,
-    inputSampleRate: number,
-    adapterFlags: AdapterFlags[]
+    pluginKey: string;
+    inputSampleRate: number;
+    adapterFlags: AdapterFlags[];
 }
 
 export type PluginHandle = number;
 
 export interface LoadResponse {
-    pluginHandle: PluginHandle,
-    staticData: StaticData,
-    defaultConfiguration: Configuration
+    pluginHandle: PluginHandle;
+    staticData: StaticData;
+    defaultConfiguration: Configuration;
 }
 
 export interface ConfigurationRequest {
-    pluginHandle: PluginHandle,
-    configuration: Configuration
+    pluginHandle: PluginHandle;
+    configuration: Configuration;
 }
 
 export interface ConfigurationResponse {
-    outputList: OutputDescriptor[]
+    outputList: OutputDescriptor[];
 }
 
 export enum InputDomain {
@@ -62,98 +62,98 @@ export enum AdapterFlags {
 }
 
 export interface BasicDescriptor {
-    identifier: string,
-    name: string,
-    description: string
+    identifier: string;
+    name: string;
+    description: string;
 }
 
 export interface ValueExtents {
-    min: number,
-    max: number
+    min: number;
+    max: number;
 }
 
 export interface ParameterDescriptor {
-    basic: BasicDescriptor,
-    unit?: string,
-    extents: ValueExtents,
-    defaultValue: number,
-    quantizeStep?: number,
-    valueNames?: string[]
+    basic: BasicDescriptor;
+    unit?: string;
+    extents: ValueExtents;
+    defaultValue: number;
+    quantizeStep?: number;
+    valueNames?: string[];
 }
 
 export interface StaticData {
-    pluginKey: string,
-    basic: BasicDescriptor,
-    maker?: string,
-    copyright?: string,
-    pluginVersion: number,
-    category?: string[],
-    minChannelCount: number,
-    maxChannelCount: number,
-    parameters?: ParameterDescriptor[],
-    programs?: string[],
-    inputDomain: InputDomain,
-    basicOutputInfo: BasicDescriptor[]
+    pluginKey: string;
+    basic: BasicDescriptor;
+    maker?: string;
+    copyright?: string;
+    pluginVersion: number;
+    category?: string[];
+    minChannelCount: number;
+    maxChannelCount: number;
+    parameters?: ParameterDescriptor[];
+    programs?: string[];
+    inputDomain: InputDomain;
+    basicOutputInfo: BasicDescriptor[];
 }
 
 export interface OutputDescriptor {
-    basic: BasicDescriptor,
-    unit?: string,
-    binCount?: number,
-    binNames?: string[],
-    extents?: ValueExtents,
-    quantizeStep?: number,
-    sampleType: SampleType,
-    sampleRate?: number,
-    hasDuration: boolean
+    basic: BasicDescriptor;
+    unit?: string;
+    binCount?: number;
+    binNames?: string[];
+    extents?: ValueExtents;
+    quantizeStep?: number;
+    sampleType: SampleType;
+    sampleRate?: number;
+    hasDuration: boolean;
 }
 
 export interface Configuration {
-    channelCount: number,
-    stepSize: number,
-    blockSize: number
+    channelCount: number;
+    stepSize: number;
+    blockSize: number;
 }
 
 export interface ProcessBlock {
-    timestamp: Timestamp,
-    inputBuffers: {values?: Float32Array, b64values?: string}[];
+    timestamp: Timestamp;
+    inputBuffers: {values?: Float32Array; b64values?: string}[];
 }
 
 export interface ProcessRequest {
-    pluginHandle: PluginHandle,
-    processInput: ProcessBlock
+    pluginHandle: PluginHandle;
+    processInput: ProcessBlock;
 }
 
 export interface ListFunction {
-    (): Promise<StaticData[]>
+    (): Promise<StaticData[]>;
 }
 
 export interface LoadFunction {
-    (request: LoadRequest) : Promise<LoadResponse>
+    (request: LoadRequest) : Promise<LoadResponse>;
 }
 
 export interface ConfigurationFunction {
-    (request: ConfigurationRequest): Promise<ConfigurationResponse>
+    (request: ConfigurationRequest): Promise<ConfigurationResponse>;
 }
 
 export interface ProcessFunction {
-    (request: ProcessRequest): Promise<FeatureSet>
+    (request: ProcessRequest): Promise<FeatureSet>;
 }
 
 export interface FinishFunction {
-    (pluginHandle: PluginHandle): Promise<FeatureSet>
+    (pluginHandle: PluginHandle): Promise<FeatureSet>;
 }
 
 export interface ModuleClient {
-    listPlugins: ListFunction,
-    loadPlugin: LoadFunction,
-    configurePlugin: ConfigurationFunction,
-    process: ProcessFunction,
-    finish: FinishFunction
+    listPlugins: ListFunction;
+    loadPlugin: LoadFunction;
+    configurePlugin: ConfigurationFunction;
+    process: ProcessFunction;
+    finish: FinishFunction;
 }
 
 export interface ModuleRequestHandler { // should this just be called Server?
-    handle: (request: Request) => Promise<Response>
+    handle: (request: Request) => Promise<Response>;
 }
 
 export function toBase64(values: Float32Array): string {
@@ -173,6 +173,6 @@ export function fromBase64(b64: string): Float32Array {
     while (b64.length % 4 > 0) {
         b64 += "=";
     }
-    //!!! endianness, as above.
+    // !!! endianness, as above.
     return new Float32Array(base64.toByteArray(b64).buffer);
 }

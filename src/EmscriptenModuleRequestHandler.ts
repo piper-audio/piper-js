@@ -14,13 +14,13 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
 
     constructor(pluginModule: EmscriptenModule) {
         this.server = pluginModule;
-        this.doRequest = this.server.cwrap('vampipeRequestJson', 'number', ['number']) as (ptr: number) => number;
-        this.doProcess = this.server.cwrap('vampipeProcessRaw', 'number', ['number', 'number', 'number', 'number']) as (handle: number, bufs: number, sec: number, nsec: number) => number;
-        this.freeJson = this.server.cwrap('vampipeFreeJson', 'void', ['number']) as (ptr: number) => void;
+        this.doRequest = this.server.cwrap("vampipeRequestJson", "number", ["number"]) as (ptr: number) => number;
+        this.doProcess = this.server.cwrap("vampipeProcessRaw", "number", ["number", "number", "number", "number"]) as (handle: number, bufs: number, sec: number, nsec: number) => number;
+        this.freeJson = this.server.cwrap("vampipeFreeJson", "void", ["number"]) as (ptr: number) => void;
     }
 
     handle(request: Request): Promise<Response> {
-        if (request.type == 'process') return this.processRaw(request.content as ProcessRequest);
+        if (request.type === "process") return this.processRaw(request.content as ProcessRequest);
         return this.respond(request);
     }
 
@@ -28,14 +28,14 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
         return new Promise<Response>((resolve, reject) => {
             const requestJson: string = JSON.stringify(request);
             const requestJsonPtr: number = this.server.allocate(
-                this.server.intArrayFromString(requestJson), 'i8',
+                this.server.intArrayFromString(requestJson), "i8",
                 Allocator.ALLOC_NORMAL);
 
             const responseJsonPtr: number = this.doRequest(requestJsonPtr);
 
             this.server._free(requestJsonPtr);
 
-            var response: Response = JSON.parse(
+            const response: Response = JSON.parse(
                 this.server.Pointer_stringify(responseJsonPtr));
 
             this.freeJson(responseJsonPtr);
@@ -77,7 +77,7 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
             }
             this.server._free(bufsPtr);
 
-            var response: Response = JSON.parse(
+            const response: Response = JSON.parse(
                 this.server.Pointer_stringify(responseJsonPtr));
             this.freeJson(responseJsonPtr);
 

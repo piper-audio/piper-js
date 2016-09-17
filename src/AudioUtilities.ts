@@ -41,7 +41,7 @@ export function* segmentAudio(blockSize: number, stepSize: number, audioData: Fl
         if (isDone(nStep))
             subArray = Float32Array.of(...subArray, ...new Float32Array(blockSize - subArray.length));
         yield subArray;
-    } while(!isDone(nStep))
+    } while (!isDone(nStep));
 }
 
 export function* lfo(sampleRate: number, frequency: number, amplitude: number = 1.0): IterableIterator<number> {
