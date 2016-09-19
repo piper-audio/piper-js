@@ -9,7 +9,8 @@ import {
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
-    Response, Request, AdapterFlags, SampleType, ModuleRequestHandler, toBase64, fromBase64, PluginHandle
+    Response, Request, AdapterFlags, SampleType, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
+    ProcessEncoding
 } from "./ClientServer";
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
@@ -35,9 +36,17 @@ interface WireProcessRequest {
 
 export class FeatsModuleClient implements ModuleClient {
     private timeAdjusters: Map<number, FeatureTimeAdjuster>;
+    private handler: ModuleRequestHandler;
+    private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<Response>>;
 
-    constructor(private handler: ModuleRequestHandler) {
+    constructor(handler: ModuleRequestHandler) {
+        this.handler = handler;
         this.timeAdjusters = new Map();
+        this.encodingMap = new Map([
+            [ProcessEncoding.Raw, (request: ProcessRequest) => this.processRaw(request)],
+            [ProcessEncoding.Base64, (request: ProcessRequest) => this.processEncoded(FeatsModuleClient.encodeBase64(request))],
+            [ProcessEncoding.Json, (request: ProcessRequest) => this.processEncoded(FeatsModuleClient.encodeJson(request))]
+        ]);
     }
 
     public static createFromModule(module: any): FeatsModuleClient { // TODO need to define an actual interface for the module
@@ -73,7 +82,7 @@ export class FeatsModuleClient implements ModuleClient {
     }
 
     process(request: ProcessRequest): Promise<FeatureSet> {
-        const response: Promise<Response> = this.processRaw(request); // TODO introduce some way of indicating default content type
+        const response: Promise<Response> = this.encodingMap.get(this.handler.getProcessEncoding())(request);
         return response.then(response => {
             let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);

@@ -152,8 +152,15 @@ export interface ModuleClient {
     finish: FinishFunction;
 }
 
+export enum ProcessEncoding {
+    Base64,
+    Json,
+    Raw
+}
+
 export interface ModuleRequestHandler { // should this just be called Server?
     handle(request: Request): Promise<Response>;
+    getProcessEncoding(): ProcessEncoding;
 }
 
 export function toBase64(values: Float32Array): string {
