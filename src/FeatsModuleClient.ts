@@ -73,7 +73,7 @@ export class FeatsModuleClient implements ModuleClient {
     }
 
     process(request: ProcessRequest): Promise<FeatureSet> {
-        const response: Promise<Response> = this.process(request); // TODO introduce some way of indicating default content type
+        const response: Promise<Response> = this.processRaw(request); // TODO introduce some way of indicating default content type
         return response.then(response => {
             let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
