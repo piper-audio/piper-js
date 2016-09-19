@@ -38,6 +38,7 @@ export interface ConfigurationRequest {
 }
 
 export interface ConfigurationResponse {
+    pluginHandle: PluginHandle;
     outputList: OutputDescriptor[];
 }
 
