@@ -170,11 +170,9 @@ export class FeatsModuleClient implements ModuleClient {
         const features: FeatureSet = new Map();
         const processResponse: ProcessResponse = response.content;
         const wireFeatures: WireFeatureSet = processResponse.features;
-        Object.keys(wireFeatures).forEach(
-            key => features.set(key, // TODO how do i map this to the identifier?
-                FeatsModuleClient.convertWireFeatureList(
-                    wireFeatures[key])));
-        // TODO seems awkward and inefficient converting an object to a map
+        Object.keys(wireFeatures).forEach(key => {
+            return features.set(key, FeatsModuleClient.convertWireFeatureList(wireFeatures[key]));
+        });
         return features;
     }
 
