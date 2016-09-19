@@ -70,7 +70,7 @@ describe("FeatsModuleClient", () => {
 
     it("Can process a single block", () => {
         const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
-        const expectedTimestamps = (expectedFeatures.one.get(1) as FeatureList).map(feature => feature.timestamp);
+        const expectedTimestamps = (expectedFeatures.one.get("zerocrossings") as FeatureList).map(feature => feature.timestamp);
 
         const features: Promise<FeatureSet> = server.process({
             pluginHandle: pluginHandles[0],
@@ -81,9 +81,9 @@ describe("FeatsModuleClient", () => {
         } as ProcessRequest);
 
         return features.then((features: FeatureSet) => {
-            const timestamps = features.get(1).map(feature => feature.timestamp);
+            const timestamps = features.get("zerocrossings").map(feature => feature.timestamp);
             timestamps.should.deep.equal(expectedTimestamps);
-            features.get(0).should.deep.equal(expectedFeatures.one.get(0));
+            features.get("counts").should.deep.equal(expectedFeatures.one.get("counts"));
         });
     });
 
@@ -115,8 +115,8 @@ describe("FeatsModuleClient", () => {
         const features: Promise<FeatureSet> = loadZeroCrossings().then(config).then(processBlocks);
         const getTimestamps = (features: FeatureList) => features.map(feature => feature.timestamp);
         return features.then((features) => {
-            features.get(0).should.deep.equal(expectedFeatures.merged.get(0));
-            getTimestamps(features.get(1)).should.deep.equal(getTimestamps(expectedFeatures.merged.get(1)));
+            features.get("counts").should.deep.equal(expectedFeatures.merged.get("counts"));
+            getTimestamps(features.get("zerocrossings")).should.deep.equal(getTimestamps(expectedFeatures.merged.get("zerocrossings")));
         });
     });
 });

@@ -15,7 +15,7 @@ import {
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
-import {FeatureSet, Feature} from "./Feature";
+import {FeatureSet, Feature, FeatureList} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {EmscriptenModuleRequestHandler} from "./EmscriptenModuleRequestHandler";
 interface WireFeature {
@@ -25,6 +25,17 @@ interface WireFeature {
     values?: Float32Array;
     b64values?: string;
 }
+type WireFeatureList = WireFeature[];
+
+interface WireFeatureSet {
+    [key: string]: WireFeatureList;
+}
+
+interface ProcessResponse {
+    pluginHandle: number,
+    features: WireFeatureSet
+}
+
 interface WireProcessBlock {
     timestamp: Timestamp;
     inputBuffers: {values?: number[]; b64values?: string;}[];
@@ -35,7 +46,7 @@ interface WireProcessRequest {
 }
 
 export class FeatsModuleClient implements ModuleClient {
-    private timeAdjusters: Map<number, FeatureTimeAdjuster>;
+    private timeAdjusters: Map<string, FeatureTimeAdjuster>;
     private handler: ModuleRequestHandler;
     private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<Response>>;
 
@@ -73,9 +84,9 @@ export class FeatsModuleClient implements ModuleClient {
 
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
         return this.request({type: "configure", content: request}).then((response) => {
-            for (let [i, output] of response.content.outputList.entries()) {
+            for (let output of response.content.outputList) {
                 (output as any).sampleType = SampleType[output.sampleType];
-                this.timeAdjusters.set(i, createFeatureTimeAdjuster(output));
+                this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(output));
             }
             return response.content as ConfigurationResponse;
         });
@@ -150,16 +161,19 @@ export class FeatsModuleClient implements ModuleClient {
         }
         return out;
     }
-    private static convertWireFeatureList(wfeatures: WireFeature[]): Feature[] {
+
+    private static convertWireFeatureList(wfeatures: WireFeatureList): FeatureList {
         return wfeatures.map(FeatsModuleClient.convertWireFeature);
     }
 
     private static responseToFeatureSet(response: Response): FeatureSet {
         const features: FeatureSet = new Map();
-        Object.keys(response.content).forEach(
-            key => features.set(Number.parseInt(key),
+        const processResponse: ProcessResponse = response.content;
+        const wireFeatures: WireFeatureSet = processResponse.features;
+        Object.keys(wireFeatures).forEach(
+            key => features.set(key, // TODO how do i map this to the identifier?
                 FeatsModuleClient.convertWireFeatureList(
-                    response.content[key])));
+                    wireFeatures[key])));
         // TODO seems awkward and inefficient converting an object to a map
         return features;
     }
