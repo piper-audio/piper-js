@@ -33,7 +33,7 @@ describe("BatchBlockProcess", () => {
         const zc: FeatureExtractor = new ZeroCrossings(16);
         const features: Promise<FeatureSet> = batchProcess(blocks, (block) => Promise.resolve(zc.process(block)));
         return features.then((aggregate) => {
-            aggregate.get(0).should.deep.equal(expectedFeatures);
+            aggregate.get("counts").should.deep.equal(expectedFeatures);
         });
     });
 
@@ -62,7 +62,7 @@ describe("BatchBlockProcess", () => {
             });
         });
         return features.then((aggregate) => {
-            aggregate.get(0).should.deep.equal(expectedFeatures);
+            aggregate.get("counts").should.deep.equal(expectedFeatures);
         });
     });
 
@@ -71,7 +71,7 @@ describe("BatchBlockProcess", () => {
         const frames: IterableIterator<ProcessBlock> = segmentAudioBuffer(256, 64, audioData);
         const zc: FeatureExtractor = new ZeroCrossings(8000.0);
         const featureSet: Promise<FeatureSet> = batchProcess(frames, block => Promise.resolve(zc.process(block)));
-        return featureSet.then(featureSet => featureSet.get(0).length.should.equal((10.0 * 8000.0) / 64.0));
+        return featureSet.then(featureSet => featureSet.get("counts").length.should.equal((10.0 * 8000.0) / 64.0));
     });
 });
 

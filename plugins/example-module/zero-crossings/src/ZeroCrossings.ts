@@ -27,8 +27,8 @@ export class ZeroCrossings implements FeatureExtractor {
             this.previousSample = sample;
         });
 
-        returnFeatures.set(0, [{values: new Float32Array([count])}]);
-        if (crossingPoints.length > 0) returnFeatures.set(1, crossingPoints);
+        returnFeatures.set("counts", [{values: new Float32Array([count])}]);
+        if (crossingPoints.length > 0) returnFeatures.set("crossings", crossingPoints);
         return returnFeatures;
     }
 

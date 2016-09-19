@@ -22,7 +22,7 @@ describe('ZeroCrossings', () => {
             let zc = new ZeroCrossings(16);
             let block = toProcessBlock(new Float32Array(8));
             let features: FeatureSet = zc.process(block);
-            features.get(0).should.deep.equal([{values: new Float32Array([0])}]);
+            features.get("counts").should.deep.equal([{values: new Float32Array([0])}]);
             features.size.should.equal(1);
         });
 
@@ -30,8 +30,8 @@ describe('ZeroCrossings', () => {
             let zc = new ZeroCrossings(16);
             let block = toProcessBlock(new Float32Array([0, 1, -1, 0, 1, -1, 0, 1]));
             let features: FeatureSet = zc.process(block);
-            features.get(0).should.deep.equal([{values: new Float32Array([5])}]);
-            [1,2,4,5,7].forEach((frame, index) => frame2timestamp(frame, 16).should.eql(features.get(1)[index].timestamp));
+            features.get("counts").should.deep.equal([{values: new Float32Array([5])}]);
+            [1,2,4,5,7].forEach((frame, index) => frame2timestamp(frame, 16).should.eql(features.get("crossings")[index].timestamp));
         });
 
         it('Should keep the last sample from the previous block and thus cross once', () => {
@@ -40,8 +40,8 @@ describe('ZeroCrossings', () => {
             zc.process(block);
             block.inputBuffers[0].values.fill(0);
             let features: FeatureSet = zc.process(block);
-            features.get(0).should.deep.equal([{values: new Float32Array([1])}]);
-            features.get(1).length.should.equal(1);
+            features.get("counts").should.deep.equal([{values: new Float32Array([1])}]);
+            features.get("crossings").length.should.equal(1);
         });
     })
 });

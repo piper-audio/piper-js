@@ -14,7 +14,7 @@
       },
       {
         "description": "The locations of zero crossing points",
-        "identifier": "zerocrossings",
+        "identifier": "crossings",
         "name": "Zero Crossings"
       }
     ],
