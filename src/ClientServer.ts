@@ -124,32 +124,12 @@ export interface ProcessRequest {
     processInput: ProcessBlock;
 }
 
-export interface ListFunction {
-    (): Promise<StaticData[]>;
-}
-
-export interface LoadFunction {
-    (request: LoadRequest) : Promise<LoadResponse>;
-}
-
-export interface ConfigurationFunction {
-    (request: ConfigurationRequest): Promise<ConfigurationResponse>;
-}
-
-export interface ProcessFunction {
-    (request: ProcessRequest): Promise<FeatureSet>;
-}
-
-export interface FinishFunction {
-    (pluginHandle: PluginHandle): Promise<FeatureSet>;
-}
-
 export interface ModuleClient {
-    listPlugins: ListFunction;
-    loadPlugin: LoadFunction;
-    configurePlugin: ConfigurationFunction;
-    process: ProcessFunction;
-    finish: FinishFunction;
+    listPlugins(): Promise<StaticData[]>;
+    loadPlugin(request: LoadRequest) : Promise<LoadResponse>;
+    configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>;
+    process(request: ProcessRequest): Promise<FeatureSet>;
+    finish(pluginHandle: PluginHandle): Promise<FeatureSet>;
 }
 
 export enum ProcessEncoding {

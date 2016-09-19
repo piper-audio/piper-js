@@ -65,24 +65,20 @@ export class FeatsModuleClient implements ModuleClient {
         return isEmscriptenModule ? new FeatsModuleClient(new EmscriptenModuleRequestHandler(module)) : null; // TODO complete factory when more Handlers exist
     }
 
-    private request(request: Request): Promise<Response> {
-        return this.handler.handle(request);
-    }
-
-    listPlugins(): Promise<StaticData[]> {
+    public listPlugins(): Promise<StaticData[]> {
         return this.request({type: "list"} as Request).then((response) => {
             return response.content.plugins as StaticData[];
         });
     }
 
-    loadPlugin(request: LoadRequest): Promise<LoadResponse> {
+    public loadPlugin(request: LoadRequest): Promise<LoadResponse> {
         (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
         return this.request({type: "load", content: request} as Request).then((response) => {
             return response.content as LoadResponse;
         });
     }
 
-    configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
+    public configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
         return this.request({type: "configure", content: request}).then((response) => {
             for (let output of response.content.outputList) {
                 (output as any).sampleType = SampleType[output.sampleType];
@@ -92,13 +88,25 @@ export class FeatsModuleClient implements ModuleClient {
         });
     }
 
-    process(request: ProcessRequest): Promise<FeatureSet> {
+    public process(request: ProcessRequest): Promise<FeatureSet> {
         const response: Promise<Response> = this.encodingMap.get(this.handler.getProcessEncoding())(request);
         return response.then(response => {
             let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
             return features;
         });
+    }
+
+    public finish(pluginHandle: number): Promise<FeatureSet> {
+        return this.request({type: "finish", content: {pluginHandle: pluginHandle}}).then((response) => {
+            const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
+            this.adjustFeatureTimes(features);
+            return features;
+        });
+    }
+
+    private request(request: Request): Promise<Response> {
+        return this.handler.handle(request);
     }
 
     private static encodeJson(request: ProcessRequest): WireProcessRequest {
@@ -133,14 +141,6 @@ export class FeatsModuleClient implements ModuleClient {
 
     private processRaw(request: ProcessRequest): Promise<Response> {
         return this.handler.handle({type: "process", content: request})
-    }
-
-    finish(pluginHandle: number): Promise<FeatureSet> {
-        return this.request({type: "finish", content: {pluginHandle: pluginHandle}}).then((response) => {
-            const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
-            this.adjustFeatureTimes(features);
-            return features;
-        });
     }
 
     private static convertWireFeature(wfeature: WireFeature): Feature {
