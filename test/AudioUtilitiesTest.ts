@@ -69,9 +69,9 @@ describe("BatchBlockProcess", () => {
     it("can consume blocks from a generator", () => {
         const audioData: AudioBuffer = FeatsAudioBuffer.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
         const frames: IterableIterator<ProcessBlock> = segmentAudioBuffer(256, 64, audioData);
-        const zc: FeatureExtractor = new ZeroCrossings();
-        const featureSet: Promise<Feature[][]> = batchProcess(frames, block => zc.process(block));
-        return featureSet.should.eventually.have.length((10.0 * 8000.0) / 64.0);
+        const zc: FeatureExtractor = new ZeroCrossings(8000.0);
+        const featureSet: Promise<FeatureSet> = batchProcess(frames, block => Promise.resolve(zc.process(block)));
+        return featureSet.then(featureSet => featureSet.get(0).length.should.equal((10.0 * 8000.0) / 64.0));
     });
 });
 
