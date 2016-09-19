@@ -4,7 +4,7 @@
 import {EmscriptenModule, Allocator} from "./Emscripten";
 import {Response, Request, ModuleRequestHandler, ProcessRequest} from "./ClientServer";
 
-type ResponsePointer = number;
+type Pointer = number;
 export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
 
     private server: EmscriptenModule;
@@ -21,60 +21,55 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
 
     handle(request: Request): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            const responseJson: ResponsePointer =
+            const responseJson: Pointer =
                 (request.type === "process") ? this.processRaw(request.content) : this.processRequest(request);
 
             const response: Response = JSON.parse(
                 this.server.Pointer_stringify(responseJson));
             this.freeJson(responseJson);
 
-            if (response.success) {
-                resolve(response);
-            } else {
-                reject(response.errorText);
-            }
+            response.success ? resolve(response) : reject(response.errorText);
         });
     }
 
-    private processRequest(request: Request): ResponsePointer {
-        const requestJson: string = JSON.stringify(request);
-        const requestJsonPtr: number = this.server.allocate(
-            this.server.intArrayFromString(requestJson), "i8",
+    private processRequest(request: Request): Pointer {
+        const requestJson: Pointer = this.server.allocate(
+            this.server.intArrayFromString(JSON.stringify(request)), "i8",
             Allocator.ALLOC_NORMAL);
 
-        const responseJsonPtr: number = this.doRequest(requestJsonPtr);
-        this.server._free(requestJsonPtr);
-        return responseJsonPtr;
+        const responseJson: Pointer = this.doRequest(requestJson);
+        this.server._free(requestJson);
+        return responseJson;
     }
 
-    private processRaw(request: ProcessRequest): ResponsePointer {
-        const nchannels = request.processInput.inputBuffers.length;
-        const nframes = request.processInput.inputBuffers[0].values.length;
+    private processRaw(request: ProcessRequest): Pointer {
+        const nChannels: number = request.processInput.inputBuffers.length;
+        const nFrames: number = request.processInput.inputBuffers[0].values.length;
 
-        const bufsPtr = this.server._malloc(nchannels * 4);
-        const bufs = new Uint32Array(
-            this.server.HEAPU8.buffer, bufsPtr, nchannels);
+        const buffersPtr: Pointer = this.server._malloc(nChannels * 4);
+        const buffers: Uint32Array = new Uint32Array(
+            this.server.HEAPU8.buffer, buffersPtr, nChannels);
 
-        for (let i = 0; i < nchannels; ++i) {
-            const framesPtr = this.server._malloc(nframes * 4);
-            const frames = new Float32Array(
-                this.server.HEAPU8.buffer, framesPtr, nframes);
+        for (let i = 0; i < nChannels; ++i) {
+            const framesPtr: Pointer = this.server._malloc(nFrames * 4);
+            const frames: Float32Array = new Float32Array(
+                this.server.HEAPU8.buffer, framesPtr, nFrames);
             frames.set(request.processInput.inputBuffers[i].values);
-            bufs[i] = framesPtr;
+            buffers[i] = framesPtr;
         }
 
-        const responseJsonPtr: number = this.doProcess(
+        const responseJson: Pointer = this.doProcess(
             request.pluginHandle,
-            bufsPtr,
+            buffersPtr,
             request.processInput.timestamp.s,
             request.processInput.timestamp.n);
 
-        for (let i = 0; i < nchannels; ++i) {
-            this.server._free(bufs[i]);
+        for (let i = 0; i < nChannels; ++i) {
+            this.server._free(buffers[i]);
         }
-        this.server._free(bufsPtr);
+        this.server._free(buffersPtr);
 
-        return responseJsonPtr;
+        return responseJson;
     }
 
 }
