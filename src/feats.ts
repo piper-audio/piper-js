@@ -4,4 +4,4 @@
 
 export {FeatsModuleClient} from "./FeatsModuleClient";
 export {AdapterFlags} from "./ClientServer";
-export {batchProcess} from "./AudioUtilities";
+export {batchProcess, generateSineWave, segmentAudioBuffer} from "./AudioUtilities";

@@ -13,11 +13,11 @@
 <script src="../ext/VampExamplePlugins.js"></script>
 <script src="bundle.js"></script>
 <script>
-    function extractFeatures(pluginServer, pluginKey, blocks) {
+    function extractFeatures(pluginServer, pluginKey, audioBuffer, config) {
         var loadPlugin = function (pluginKey) {
             return pluginServer.loadPlugin({
                 pluginKey: pluginKey,
-                inputSampleRate: 16,
+                inputSampleRate: audioBuffer.sampleRate,
                 adapterFlags: [feats.AdapterFlags.AdaptAllSafe]
             });
         };
@@ -27,16 +27,12 @@
             handles.push(response.pluginHandle);
             return pluginServer.configurePlugin({
                 pluginHandle: response.pluginHandle,
-                configuration: {
-                    blockSize: 8,
-                    channelCount: 1,
-                    stepSize: 8
-                }
+                configuration: config
             });
         };
 
         var processBlocks = function () {
-            return feats.batchProcess(blocks, function (block) {
+            return feats.batchProcess(feats.segmentAudioBuffer(config.blockSize, config.stepSize, audioBuffer), function (block) {
                 return pluginServer.process({pluginHandle: handles[handles.length - 1], processInput: block})
             });
         };
@@ -53,14 +49,17 @@
     }
 
     var pluginSelect = document.getElementById('plugins');
-    var server = new feats.FeatsModuleClient(VampExamplePluginsModule());
-    var blocks = [];
-
-    for (var i = 0; i < 10000; ++i)
-        blocks.push({
-            timestamp: {s: i, n: 500000000},
-            inputBuffers: [{values: new Float32Array([0.4, 0.3, 0.2, 0.1, 0.0, -0.1, -0.2, -0.3])}]
-        });
+    var featsClient = new feats.FeatsModuleClient.createFromModule(VampExamplePluginsModule());
+    var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    var sampleRate = 44100;
+    var sineLengthSeconds = 120;
+    var config = {
+        blockSize: 2048,
+        stepSize: 256,
+        channelCount: 1
+    };
+    var buffer = audioContext.createBuffer(config.channelCount, sineLengthSeconds * sampleRate, sampleRate);
+    buffer.copyToChannel(feats.generateSineWave(440.0, sineLengthSeconds, sampleRate, 0.5), 0);
 
     var renderPluginSelectElement = function (plugins) {
         plugins.forEach(function (plugin) {
@@ -71,10 +70,10 @@
         });
     };
 
-    server.listPlugins().then(renderPluginSelectElement);
+    featsClient.listPlugins().then(renderPluginSelectElement);
 
     document.getElementById('extract').addEventListener('click', function () {
-        extractFeatures(server, pluginSelect.value, blocks);
+        extractFeatures(featsClient, pluginSelect.value, buffer, config);
     });
 </script>
 </html>
