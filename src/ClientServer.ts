@@ -116,7 +116,7 @@ export interface Configuration {
 
 export interface ProcessBlock {
     timestamp: Timestamp;
-    inputBuffers: {values?: Float32Array; b64values?: string}[];
+    inputBuffers: {values: Float32Array}[];
 }
 
 export interface ProcessRequest {
@@ -153,7 +153,7 @@ export interface ModuleClient {
 }
 
 export interface ModuleRequestHandler { // should this just be called Server?
-    handle: (request: Request) => Promise<Response>;
+    handle(request: Request): Promise<Response>;
 }
 
 export function toBase64(values: Float32Array): string {

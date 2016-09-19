@@ -9,13 +9,14 @@ import {
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
-    Response, Request, AdapterFlags, SampleType, ModuleRequestHandler, toBase64, fromBase64, ProcessBlock
+    Response, Request, AdapterFlags, SampleType, ModuleRequestHandler, toBase64, fromBase64, PluginHandle
 } from "./ClientServer";
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
 import {FeatureSet, Feature} from "./Feature";
 import {Timestamp} from "./Timestamp";
+import {EmscriptenModuleRequestHandler} from "./EmscriptenModuleRequestHandler";
 interface WireFeature {
     timestamp?: Timestamp;
     duration?: Timestamp;
@@ -23,12 +24,25 @@ interface WireFeature {
     values?: Float32Array;
     b64values?: string;
 }
+interface WireProcessBlock {
+    timestamp: Timestamp;
+    inputBuffers: {values?: number[]; b64values?: string;}[];
+}
+interface WireProcessRequest {
+    pluginHandle: PluginHandle;
+    processInput: WireProcessBlock;
+}
 
 export class FeatsModuleClient implements ModuleClient {
     private timeAdjusters: Map<number, FeatureTimeAdjuster>;
 
     constructor(private handler: ModuleRequestHandler) {
         this.timeAdjusters = new Map();
+    }
+
+    public static createFromModule(module: any): FeatsModuleClient { // TODO need to define an actual interface for the module
+        const isEmscriptenModule: boolean = typeof module.ccall === "function"; // TODO this is an arbitrary way of deciding
+        return isEmscriptenModule ? new FeatsModuleClient(new EmscriptenModuleRequestHandler(module)) : null; // TODO complete factory when more Handlers exist
     }
 
     private request(request: Request): Promise<Response> {
@@ -59,9 +73,7 @@ export class FeatsModuleClient implements ModuleClient {
     }
 
     process(request: ProcessRequest): Promise<FeatureSet> {
-        const block: ProcessBlock = request.processInput;
-        const isBase64: boolean = block.inputBuffers[0].b64values != null && block.inputBuffers[0].b64values !== ""; // TODO would there ever be a mix of values and b64values?
-        const response: Promise<Response> = isBase64 ? this.processBase64(request) : this.processJson(request);
+        const response: Promise<Response> = this.process(request); // TODO introduce some way of indicating default content type
         return response.then(response => {
             let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
@@ -69,25 +81,38 @@ export class FeatsModuleClient implements ModuleClient {
         });
     }
 
-    private processJson(request: ProcessRequest): Promise<Response> {
-        request.processInput.inputBuffers.forEach((val) => {
-            (val as any).values = [...val.values]; // TODO is there a better way to change Float32Array"s JSON representation
-        });
-        return this.handler.handle({type: "process", content: request});
-    }
-
-    private processBase64(request: ProcessRequest): Promise<Request> {
+    private static encodeJson(request: ProcessRequest): WireProcessRequest {
         const encoded = request.processInput.inputBuffers.map(channel => {
-            return {b64values: toBase64(channel.values)};
+            return {values: [...channel.values]}
         });
-        const encReq = {
+        return {
             pluginHandle: request.pluginHandle,
             processInput: {
                 timestamp: request.processInput.timestamp,
                 inputBuffers: encoded
             }
         };
-        return this.handler.handle({type: "process", content: encReq});
+    }
+
+    private static encodeBase64(request: ProcessRequest): WireProcessRequest {
+        const encoded: {b64values: string}[] = request.processInput.inputBuffers.map(channel => {
+            return {b64values: toBase64(channel.values)};
+        });
+        return {
+            pluginHandle: request.pluginHandle,
+            processInput: {
+                timestamp: request.processInput.timestamp,
+                inputBuffers: encoded
+            }
+        };
+    }
+
+    private processEncoded(request: WireProcessRequest): Promise<Response> {
+        return this.handler.handle({type: "process", content: request})
+    }
+
+    private processRaw(request: ProcessRequest): Promise<Response> {
+        return this.handler.handle({type: "process", content: request})
     }
 
     finish(pluginHandle: number): Promise<FeatureSet> {
