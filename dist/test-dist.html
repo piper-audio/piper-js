@@ -57,7 +57,7 @@
         channelCount: 1
     };
     var buffer = audioContext.createBuffer(config.channelCount, sineLengthSeconds * sampleRate, sampleRate);
-    buffer.copyToChannel(feats.generateSineWave(440.0, sineLengthSeconds, sampleRate, 0.5), 0);
+    buffer.getChannelData(0).set(feats.generateSineWave(440.0, sineLengthSeconds, sampleRate, 0.5));
 
     var renderPluginSelectElement = function (plugins) {
         plugins.forEach(function (plugin) {
