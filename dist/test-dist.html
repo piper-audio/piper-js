@@ -9,6 +9,7 @@
     <option></option>
 </select>
 <button id="extract">Extract</button>
+<pre id="dots"></pre>
 </body>
 <script src="../ext/VampExamplePlugins.js"></script>
 <script src="bundle.js"></script>
@@ -71,7 +72,28 @@
     featsClient.listPlugins().then(renderPluginSelectElement);
 
     document.getElementById('extract').addEventListener('click', function () {
-        extractFeatures(featsClient, pluginSelect.value, buffer, config);
+        clearDots();
+        moreDots(0);
+        extractFeatures(featsClient, pluginSelect.value, buffer, config).then(clearDotsMarkAsDone);
     });
+
+    var moreDots = function (count) {
+        var isEndOfLine = (count++ % 100) === 0;
+        var isDone = document.getElementById("dots").textContent.split("Done").length > 1;
+        if (isDone) return;
+        window.setTimeout(function () {
+            document.getElementById("dots").textContent += isEndOfLine ? "\n" : ".";
+            moreDots(count);
+        }, 10);
+    };
+
+    var clearDots = function () {
+        document.getElementById("dots").textContent = "";
+    };
+
+    var clearDotsMarkAsDone = function () {
+        document.getElementById("dots").textContent = "Done.";
+    };
+
 </script>
 </html>
