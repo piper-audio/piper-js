@@ -13,6 +13,6 @@ describe("ModuleAdapter", () => {
     it("Should return an instance of the Feature Extractor it adapts", () => {
         const adaptor: ModuleAdapter = new ModuleAdapter((sampleRate: number) => new ZeroCrossings(sampleRate), {} as StaticData);
         const extractor: FeatureExtractor = adaptor.createFeatureExtractor(44100);
-        console.log(extractor.process);
+        return (extractor instanceof ZeroCrossings).should.be.true;
     });
 });
