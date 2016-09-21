@@ -8,6 +8,8 @@ import {
     Configuration, ConfigurationResponse, ProcessRequest, ProcessInput, SampleType
 } from "../src/ClientServer";
 
+import fs = require("fs");
+
 const validator = require('json-schema-remote');
 
 chai.should();
@@ -18,12 +20,20 @@ describe("FixtureSchema", () => {
     // Really this is just a roundabout way of validating the
     // ClientServer interfaces against the Vamp JSON Schema. I wonder
     // how we can do that more directly.
-    
-    const configurationResponse = require(
-	"./fixtures/expected-configuration-response.json") as ConfigurationResponse;
 
-    const loadResponse = require(
-	"./fixtures/expected-load-response.json") as LoadResponse;
+    //!!! dup, refactor, or find similar in mocha etc
+    const loadFixture = (name : string) => {
+	return JSON.parse( 
+	    fs.readFileSync(
+		__dirname + "/fixtures/" + name + ".json",
+		"utf8"));
+    };
+    
+    const configurationResponse =
+        loadFixture("expected-configuration-response") as ConfigurationResponse;
+
+    const loadResponse =
+        loadFixture("expected-load-response") as LoadResponse;
 
     const schemaBase = "http://vamp-plugins.org/json/schema/";
 
@@ -36,7 +46,7 @@ describe("FixtureSchema", () => {
     
     it("Validates configuration response", function(done) {
 	validator.validate(configurationResponse,
-			   schemaBase + "configurationresponse#")
+			   schemaBase + "configurationresponse")
 	    .then(() => done())
 	    .catch((verr: any) => {
 		throw (new Error(report(verr)));
@@ -45,7 +55,7 @@ describe("FixtureSchema", () => {
     
     it("Validates load response", function(done) {
 	validator.validate(loadResponse,
-			   schemaBase + "loadresponse#")
+                           schemaBase + "loadresponse")
 	    .then(() => done())
 	    .catch((verr: any) => {
 		throw (new Error(report(verr)));
