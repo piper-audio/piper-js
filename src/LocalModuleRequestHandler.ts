@@ -87,12 +87,14 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     //  adapterFlags are used for indicating the host should handle channel adapting stuff,
     //  frequency domain transformation etc
     //     - LoadResponse, some handle for the plugin is returned, so I guess need something like the CountingHandle from VamPipe
-    private load(request: LoadRequest): LoadResponse { // TODO what do I do with adapter flags?
+    private load(request: LoadRequest): LoadResponse {
+        // TODO what do I do with adapter flags?
+        // TODO what about parameterValues?
         if (!this.plugins.has(request.pluginKey)) throw new Error("Invalid plugin key.");
 
         const plugin: Plugin = this.plugins.get(request.pluginKey);
         const extractor: FeatureExtractor = plugin.extractor(request.inputSampleRate);
-        this.loaded.set(this.countingHandle, extractor);
+        this.loaded.set(++this.countingHandle, extractor); // TODO should the first assigned handle be 1 or 0? currently 1
 
         const defaultConfiguration: Configuration = {
             channelCount: (plugin.metadata.minChannelCount === plugin.metadata.maxChannelCount) ?
@@ -102,7 +104,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         };
 
         return {
-            pluginHandle: this.countingHandle++,
+            pluginHandle: this.countingHandle,
             staticData: plugin.metadata,
             defaultConfiguration: defaultConfiguration
         };

@@ -37,7 +37,7 @@ describe("LocalModuleRequestHandler", () => {
         });
 
         it("Resolves to a response where the content body is a LoadResponse", () => {
-            const expectedResponse: LoadResponse = require('./fixtures/expected-load-response.json');
+            const expectedResponse: LoadResponse = require('./fixtures/expected-load-response-js.json');
             const response: Promise<Response> = handler.handle({
                 type: "load", content: {
                     pluginKey: "example-module:zerocrossing",
