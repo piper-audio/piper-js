@@ -7,10 +7,23 @@ import {ProcessBlock} from "../../../../src/ClientServer";
 import {frame2timestamp} from "../../../../src/Timestamp";
 
 export class ZeroCrossings implements FeatureExtractor {
+
     private previousSample: number;
 
     constructor(private inputSampleRate: number) {
         this.previousSample = 0;
+    }
+
+    initialise(channels: number, stepSize: number, blockSize: number): boolean {
+        return true; // TODO how would one access the StaticData here, as it is defined in a config file?
+    }
+
+    getPreferredStepSize(): number {
+        return 0; // TODO I wonder if there should be an abstract base class to derive from? As in the Vamp SDK, could also handle the reading of static data
+    }
+
+    getPreferredBlockSize(): number {
+        return 0;
     }
 
     process(block: ProcessBlock): FeatureSet {
