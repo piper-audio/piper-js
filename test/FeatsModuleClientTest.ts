@@ -14,14 +14,24 @@ import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
+import fs = require("fs");
+
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("FeatsModuleClient", () => {
     const server = new FeatsModuleClient(new EmscriptenModuleRequestHandler(VampExamplePlugins()));
 
+    const loadFixture = (name : string) => {
+	// avoid sharing things through use of require
+	return JSON.parse( 
+	    fs.readFileSync(
+		__dirname + "/fixtures/" + name + ".json",
+		"utf8"));
+    };
+
     it("Can list available plugins in the module", () => {
-        const expectedList: StaticData[] = require("./fixtures/expected-plugin-list.json") as StaticData[];
+        const expectedList: StaticData[] = loadFixture("expected-plugin-list") as StaticData[];
         return server.listPlugins().should.eventually.deep.equal(expectedList);
     });
 
@@ -38,7 +48,7 @@ describe("FeatsModuleClient", () => {
     const loadResponse: Promise<LoadResponse> = loadZeroCrossings();
 
     it("Can load an available plugin", () => {
-        const expectedResponse = require("./fixtures/expected-load-response.json");
+        const expectedResponse = loadFixture("expected-load-response");
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });
 
@@ -58,7 +68,8 @@ describe("FeatsModuleClient", () => {
     const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
 
     it("Can configure a loaded plugin", () => {
-        let expectedResponse = require("./fixtures/expected-configuration-response.json");
+	let expectedResponse = JSON.parse( 
+	    fs.readFileSync(__dirname + "/fixtures/expected-configuration-response.json", "utf8"));
         expectedResponse.outputList.forEach((output: any) => output.sampleType = SampleType[output.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });
@@ -69,7 +80,7 @@ describe("FeatsModuleClient", () => {
     });
 
     it("Can process a single block", () => {
-        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets"); // a js file, not a json one
         const expectedTimestamps = (expectedFeatures.one.get("zerocrossings") as FeatureList).map(feature => feature.timestamp);
 
         const features: Promise<FeatureSet> = server.process({
@@ -93,7 +104,7 @@ describe("FeatsModuleClient", () => {
     });
 
     it("Can process multiple blocks of audio, consecutively", () => {
-        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets"); // a js file, not a json one
         const blocks: ProcessInput[] = [];
 
         blocks.push({
