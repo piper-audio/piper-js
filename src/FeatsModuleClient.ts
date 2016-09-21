@@ -36,13 +36,13 @@ interface ProcessResponse {
     features: WireFeatureSet
 }
 
-interface WireProcessBlock {
+interface WireProcessInput {
     timestamp: Timestamp;
     inputBuffers: {values?: number[]; b64values?: string;}[];
 }
 interface WireProcessRequest {
     pluginHandle: PluginHandle;
-    processInput: WireProcessBlock;
+    processInput: WireProcessInput;
 }
 
 export class FeatsModuleClient implements ModuleClient {

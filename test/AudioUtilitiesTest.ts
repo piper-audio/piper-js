@@ -7,7 +7,7 @@ chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
 import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
-import {ProcessBlock} from "../src/ClientServer.ts";
+import {ProcessInput} from "../src/ClientServer.ts";
 import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment} from "../src/AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {FeatsAudioBuffer} from "../src/AudioBuffer";
@@ -18,7 +18,7 @@ describe("BatchBlockProcess", () => {
         expectedFeatures.push({values: new Float32Array([5])} as Feature);
         expectedFeatures.push({values: new Float32Array([6])} as Feature);
 
-        const blocks: ProcessBlock[] = [];
+        const blocks: ProcessInput[] = [];
 
         blocks.push({
             timestamp: {s: 0, n: 0},
@@ -42,7 +42,7 @@ describe("BatchBlockProcess", () => {
         expectedFeatures.push({values: new Float32Array([1])} as Feature);
         expectedFeatures.push({values: new Float32Array([1])} as Feature);
 
-        const blocks: ProcessBlock[] = [];
+        const blocks: ProcessInput[] = [];
 
         blocks.push({
             timestamp: {s: 0, n: 0},
@@ -68,7 +68,7 @@ describe("BatchBlockProcess", () => {
 
     it("can consume blocks from a generator", () => {
         const audioData: AudioBuffer = FeatsAudioBuffer.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
-        const frames: IterableIterator<ProcessBlock> = segmentAudioBuffer(256, 64, audioData);
+        const frames: IterableIterator<ProcessInput> = segmentAudioBuffer(256, 64, audioData);
         const zc: FeatureExtractor = new ZeroCrossings(8000.0);
         const featureSet: Promise<FeatureSet> = batchProcess(frames, block => Promise.resolve(zc.process(block)));
         return featureSet.then(featureSet => featureSet.get("counts").length.should.equal((10.0 * 8000.0) / 64.0));

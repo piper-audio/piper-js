@@ -7,7 +7,7 @@ import chaiAsPromised = require("chai-as-promised");
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
 import {
     StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType
+    Configuration, ConfigurationResponse, ProcessRequest, ProcessInput, SampleType
 } from "../src/ClientServer";
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
@@ -77,7 +77,7 @@ describe("FeatsModuleClient", () => {
             processInput: {
                 timestamp: {s: 0, n: 0} as Timestamp,
                 inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
-            } as ProcessBlock
+            } as ProcessInput
         } as ProcessRequest);
 
         return features.then((features: FeatureSet) => {
@@ -94,17 +94,17 @@ describe("FeatsModuleClient", () => {
 
     it("Can process multiple blocks of audio, consecutively", () => {
         const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
-        const blocks: ProcessBlock[] = [];
+        const blocks: ProcessInput[] = [];
 
         blocks.push({
             timestamp: {s: 0, n: 0} as Timestamp,
             inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
-        } as ProcessBlock);
+        } as ProcessInput);
 
         blocks.push({
             timestamp: {s: 0, n: 500000000} as Timestamp,
             inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
-        } as ProcessBlock);
+        } as ProcessInput);
 
 
         const processBlocks: () => Promise<FeatureSet> = () => {
