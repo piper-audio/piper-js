@@ -35,6 +35,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
 
     public handle(request: Request): Promise<Response> {
         // TODO switch statement suggests the interface should just be list, load, config, process, finish?
+        // or that it belongs somewhere else, at this point it looks like a bit like request router
         try {
             switch (request.type) {
                 case "list":
@@ -79,18 +80,13 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         return ProcessEncoding.Raw;
     }
     // TODO this might all belong somewhere else
-    // list is basically a dump of each plugins static data (from config)
-    //     - StaticData[]
+
     private list(): StaticData[] {
         return [...this.plugins.values()].map(plugin => plugin.metadata);
     }
 
-    // load instantiates the given plugin (pluginKey, need a map) using the sampleRate provided,
-    //  adapterFlags are used for indicating the host should handle channel adapting stuff,
-    //  frequency domain transformation etc
-    //     - LoadResponse, some handle for the plugin is returned, so I guess need something like the CountingHandle from VamPipe
     private load(request: LoadRequest): LoadResponse {
-        // TODO what do I do with adapter flags?
+        // TODO what do I do with adapter flags? channel adapting stuff, frequency domain transformation etc
         // TODO what about parameterValues?
         if (!this.plugins.has(request.pluginKey)) throw new Error("Invalid plugin key.");
 
@@ -112,8 +108,6 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         };
     }
 
-    // configure, will call initialise on the plugin
-    //     - ConfigurationResponse
     private configure(request: ConfigurationRequest): ConfigurationResponse {
         if (!this.loaded.has(request.pluginHandle)) throw new Error("Invalid plugin handle");
         if (this.configured.has(request.pluginHandle)) throw new Error("Plugin is already configured");
