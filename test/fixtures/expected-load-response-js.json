@@ -1,6 +1,11 @@
 {
-  "main": "src/ZeroCrossings.ts",
-  "description": {
+  "defaultConfiguration": {
+    "blockSize": 0,
+    "channelCount": 1,
+    "stepSize": 0
+  },
+  "pluginHandle": 1,
+  "staticData": {
     "basic": {
       "description": "Detect and count zero crossing points",
       "identifier": "zerocrossing",

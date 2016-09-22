@@ -39,7 +39,7 @@ export interface ConfigurationRequest {
 
 export interface ConfigurationResponse {
     pluginHandle: PluginHandle;
-    outputList: OutputDescriptor[];
+    outputList: OutputList;
 }
 
 export enum InputDomain {
@@ -97,8 +97,7 @@ export interface StaticData {
     basicOutputInfo: BasicDescriptor[];
 }
 
-export interface OutputDescriptor {
-    basic: BasicDescriptor;
+export interface RuntimeOutputInfo {
     unit?: string;
     binCount?: number;
     binNames?: string[];
@@ -108,6 +107,15 @@ export interface OutputDescriptor {
     sampleRate?: number;
     hasDuration: boolean;
 }
+
+export type OutputIdentifier = string;
+export type RuntimeOutputMap = Map<OutputIdentifier, RuntimeOutputInfo>;
+
+export interface OutputDescriptor extends RuntimeOutputInfo {
+    basic: BasicDescriptor;
+}
+
+export type OutputList = OutputDescriptor[];
 
 export interface Configuration {
     channelCount: number;
