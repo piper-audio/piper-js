@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 /**
  * Created by lucast on 30/08/2016.
  */
