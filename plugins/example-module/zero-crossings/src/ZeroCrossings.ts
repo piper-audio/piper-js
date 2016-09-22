@@ -1,29 +1,46 @@
 /**
  * Created by lucas on 25/08/2016.
  */
-import {FeatureExtractor} from "../../../../src/FeatureExtractor";
+import {FeatsFeatureExtractor} from "../../../../src/FeatureExtractor";
 import {FeatureSet, FeatureList} from "../../../../src/Feature";
-import {ProcessBlock} from "../../../../src/ClientServer";
+import {
+    ProcessBlock, RuntimeOutputMap, OutputIdentifier,
+    RuntimeOutputInfo, SampleType, StaticData
+} from "../../../../src/ClientServer";
 import {frame2timestamp} from "../../../../src/Timestamp";
 
-export class ZeroCrossings implements FeatureExtractor {
-
+export class ZeroCrossings extends FeatsFeatureExtractor {
     private previousSample: number;
+    private outputs: RuntimeOutputMap;
+    private inputSampleRate: number;
 
-    constructor(private inputSampleRate: number) {
+    constructor(inputSampleRate: number, metadata: StaticData) {
+        super(metadata); // TODO this really doesn't seem intuitive - there must be a better way of hiding that metadata is declared externally
+        this.inputSampleRate = inputSampleRate;
         this.previousSample = 0;
+        this.outputs = new Map<OutputIdentifier, RuntimeOutputInfo>([
+            ["counts", {
+                binCount: 1,
+                quantizeStep: 1.0,
+                sampleType: SampleType.OneSamplePerStep,
+                hasDuration: false,
+                unit: "crossings"
+            }],
+            ["crossings", {
+                binCount: 0,
+                sampleType: SampleType.VariableSampleRate,
+                sampleRate: inputSampleRate,
+                hasDuration: false
+            }]
+        ]);
     }
 
     initialise(channels: number, stepSize: number, blockSize: number): boolean {
         return true; // TODO how would one access the StaticData here, as it is defined in a config file?
     }
 
-    getPreferredStepSize(): number {
-        return 0; // TODO I wonder if there should be an abstract base class to derive from? As in the Vamp SDK, could also handle the reading of static data
-    }
-
-    getPreferredBlockSize(): number {
-        return 0;
+    getRuntimeOutputInfo(identifier: OutputIdentifier): RuntimeOutputInfo {
+        return this.outputs.get(identifier); // TODO error handling
     }
 
     process(block: ProcessBlock): FeatureSet {
@@ -43,6 +60,10 @@ export class ZeroCrossings implements FeatureExtractor {
         returnFeatures.set("counts", [{values: new Float32Array([count])}]);
         if (crossingPoints.length > 0) returnFeatures.set("crossings", crossingPoints);
         return returnFeatures;
+    }
+
+    finish(): FeatureSet {
+        return undefined;
     }
 
     private hasCrossedAxis(sample: number) {
