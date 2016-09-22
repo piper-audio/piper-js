@@ -22,7 +22,7 @@ interface WireFeature {
     timestamp?: Timestamp;
     duration?: Timestamp;
     label?: string;
-    values?: Float32Array;
+    values?: number[];
     b64values?: string;
 }
 type WireFeatureList = WireFeature[];
@@ -81,7 +81,7 @@ export class FeatsModuleClient implements ModuleClient {
     public configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
         return this.request({type: "configure", content: request}).then((response) => {
             for (let output of response.content.outputList) {
-                (output as any).sampleType = SampleType[output.sampleType];
+                (output.configured as any).sampleType = SampleType[output.configured.sampleType];
                 this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(output));
             }
             return response.content as ConfigurationResponse;

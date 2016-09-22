@@ -97,7 +97,9 @@ export interface StaticData {
     basicOutputInfo: BasicDescriptor[];
 }
 
-export interface RuntimeOutputInfo {
+export type OutputIdentifier = string;
+
+export interface ConfiguredOutputDescriptor {
     unit?: string;
     binCount?: number;
     binNames?: string[];
@@ -108,19 +110,22 @@ export interface RuntimeOutputInfo {
     hasDuration: boolean;
 }
 
-export type OutputIdentifier = string;
-export type RuntimeOutputMap = Map<OutputIdentifier, RuntimeOutputInfo>;
+export type ConfiguredOutputs = Map<OutputIdentifier, ConfiguredOutputDescriptor>;
 
-export interface OutputDescriptor extends RuntimeOutputInfo {
+export interface OutputDescriptor {
     basic: BasicDescriptor;
+    configured: ConfiguredOutputDescriptor;
 }
 
 export type OutputList = OutputDescriptor[];
+export type ParameterIdentifier = string;
+export type Parameters = Map<ParameterIdentifier, number>;
 
 export interface Configuration {
     channelCount: number;
     stepSize: number;
     blockSize: number;
+    parameterValues?: Parameters
 }
 
 export interface ProcessInput {

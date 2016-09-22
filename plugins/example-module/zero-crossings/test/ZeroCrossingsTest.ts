@@ -6,7 +6,7 @@ import {ZeroCrossings} from "../src/ZeroCrossings";
 import {Feature, FeatureSet} from "../../../../src/Feature"
 import chai = require('chai');
 import {Timestamp, frame2timestamp} from "../../../../src/Timestamp";
-import {ProcessInput, StaticData} from "../../../../src/ClientServer";
+import {ProcessInput} from "../../../../src/ClientServer";
 chai.should();
 
 describe('ZeroCrossings', () => {
@@ -19,7 +19,7 @@ describe('ZeroCrossings', () => {
 
     describe('.process()', () => {
         it('Should return a count of zero for a buffer of zeros, and have no crossing points', () => {
-            let zc = new ZeroCrossings(16, {} as StaticData);
+            let zc = new ZeroCrossings(16);
             let block = toProcessInput(new Float32Array(8));
             let features: FeatureSet = zc.process(block);
             features.get("counts").should.deep.equal([{values: new Float32Array([0])}]);
@@ -27,7 +27,7 @@ describe('ZeroCrossings', () => {
         });
 
         it('Should return a count of 5 for an input which crosses 5 times, with the locations of the crossings', () => {
-            let zc = new ZeroCrossings(16, {} as StaticData);
+            let zc = new ZeroCrossings(16);
             let block = toProcessInput(new Float32Array([0, 1, -1, 0, 1, -1, 0, 1]));
             let features: FeatureSet = zc.process(block);
             features.get("counts").should.deep.equal([{values: new Float32Array([5])}]);
@@ -35,7 +35,7 @@ describe('ZeroCrossings', () => {
         });
 
         it('Should keep the last sample from the previous block and thus cross once', () => {
-            let zc = new ZeroCrossings(16, {} as StaticData);
+            let zc = new ZeroCrossings(16);
             let block = toProcessInput(new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]));
             zc.process(block);
             block.inputBuffers[0].values.fill(0);

@@ -3,7 +3,8 @@
  */
 import {
     ModuleRequestHandler, Request, Response, ProcessEncoding, StaticData, LoadRequest,
-    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, Configuration
+    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, Configuration, OutputList,
+    ConfiguredOutputs
 } from "./ClientServer";
 import {FeatureExtractor} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
@@ -11,23 +12,28 @@ import {FeatureSet} from "./Feature";
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 
 interface ProcessResponse { // TODO where does this belong? FeatsModuleClient also has a ProcessResponse, with a WireFeature
-    pluginHandle: PluginHandle,
-    features: FeatureSet
+    pluginHandle: PluginHandle;
+    features: FeatureSet;
 }
 
-export interface Plugin { // TODO rename, this is part of our identity crisis
-    extractor: FeatureExtractorFactory,
-    metadata: StaticData
+export interface PluginFactory { // TODO rename, this is part of our identity crisis
+    extractor: FeatureExtractorFactory;
+    metadata: StaticData;
+}
+
+export interface Plugin {
+    extractor: FeatureExtractor;
+    metadata: StaticData;
 }
 
 export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO Local? This also has an identity crisis
-    private plugins: Map<string, Plugin>;
-    private loaded: Map<number, FeatureExtractor>;
-    private configured: Map<number, FeatureExtractor>;
+    private factories: Map<string, PluginFactory>;
+    private loaded: Map<number, Plugin>;
+    private configured: Map<number, Plugin>;
     private countingHandle: number;
 
-    constructor(...plugins: Plugin[]) {
-        this.plugins = new Map(plugins.map(plugin => [plugin.metadata.pluginKey, plugin] as [string, Plugin]));
+    constructor(...factories: PluginFactory[]) {
+        this.factories = new Map(factories.map(plugin => [plugin.metadata.pluginKey, plugin] as [string, PluginFactory]));
         this.loaded = new Map();
         this.configured = new Map();
         this.countingHandle = 0;
@@ -82,41 +88,43 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     // TODO this might all belong somewhere else
 
     private list(): StaticData[] {
-        return [...this.plugins.values()].map(plugin => plugin.metadata);
+        return [...this.factories.values()].map(plugin => plugin.metadata);
     }
 
     private load(request: LoadRequest): LoadResponse {
         // TODO what do I do with adapter flags? channel adapting stuff, frequency domain transformation etc
         // TODO what about parameterValues?
-        if (!this.plugins.has(request.pluginKey)) throw new Error("Invalid plugin key.");
+        if (!this.factories.has(request.pluginKey)) throw new Error("Invalid plugin key.");
 
-        const plugin: Plugin = this.plugins.get(request.pluginKey);
-        const extractor: FeatureExtractor = plugin.extractor(request.inputSampleRate);
-        this.loaded.set(++this.countingHandle, extractor); // TODO should the first assigned handle be 1 or 0? currently 1
+        const factory: PluginFactory = this.factories.get(request.pluginKey);
+        const extractor: FeatureExtractor = factory.extractor(request.inputSampleRate);
+        const metadata: StaticData = factory.metadata;
+        this.loaded.set(++this.countingHandle, {extractor: extractor, metadata: metadata}); // TODO should the first assigned handle be 1 or 0? currently 1
 
-        const defaultConfiguration: Configuration = {
-            channelCount: (plugin.metadata.minChannelCount === plugin.metadata.maxChannelCount) ?
-                plugin.metadata.minChannelCount : 0, // TODO logic from VamPipe adapter, what happens when it returns 0?
-            stepSize: extractor.getPreferredStepSize(),
-            blockSize: extractor.getPreferredBlockSize()
-        };
+        const defaultConfiguration: Configuration = extractor.getDefaultConfiguration();
 
         return {
             pluginHandle: this.countingHandle,
-            staticData: plugin.metadata,
+            staticData: metadata,
             defaultConfiguration: defaultConfiguration
         };
     }
 
     private configure(request: ConfigurationRequest): ConfigurationResponse {
         if (!this.loaded.has(request.pluginHandle)) throw new Error("Invalid plugin handle");
-        if (this.configured.has(request.pluginHandle)) throw new Error("Plugin is already configured");
+        if (this.configured.has(request.pluginHandle)) throw new Error("PluginFactory is already configured");
 
-        const extractor: FeatureExtractor = this.loaded.get(request.pluginHandle);
-        const config: Configuration = request.configuration;
-        extractor.initialise(config.channelCount, config.stepSize, config.blockSize);
-        this.configured.set(request.pluginHandle, extractor);
-        return {pluginHandle: request.pluginHandle, outputList: extractor.getOutputDescriptors()};
+        const plugin: Plugin = this.loaded.get(request.pluginHandle);
+        // TODO this is probably where the error handling for channel mismatch should be...
+        const outputs: ConfiguredOutputs = plugin.extractor.configure(request.configuration);
+        this.configured.set(request.pluginHandle, plugin);
+        const outputList: OutputList = plugin.metadata.basicOutputInfo.map(basic => {
+            return {
+                basic: basic,
+                configured: Object.assign({binNames: [], sampleRate: 0}, outputs.get(basic.identifier))
+            };
+        });
+        return {pluginHandle: request.pluginHandle, outputList: outputList};
     }
 
     // process, should be a direct call to process, may need to alter the shape of the return (not sure)
@@ -124,6 +132,18 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     // ^^ The AdapterFlags will indicate the work to be done, but I've not yet implemented anything which does it
     //     - ProcessResponse (there is no JSON schema for this, but copy the shape of the latest VamPipe)
     private process(request: ProcessRequest): ProcessResponse {
+        if (!this.configured.has(request.pluginHandle))
+            throw new Error("Invalid plugin handle, or plugin not configured.");
+
+        const plugin: Plugin = this.configured.get(request.pluginHandle);
+        const numberOfInputs: number = request.processInput.inputBuffers.length;
+        const metadata: StaticData = plugin.metadata;
+
+        if (numberOfInputs < metadata.minChannelCount || numberOfInputs > metadata.maxChannelCount) // TODO is there a specific number of channels after configure is called?
+            throw new Error("wrong number of channels supplied.");
+
+
+
         return undefined;
     }
 
