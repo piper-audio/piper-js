@@ -1,0 +1,27 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/feature#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a Vamp::Plugin::Feature serialisation",
+    "type": "object",
+    "properties": {
+	"timestamp": {
+	    "$ref": "http://vamp-plugins.org/json/schema/realtime#"
+	},
+	"duration": {
+	    "$ref": "http://vamp-plugins.org/json/schema/realtime#"
+	},
+	"label": {
+	    "type": "string"
+	},
+	"values": {
+	    "type": "array",
+	    "items": { "type": "number" }
+	},
+	"b64values": {
+	    "type": "string"
+	}
+    },
+    "additionalProperties": false
+}
+
+	

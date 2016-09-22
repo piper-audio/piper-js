@@ -3,7 +3,7 @@
  */
 import {FeatureSet} from "./Feature";
 import {
-    ProcessBlock, OutputDescriptor, StaticData, RuntimeOutputMap, OutputList,
+    ProcessInput, OutputDescriptor, StaticData, OutputList,
     RuntimeOutputInfo, OutputIdentifier
 } from "./ClientServer";
 
@@ -13,7 +13,7 @@ export interface FeatureExtractor {
     getPreferredBlockSize(): number; // TODO not in StaticData? should they be? I guess this could be sample rate dependant
     getMetadata(): StaticData;
     getOutputDescriptors(): OutputDescriptor[];
-    process(block: ProcessBlock): FeatureSet;
+    process(block: ProcessInput): FeatureSet;
     finish(): FeatureSet;
 }
 
@@ -51,6 +51,6 @@ export abstract class FeatsFeatureExtractor implements FeatureExtractor {
     }
 
     public abstract getRuntimeOutputInfo(identifier: OutputIdentifier): RuntimeOutputInfo;
-    public abstract process(block: ProcessBlock): FeatureSet;
+    public abstract process(block: ProcessInput): FeatureSet;
     public abstract finish(): FeatureSet;
 }

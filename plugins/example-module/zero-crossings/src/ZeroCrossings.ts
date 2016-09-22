@@ -4,7 +4,7 @@
 import {FeatsFeatureExtractor} from "../../../../src/FeatureExtractor";
 import {FeatureSet, FeatureList} from "../../../../src/Feature";
 import {
-    ProcessBlock, RuntimeOutputMap, OutputIdentifier,
+    ProcessInput, RuntimeOutputMap, OutputIdentifier,
     RuntimeOutputInfo, SampleType, StaticData
 } from "../../../../src/ClientServer";
 import {frame2timestamp} from "../../../../src/Timestamp";
@@ -43,7 +43,7 @@ export class ZeroCrossings extends FeatsFeatureExtractor {
         return this.outputs.get(identifier); // TODO error handling
     }
 
-    process(block: ProcessBlock): FeatureSet {
+    process(block: ProcessInput): FeatureSet {
         let count: number = 0;
         let returnFeatures: FeatureSet = new Map();
         let crossingPoints: FeatureList = [];

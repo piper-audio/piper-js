@@ -1,0 +1,23 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/loadrequest#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised load request for a Vamp Plugin; normally served as the content field of an object matching the plain request schema",
+    "type": "object",
+    "properties": {
+	"pluginKey": {
+	    "type": "string"
+	},
+	"inputSampleRate": {
+	    "type": "number"
+	},
+	"adapterFlags": {
+	    "type": "array",
+	    "items": {
+		"$ref": "http://vamp-plugins.org/json/schema/enums#/definitions/adapter_flags"
+	    }
+	}
+    },
+    "required": [ "pluginKey", "inputSampleRate" ],
+    "additionalProperties": false
+}
+

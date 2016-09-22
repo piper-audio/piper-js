@@ -1,0 +1,17 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/enums#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for Vamp serialisation enums",
+    "definitions": {
+	"input_domain": {
+	    "enum": [ "TimeDomain", "FrequencyDomain" ]
+	},
+	"sample_type": {
+	    "enum": [ "OneSamplePerStep", "FixedSampleRate", "VariableSampleRate" ]
+	},
+	"adapter_flags": {
+	    "enum": [ "AdaptNone", "AdaptInputDomain", "AdaptChannelCount",
+		      "AdaptBufferSize", "AdaptAllSafe", "AdaptAll" ]
+	}
+    }
+}

@@ -123,14 +123,14 @@ export interface Configuration {
     blockSize: number;
 }
 
-export interface ProcessBlock {
+export interface ProcessInput {
     timestamp: Timestamp;
     inputBuffers: {values: Float32Array}[];
 }
 
 export interface ProcessRequest {
     pluginHandle: PluginHandle;
-    processInput: ProcessBlock;
+    processInput: ProcessInput;
 }
 
 export interface ModuleClient {
