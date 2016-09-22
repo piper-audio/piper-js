@@ -14,7 +14,7 @@ export class VariableSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuste
 
     adjust(feature: Feature): void {
         if (!feature.hasOwnProperty("timestamp")) throw new Error("Feature must have a timestamp");
-        const hasSampleRate: boolean = this.descriptor.hasOwnProperty("sampleRate") && this.descriptor.configured.sampleRate !== 0.0;
+        const hasSampleRate: boolean = this.descriptor.configured.hasOwnProperty("sampleRate") && this.descriptor.configured.sampleRate !== 0.0;
         if (!feature.hasOwnProperty("duration"))
             feature.duration = hasSampleRate ? frame2timestamp(1, this.descriptor.configured.sampleRate) : {s: 0, n: 0};
     }
@@ -24,7 +24,7 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
     private lastFeatureIndex: number;
 
     constructor(private descriptor: OutputDescriptor) {
-        if (!descriptor.hasOwnProperty("sampleRate") || descriptor.configured.sampleRate === 0.0) throw new Error("OutputDescriptor must provide a sample rate.");
+        if (!descriptor.configured.hasOwnProperty("sampleRate") || descriptor.configured.sampleRate === 0.0) throw new Error("OutputDescriptor must provide a sample rate.");
         this.lastFeatureIndex = -1;
     }
 
