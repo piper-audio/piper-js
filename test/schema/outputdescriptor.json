@@ -1,0 +1,45 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/outputdescriptor#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a Vamp::Plugin::OutputDescriptor serialisation",
+    "type": "object",
+    "properties": {
+	"basic": {
+	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
+	},
+	"unit": {
+	    "type": "string"
+	},
+	"binCount": {
+	    "type": "integer"
+	},
+	"binNames": {
+	    "type": "array",
+	    "items": { "type": "string" }
+	},
+	"extents": {
+	    "type": "object",
+	    "properties": {
+		"min": { "type": "number" },
+		"max": { "type": "number" }
+	    },
+	    "required": [ "min", "max" ],
+	    "additionalProperties": false
+	},
+	"quantizeStep": {
+	    "type": "number"
+	},
+	"sampleType": {
+	    "$ref": "http://vamp-plugins.org/json/schema/enums#/definitions/sample_type"
+	},
+	"sampleRate": {
+	    "type": "number"
+	},
+	"hasDuration": {
+	    "type": "boolean"
+	}
+    },
+    "required": [ "basic", "sampleType", "hasDuration" ],
+    "additionalProperties": false
+}
+

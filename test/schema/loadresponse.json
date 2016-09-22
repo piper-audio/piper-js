@@ -1,0 +1,19 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/loadresponse#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised response to a load request for a Vamp Plugin; normally served as the content field of an object matching the plain response schema",
+    "type": "object",
+    "properties": {
+	"pluginHandle": {
+	    "type": "number"
+	},
+	"staticData": {
+	    "$ref": "http://vamp-plugins.org/json/schema/pluginstaticdata#"
+	},
+	"defaultConfiguration": {
+	    "$ref": "http://vamp-plugins.org/json/schema/pluginconfiguration#"
+	}
+    },
+    "additionalProperties": false
+}
+

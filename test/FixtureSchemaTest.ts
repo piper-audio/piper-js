@@ -10,16 +10,7 @@ import {
 
 import fs = require("fs");
 
-const validator = require('json-schema-remote');
-
-validator.preload(
-	    fs.readFileSync(
-		__dirname + "/../../vamp-json-schema/schema/configurationresponse.json",
-		"utf8"));
-
-console.log("preloaded");
-
-const schemaBase = "http://vamp-plugins.org/json/schema/";
+const tv4 = require("tv4");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -37,6 +28,40 @@ describe("FixtureSchema", () => {
 		__dirname + "/fixtures/" + name + ".json",
 		"utf8"));
     };
+
+    const vampSchemaBase = "http://vamp-plugins.org/json/schema/";
+    const vampSchemaFileBase = __dirname + "/schema/";
+
+    const loadSchema = () => {
+        const vampSchema = [
+            "basic",
+            "configurationrequest",
+            "configurationresponse",
+            "enums",
+            "feature",
+            "featureset",
+            "loadrequest",
+            "loadresponse",
+            "outputdescriptor",
+            "parameterdescriptor",
+            "pluginconfiguration",
+            "pluginstaticdata",
+            "processinput",
+            "processrequest",
+            "realtime",
+            "request",
+            "response",
+            "valueextents"
+        ];
+        vampSchema.map(name => {
+            tv4.addSchema(JSON.parse(
+                fs.readFileSync(
+                    vampSchemaFileBase + name + ".json",
+                    "utf8")));
+        });
+    }
+
+    const preload = loadSchema();
     
     const configurationResponse =
         loadFixture("expected-configuration-response") as ConfigurationResponse;
@@ -44,29 +69,25 @@ describe("FixtureSchema", () => {
     const loadResponse =
         loadFixture("expected-load-response") as LoadResponse;
 
-    const report = function(verr : any) : string {
-	return verr.errors.map((e : any) => {
-	    return "Error: \"" + e.message + "\" at data path " + e.dataPath
-		+ " and schema path " + e.schemaPath;
-	}).join("\n");
+    const report = function(e : any) : string {
+	return "Error: \"" + e.message + "\" at data path " + e.dataPath
+	    + " and schema path " + e.schemaPath;
     }
-    
+
     it("Validates configuration response", function(done) {
-	validator.tv4Validate(configurationResponse,
-			   schemaBase + "configurationresponse#")
-	    .then(() => done())
-	    .catch((verr: any) => {
-		throw (new Error(report(verr)));
-	    });
+        if (!tv4.validate(configurationResponse,
+		          vampSchemaBase + "configurationresponse#")) {
+            throw new Error(report(tv4.error));
+        } 
+        done();
     });
     
     it("Validates load response", function(done) {
-	validator.tv4Validate(loadResponse,
-                           schemaBase + "loadresponse#")
-	    .then(() => done())
-	    .catch((verr: any) => {
-		throw (new Error(report(verr)));
-	    });
+        if (!tv4.validate(loadResponse,
+		          vampSchemaBase + "loadresponse#")) {
+            throw new Error(report(tv4.error));
+        }
+        done();
     });
 });
 

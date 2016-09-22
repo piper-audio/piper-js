@@ -1,0 +1,29 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/processinput#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised input into a plugin process call",
+    "type": "object",
+    "properties": {
+	"timestamp": {
+	    "$ref": "http://vamp-plugins.org/json/schema/realtime#"
+	},
+	"inputBuffers": {
+	    "type": "array",
+	    "items": {
+		"type": "object",
+		"properties": {
+		    "values": {
+			"type": "array",
+			"items": { "type": "number" }
+		    },
+		    "b64values": {
+			"type": "string"
+		    }
+		}
+	    }
+	}
+    },
+    "additionalProperties": false
+}
+
+	

@@ -1,0 +1,53 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/pluginstaticdata#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised bundle of the static data associated with a Vamp Plugin",
+    "type": "object",
+    "properties": {
+	"pluginKey": {
+	    "type": "string"
+	},
+	"basic": {
+	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
+	},
+	"maker": {
+	    "type": "string"
+	},
+	"copyright": {
+	    "type": "string"
+	},
+	"pluginVersion": {
+	    "type": "integer"
+	},
+	"category": {
+	    "type": "array",
+	    "items": { "type": "string" }
+	},
+	"minChannelCount": {
+	    "type": "integer"
+	},
+	"maxChannelCount": {
+	    "type": "integer"
+	},
+	"parameters": {
+	    "type": "array",
+	    "items": { "$ref": "http://vamp-plugins.org/json/schema/parameterdescriptor#" }
+	},
+	"programs": {
+	    "type": "array",
+	    "items": { "type": "string" }
+	},
+	"inputDomain": {
+	    "$ref": "http://vamp-plugins.org/json/schema/enums#/definitions/input_domain"
+	},
+	"basicOutputInfo": {
+	    "type": "array",
+	    "items": { "$ref": "http://vamp-plugins.org/json/schema/basic#" }
+	}
+    },
+    "required": [ "pluginKey", "basic", "pluginVersion",
+		  "minChannelCount", "maxChannelCount",
+		  "inputDomain", "basicOutputInfo" ],
+    "additionalProperties": false
+}
+

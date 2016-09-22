@@ -1,0 +1,17 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/request#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a simple serialised request",
+    "type": "object",
+    "properties": {
+	"type": {
+	    "type": "string"
+	},
+	"content": {
+	    "type": "object"
+	}
+    },
+    "required": [ "type" ],
+    "additionalProperties": false
+}
+
