@@ -3,12 +3,14 @@
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 
-import {EmscriptenPluginServer} from "../src/EmscriptenPluginServer";
+import {FeatsModuleClient} from "../src/FeatsModuleClient";
+
 import {
     StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessBlock, SampleType
-} from "../src/PluginServer";
+    Configuration, ConfigurationResponse, ProcessRequest, ProcessInput, SampleType
+} from "../src/ClientServer";
 
+import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
@@ -19,7 +21,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 describe('VampTestPlugin', () => {
-    const server = new EmscriptenPluginServer(VampTestPlugin());
+    const server = new FeatsModuleClient(new EmscriptenModuleRequestHandler(VampTestPlugin()));
 
     const loadResponse: Promise<LoadResponse> =
 	server.listPlugins().then((plugins) => {
