@@ -23,11 +23,13 @@ export interface Plugin { // TODO rename, this is part of our identity crisis
 export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO Local? This also has an identity crisis
     private plugins: Map<string, Plugin>;
     private loaded: Map<number, FeatureExtractor>;
+    private configured: Map<number, FeatureExtractor>;
     private countingHandle: number;
 
     constructor(...plugins: Plugin[]) {
         this.plugins = new Map(plugins.map(plugin => [plugin.metadata.pluginKey, plugin] as [string, Plugin]));
         this.loaded = new Map();
+        this.configured = new Map();
         this.countingHandle = 0;
     }
 
@@ -110,10 +112,17 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         };
     }
 
-    // configure, will call initialise on the plugin, which currently doesn't exist
+    // configure, will call initialise on the plugin
     //     - ConfigurationResponse
     private configure(request: ConfigurationRequest): ConfigurationResponse {
-        return undefined;
+        if (!this.loaded.has(request.pluginHandle)) throw new Error("Invalid plugin handle");
+        if (this.configured.has(request.pluginHandle)) throw new Error("Plugin is already configured");
+
+        const extractor: FeatureExtractor = this.loaded.get(request.pluginHandle);
+        const config: Configuration = request.configuration;
+        extractor.initialise(config.channelCount, config.stepSize, config.blockSize);
+        this.configured.set(request.pluginHandle, extractor);
+        return {pluginHandle: request.pluginHandle, outputList: extractor.getOutputDescriptors()};
     }
 
     // process, should be a direct call to process, may need to alter the shape of the return (not sure)
