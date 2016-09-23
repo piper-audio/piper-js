@@ -7,39 +7,11 @@
 	"basic": {
 	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
 	},
-	"unit": {
-	    "type": "string"
-	},
-	"binCount": {
-	    "type": "integer"
-	},
-	"binNames": {
-	    "type": "array",
-	    "items": { "type": "string" }
-	},
-	"extents": {
-	    "type": "object",
-	    "properties": {
-		"min": { "type": "number" },
-		"max": { "type": "number" }
-	    },
-	    "required": [ "min", "max" ],
-	    "additionalProperties": false
-	},
-	"quantizeStep": {
-	    "type": "number"
-	},
-	"sampleType": {
-	    "$ref": "http://vamp-plugins.org/json/schema/enums#/definitions/sample_type"
-	},
-	"sampleRate": {
-	    "type": "number"
-	},
-	"hasDuration": {
-	    "type": "boolean"
+	"configured": {
+		"$ref": "http://vamp-plugins.org/json/schema/configuredoutputdescriptor#"
 	}
     },
-    "required": [ "basic", "sampleType", "hasDuration" ],
+    "required": [ "basic", "configured" ],
     "additionalProperties": false
 }
 
