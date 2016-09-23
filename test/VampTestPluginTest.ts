@@ -24,9 +24,9 @@ describe('VampTestPlugin', () => {
     const server = new FeatsModuleClient(new EmscriptenModuleRequestHandler(VampTestPlugin()));
 
     const loadResponse: Promise<LoadResponse> =
-	server.listPlugins().then((plugins) => {
+	server.listPlugins().then((resp) => {
             return server.loadPlugin({
-                pluginKey: plugins[0].pluginKey, // time-domain
+                pluginKey: resp.plugins[0].pluginKey, // time-domain
                 inputSampleRate: 44100,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]
             } as LoadRequest);

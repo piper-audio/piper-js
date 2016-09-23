@@ -138,7 +138,9 @@ export interface ProcessRequest {
     processInput: ProcessInput;
 }
 
-export type ListResponse = StaticData[];
+export interface ListResponse {
+    plugins: StaticData[];
+}
 
 export interface ModuleClient {
     listPlugins(): Promise<ListResponse>;

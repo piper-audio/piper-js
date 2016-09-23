@@ -40,6 +40,7 @@ describe("FixtureSchema", () => {
             "enums",
             "feature",
             "featureset",
+            "listresponse",
             "loadrequest",
             "loadresponse",
             "outputdescriptor",

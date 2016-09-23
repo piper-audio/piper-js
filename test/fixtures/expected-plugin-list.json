@@ -1,4 +1,5 @@
-[
+{
+"plugins": [
   {
     "basic": {
       "description": "Track the amplitude of the audio signal",
@@ -280,3 +281,4 @@
     "programs": []
   }
 ]
+}
