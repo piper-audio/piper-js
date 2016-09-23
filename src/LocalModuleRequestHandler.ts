@@ -4,17 +4,12 @@
 import {
     ModuleRequestHandler, Request, Response, ProcessEncoding, StaticData, LoadRequest,
     LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, Configuration, OutputList,
-    ConfiguredOutputs
+    ConfiguredOutputs, ProcessResponse, WireFeatureSet
 } from "./ClientServer";
 import {FeatureExtractor} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
-
-interface ProcessResponse { // TODO where does this belong? FeatsModuleClient also has a ProcessResponse, with a WireFeature
-    pluginHandle: PluginHandle;
-    features: FeatureSet;
-}
 
 export interface PluginFactory { // TODO rename, this is part of our identity crisis
     extractor: FeatureExtractorFactory;
@@ -131,7 +126,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     // TODO what about FrequencyDomain input?, or channel count mis-match?
     // ^^ The AdapterFlags will indicate the work to be done, but I've not yet implemented anything which does it
     //     - ProcessResponse (there is no JSON schema for this, but copy the shape of the latest VamPipe)
-    private process(request: ProcessRequest): ProcessResponse {
+    private process(request: ProcessRequest): ProcessResponse { // TODO what if this was over the wire?
         if (!this.configured.has(request.pluginHandle))
             throw new Error("Invalid plugin handle, or plugin not configured.");
 
@@ -142,15 +137,22 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         if (numberOfInputs < metadata.minChannelCount || numberOfInputs > metadata.maxChannelCount) // TODO is there a specific number of channels after configure is called?
             throw new Error("wrong number of channels supplied.");
 
-
-
-        return undefined;
+        // TODO again, having to convert between maps and objects, to have to go back again elsewhere is very wasteful
+        // especially as we aren't doing the same thing for ProcessRequest here ~ it is all very confused
+        const features: FeatureSet = plugin.extractor.process(request.processInput);
+        return {pluginHandle: request.pluginHandle, features: LocalModuleRequestHandler.toWireFeatureSet(features)};
     }
 
     // finish, directly call finish
     //     - ProcessResponse?
     private finish(handle: PluginHandle): ProcessResponse {
-        return undefined;
+        if (!this.configured.has(handle))
+            throw new Error("Invalid plugin handle, or plugin not configured.");
+        const plugin: Plugin = this.configured.get(handle);
+        const features: FeatureSet = plugin.extractor.finish();
+        this.loaded.delete(handle);
+        this.configured.delete(handle);
+        return {pluginHandle: handle, features: LocalModuleRequestHandler.toWireFeatureSet(features)};
     }
 
     private static rejectRequest(err: string, request: Request): Promise<Request> {
@@ -159,5 +161,17 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
             success: false,
             errorText: err
         });
+    }
+
+    private static toWireFeatureSet(features: FeatureSet): WireFeatureSet { // TODO this is horrible
+        let wireFeatures: any = {};
+        for (let [key, featureList] of features.entries()) {
+            featureList.forEach(feature => {
+                if (feature.hasOwnProperty("values"))
+                    feature.values = [...feature.values] as any; // this is mutating the input FeatureSet, ergh
+            });
+            wireFeatures[key] = featureList;
+        }
+        return wireFeatures;
     }
 }

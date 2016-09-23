@@ -107,20 +107,34 @@ describe("LocalModuleRequestHandler", () => {
     });
 
     describe("Process and Finish request handling", () => {
-        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
-        const expectedTimestamps = (expectedFeatures.one.get("zerocrossings") as FeatureList).map(feature => feature.timestamp);
         const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
-
+        const configResponse: Promise<Response> = handler.handle({
+            type: "load", content: {
+                pluginKey: "example-module:zerocrossing",
+                inputSampleRate: 16,
+                adapterFlags: ["AdaptAllSafe"]
+            }
+        }).then(loadResponse => {
+            return handler.handle(
+                {type: "configure",
+                    content: {
+                        pluginHandle: loadResponse.content.pluginHandle,
+                        configuration: {blockSize: 8, channelCount: 1, stepSize: 8}
+                    }
+                })
+        });
 
         it("Rejects when the wrong number of channels are supplied", () => {
-            const request: ProcessRequest = {
-                pluginHandle: 1,
-                processInput: {
-                    timestamp: {s: 0, n: 0},
-                    inputBuffers: []
-                }
-            };
-            return handler.handle({type: "process", content: request}).should.eventually.be.rejected;
+            return configResponse.then(response => {
+                const request: ProcessRequest = {
+                    pluginHandle: response.content.pluginHandle,
+                    processInput: {
+                        timestamp: {s: 0, n: 0},
+                        inputBuffers: []
+                    }
+                };
+                return handler.handle({type: "process", content: request});
+            }).should.eventually.be.rejected;
         });
 
         it("Rejects when the plugin handle is not valid", () => {
@@ -136,7 +150,38 @@ describe("LocalModuleRequestHandler", () => {
 
 
         it("Resolves to a response whose content body contains the extracted features", () => {
+            const expected: any = require("./fixtures/expected-process-response.json");
+            const processResponse: Promise<Response> = configResponse.then(response => {
+                return handler.handle({
+                    type: "process",
+                    content: {
+                        pluginHandle: response.content.pluginHandle,
+                        processInput: {
+                            timestamp: {s:0, n: 0},
+                            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+                        }
+                    }
+                });
+            });
+            return processResponse.then(response => response.content.should.eql(expected));
+        });
 
+        it("Finish - Returns the remaining features and clears up the plugin", () => {
+            const expected: any = {features: {}, pluginHandle: 1};
+            return configResponse
+                .then(response => handler.handle({
+                    type: "finish",
+                    content: {pluginHandle: response.content.pluginHandle}
+                }))
+                .then(response => {
+                    if (!response.content.should.eql(expected)) {
+                        return Promise.reject("Finish did not return expected FeatureSet."); // did not pass
+                    }
+                    return handler.handle({
+                        type: "finish",
+                        content: {pluginHandle: response.content.pluginHandle}
+                    }).should.eventually.be.rejected;
+                });
         });
     });
 });
