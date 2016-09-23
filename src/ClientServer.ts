@@ -138,8 +138,12 @@ export interface ProcessRequest {
     processInput: ProcessInput;
 }
 
+export interface ListResponse {
+    plugins: StaticData[];
+}
+
 export interface ModuleClient {
-    listPlugins(): Promise<StaticData[]>;
+    listPlugins(): Promise<ListResponse>;
     loadPlugin(request: LoadRequest) : Promise<LoadResponse>;
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>;
     process(request: ProcessRequest): Promise<FeatureSet>;
@@ -196,3 +200,4 @@ export interface ProcessResponse {
     pluginHandle: number,
     features: WireFeatureSet
 }
+

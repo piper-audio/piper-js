@@ -8,7 +8,7 @@
 	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
 	},
 	"configured": {
-		"$ref": "http://vamp-plugins.org/json/schema/configuredoutputdescriptor#"
+	    "$ref": "http://vamp-plugins.org/json/schema/configuredoutputdescriptor#"
 	}
     },
     "required": [ "basic", "configured" ],

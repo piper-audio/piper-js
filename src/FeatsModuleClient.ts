@@ -5,7 +5,7 @@
 
 import {
     ModuleClient,
-    StaticData,
+    StaticData, ListResponse,
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
@@ -48,9 +48,9 @@ export class FeatsModuleClient implements ModuleClient {
         return isEmscriptenModule ? new FeatsModuleClient(new EmscriptenModuleRequestHandler(module)) : null; // TODO complete factory when more Handlers exist
     }
 
-    public listPlugins(): Promise<StaticData[]> {
+    public listPlugins(): Promise<ListResponse> {
         return this.request({type: "list"} as Request).then((response) => {
-            return response.content.plugins as StaticData[];
+            return response.content as ListResponse;
         });
     }
 

@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 /**
  * Created by lucast on 30/08/2016.
  */
@@ -36,9 +37,9 @@ describe("FeatsModuleClient", () => {
     });
 
     const loadZeroCrossings = (): Promise<LoadResponse> => {
-        return server.listPlugins().then((plugins) => {
+        return server.listPlugins().then((resp) => {
             return server.loadPlugin({
-                pluginKey: plugins[plugins.length - 1].pluginKey, // zero crossings
+                pluginKey: resp.plugins[resp.plugins.length - 1].pluginKey, // zero crossings
                 inputSampleRate: 16,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]
             } as LoadRequest);
