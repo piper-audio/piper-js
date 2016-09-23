@@ -26,7 +26,7 @@ describe('ProcessTimings', () => {
     const server = new FeatsModuleClient(
         new EmscriptenModuleRequestHandler(VampExamplePlugins()));
 
-    const iterations = 2000;
+    const iterations = 1000;
     
     const runProcessTest = function (key : string,
                                      outputId : string,
