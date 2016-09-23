@@ -84,15 +84,14 @@ describe('ProcessTimings', () => {
 	})
     };
 
-    it('Process ' + iterations + ' freq-domain blocks', function (done) {
-        this.timeout(0); // Suppress the timeout. Only possible when
-			 // using a classic function rather than arrow
-	runProcessTest ("vamp-example-plugins:spectralcentroid", "logcentroid", done);
-    });
-
     it('Process ' + iterations + ' time-domain blocks', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing", "counts", done);
+    });
+
+    it('Process ' + iterations + ' freq-domain blocks', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:spectralcentroid", "logcentroid", done);
     });
 
     it('Process ' + iterations + ' spectrogram blocks', function (done) {
@@ -100,14 +99,14 @@ describe('ProcessTimings', () => {
 	runProcessTest ("vamp-example-plugins:powerspectrum", "powerspectrum", done);
     });
 
-    it('Process ' + iterations + ' freq-domain blocks [second run]', function (done) {
-        this.timeout(0);
-	runProcessTest ("vamp-example-plugins:spectralcentroid", "logcentroid", done);
-    });
-
     it('Process ' + iterations + ' time-domain blocks [second run]', function (done) {
         this.timeout(0);
 	runProcessTest ("vamp-example-plugins:zerocrossing", "counts", done);
+    });
+
+    it('Process ' + iterations + ' freq-domain blocks [second run]', function (done) {
+        this.timeout(0);
+	runProcessTest ("vamp-example-plugins:spectralcentroid", "logcentroid", done);
     });
 
     it('Process ' + iterations + ' spectrogram blocks [second run]', function (done) {
