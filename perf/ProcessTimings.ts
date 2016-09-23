@@ -78,6 +78,7 @@ describe('ProcessTimings', () => {
                             return acc + f.values.reduce((acc, v) => acc + v, 0.0);
                         }, 0.0);
                     if (sum === 0) throw("This should not happen");
+                    console.log("      sum = " + sum);
                     done();
                 }, err => { console.log("failure: " + err); })
 	    })
