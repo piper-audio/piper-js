@@ -61,7 +61,7 @@
     buffer.getChannelData(0).set(feats.generateSineWave(440.0, sineLengthSeconds, sampleRate, 0.5));
 
     var renderPluginSelectElement = function (plugins) {
-        plugins.forEach(function (plugin) {
+        plugins.plugins.forEach(function (plugin) {
             var option = document.createElement('option');
             option.value = plugin.pluginKey;
             option.textContent = plugin.basic.name;
