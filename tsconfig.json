@@ -10,6 +10,7 @@
     "dist",
     "ext",
     "test",
-    "plugins"
+    "plugins",
+    "perf"
   ]
 }
