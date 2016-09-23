@@ -181,3 +181,23 @@ export function fromBase64(b64: string): Float32Array {
     // !!! endianness, as above.
     return new Float32Array(base64.toByteArray(b64).buffer);
 }
+
+export interface WireFeature {
+    timestamp?: Timestamp;
+    duration?: Timestamp;
+    label?: string;
+    values?: number[];
+    b64values?: string;
+}
+
+export type WireFeatureList = WireFeature[];
+
+export interface WireFeatureSet {
+    [key: string]: WireFeatureList;
+}
+
+export interface ProcessResponse {
+    pluginHandle: number,
+    features: WireFeatureSet
+}
+

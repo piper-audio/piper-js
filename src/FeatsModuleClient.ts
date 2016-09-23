@@ -10,7 +10,7 @@ import {
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
     Response, Request, AdapterFlags, SampleType, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
-    ProcessEncoding
+    ProcessEncoding, WireFeatureSet, ProcessResponse, WireFeatureList, WireFeature
 } from "./ClientServer";
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
@@ -18,23 +18,6 @@ import {
 import {FeatureSet, Feature, FeatureList} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {EmscriptenModuleRequestHandler} from "./EmscriptenModuleRequestHandler";
-interface WireFeature {
-    timestamp?: Timestamp;
-    duration?: Timestamp;
-    label?: string;
-    values?: number[];
-    b64values?: string;
-}
-type WireFeatureList = WireFeature[];
-
-interface WireFeatureSet {
-    [key: string]: WireFeatureList;
-}
-
-interface ProcessResponse {
-    pluginHandle: number,
-    features: WireFeatureSet
-}
 
 interface WireProcessInput {
     timestamp: Timestamp;

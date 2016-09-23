@@ -1,0 +1,44 @@
+{
+  "features": {
+    "counts": [
+      {
+        "values": [
+          5
+        ]
+      }
+    ],
+    "crossings": [
+      {
+        "timestamp": {
+          "n": 62500000,
+          "s": 0
+        }
+      },
+      {
+        "timestamp": {
+          "n": 125000000,
+          "s": 0
+        }
+      },
+      {
+        "timestamp": {
+          "n": 250000000,
+          "s": 0
+        }
+      },
+      {
+        "timestamp": {
+          "n": 312500000,
+          "s": 0
+        }
+      },
+      {
+        "timestamp": {
+          "n": 437500000,
+          "s": 0
+        }
+      }
+    ]
+  },
+  "pluginHandle": 1
+}
