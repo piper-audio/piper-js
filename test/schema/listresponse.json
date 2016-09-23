@@ -2,6 +2,13 @@
     "id": "http://vamp-plugins.org/json/schema/listresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a serialised response to a request to list plugins; normally served as the content field of an object matching the plain response schema",
-    "type": "array",
-    "items": { "$ref": "http://vamp-plugins.org/json/schema/pluginstaticdata#" }
+    "type": "object",
+    "properties": {
+	"plugins": {
+            "type": "array",
+            "items": { "$ref": "http://vamp-plugins.org/json/schema/pluginstaticdata#" }
+	}
+    },
+    "required": [ "plugins" ],
+    "additionalProperties": false
 }

@@ -4,12 +4,15 @@
     "description": "schema for Vamp serialisation enums",
     "definitions": {
 	"input_domain": {
+	    "type": "string",
 	    "enum": [ "TimeDomain", "FrequencyDomain" ]
 	},
 	"sample_type": {
+	    "type": "string",
 	    "enum": [ "OneSamplePerStep", "FixedSampleRate", "VariableSampleRate" ]
 	},
 	"adapter_flags": {
+	    "type": "string",
 	    "enum": [ "AdaptNone", "AdaptInputDomain", "AdaptChannelCount",
 		      "AdaptBufferSize", "AdaptAllSafe", "AdaptAll" ]
 	}

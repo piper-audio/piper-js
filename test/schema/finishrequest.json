@@ -1,0 +1,13 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/finishrequest#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised request to finish processing with a Vamp plugin; normally served as the content field of an object matching the plain request schema",
+    "type": "object",
+    "properties": {
+	"pluginHandle": {
+	    "type": "number"
+	}
+    },
+    "required": [ "pluginHandle" ],
+    "additionalProperties": false
+}
