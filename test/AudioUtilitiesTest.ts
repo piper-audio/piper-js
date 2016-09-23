@@ -30,7 +30,7 @@ describe("BatchBlockProcess", () => {
             inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
         });
 
-        const zc: FeatureExtractor = new ZeroCrossings(16, {} as StaticData);
+        const zc: FeatureExtractor = new ZeroCrossings(16);
         const features: Promise<FeatureSet> = batchProcess(blocks, (block) => Promise.resolve(zc.process(block)));
         return features.then((aggregate) => {
             aggregate.get("counts").should.deep.equal(expectedFeatures);
@@ -54,7 +54,7 @@ describe("BatchBlockProcess", () => {
             inputBuffers: [{values: new Float32Array([0, 0, 0, 0, 0, 0, 0, 0])}]
         });
 
-        const zc: FeatureExtractor = new ZeroCrossings(16, {} as StaticData);
+        const zc: FeatureExtractor = new ZeroCrossings(16);
         const times = [100, 1000]; // pop the times out, so the first call takes longer than the second
         const features: Promise<FeatureSet> = batchProcess(blocks, (block) => {
             return new Promise((resolve) => {
@@ -69,7 +69,7 @@ describe("BatchBlockProcess", () => {
     it("can consume blocks from a generator", () => {
         const audioData: AudioBuffer = FeatsAudioBuffer.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
         const frames: IterableIterator<ProcessInput> = segmentAudioBuffer(256, 64, audioData);
-        const zc: FeatureExtractor = new ZeroCrossings(8000.0, {} as StaticData);
+        const zc: FeatureExtractor = new ZeroCrossings(8000.0);
         const featureSet: Promise<FeatureSet> = batchProcess(frames, block => Promise.resolve(zc.process(block)));
         return featureSet.then(featureSet => featureSet.get("counts").length.should.equal((10.0 * 8000.0) / 64.0));
     });

@@ -71,7 +71,7 @@ describe("FeatsModuleClient", () => {
     it("Can configure a loaded plugin", () => {
 	let expectedResponse = JSON.parse( 
 	    fs.readFileSync(__dirname + "/fixtures/expected-configuration-response.json", "utf8"));
-        expectedResponse.outputList.forEach((output: any) => output.sampleType = SampleType[output.sampleType]);
+        expectedResponse.outputList.forEach((output: any) => output.configured.sampleType = SampleType[output.configured.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });
 

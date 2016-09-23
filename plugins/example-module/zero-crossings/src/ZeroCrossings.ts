@@ -1,24 +1,24 @@
 /**
  * Created by lucas on 25/08/2016.
  */
-import {FeatsFeatureExtractor} from "../../../../src/FeatureExtractor";
+import {FeatureExtractor} from "../../../../src/FeatureExtractor";
 import {FeatureSet, FeatureList} from "../../../../src/Feature";
 import {
-    ProcessInput, RuntimeOutputMap, OutputIdentifier,
-    RuntimeOutputInfo, SampleType, StaticData
+    ProcessInput, OutputIdentifier, SampleType,  ConfiguredOutputs, Configuration, ConfiguredOutputDescriptor
 } from "../../../../src/ClientServer";
 import {frame2timestamp} from "../../../../src/Timestamp";
 
-export class ZeroCrossings extends FeatsFeatureExtractor {
+export class ZeroCrossings implements FeatureExtractor {
     private previousSample: number;
-    private outputs: RuntimeOutputMap;
     private inputSampleRate: number;
 
-    constructor(inputSampleRate: number, metadata: StaticData) {
-        super(metadata); // TODO this really doesn't seem intuitive - there must be a better way of hiding that metadata is declared externally
+    constructor(inputSampleRate: number) {
         this.inputSampleRate = inputSampleRate;
         this.previousSample = 0;
-        this.outputs = new Map<OutputIdentifier, RuntimeOutputInfo>([
+    }
+
+    configure(configuration: Configuration): ConfiguredOutputs {
+        return new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
             ["counts", {
                 binCount: 1,
                 quantizeStep: 1.0,
@@ -28,19 +28,17 @@ export class ZeroCrossings extends FeatsFeatureExtractor {
             }],
             ["crossings", {
                 binCount: 0,
+                quantizeStep: 1,
                 sampleType: SampleType.VariableSampleRate,
-                sampleRate: inputSampleRate,
-                hasDuration: false
+                sampleRate: this.inputSampleRate,
+                hasDuration: false,
+                unit: "",
             }]
-        ]);
+        ])
     }
 
-    initialise(channels: number, stepSize: number, blockSize: number): boolean {
-        return true; // TODO how would one access the StaticData here, as it is defined in a config file?
-    }
-
-    getRuntimeOutputInfo(identifier: OutputIdentifier): RuntimeOutputInfo {
-        return this.outputs.get(identifier); // TODO error handling
+    getDefaultConfiguration(): Configuration {
+        return {channelCount: 1, blockSize: 0, stepSize: 0};
     }
 
     process(block: ProcessInput): FeatureSet {
@@ -63,7 +61,7 @@ export class ZeroCrossings extends FeatsFeatureExtractor {
     }
 
     finish(): FeatureSet {
-        return undefined;
+        return new Map();
     }
 
     private hasCrossedAxis(sample: number) {

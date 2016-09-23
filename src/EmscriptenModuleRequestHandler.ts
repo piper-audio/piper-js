@@ -2,7 +2,10 @@
  * Created by lucast on 16/09/2016.
  */
 import {EmscriptenModule, Allocator} from "./Emscripten";
-import {Response, Request, ModuleRequestHandler, ProcessRequest, ProcessEncoding} from "./ClientServer";
+import {
+    Response, Request, ModuleRequestHandler, ProcessRequest, ProcessEncoding,
+    ConfigurationResponse, BasicDescriptor, ConfiguredOutputDescriptor, ConfiguredOutputs, OutputList
+} from "./ClientServer";
 
 type Pointer = number;
 export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
@@ -27,6 +30,9 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
             const response: Response = JSON.parse(
                 this.server.Pointer_stringify(responseJson));
             this.freeJson(responseJson);
+
+            if (response.success && request.type === "configure")
+                response.content = EmscriptenModuleRequestHandler.reshapeOutputDescriptors(response);
 
             response.success ? resolve(response) : reject(response.errorText);
         });
@@ -76,4 +82,19 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
         return responseJson;
     }
 
+    private static reshapeOutputDescriptors(response: Response): ConfigurationResponse {
+        const wrong: any = response.content;
+        const corrected: any = wrong.outputList.map((output: any) => {
+            const configured: {[key: string]: any} = {};
+            Object.keys(output).filter(key => key !== "basic").forEach(key => configured[key] = output[key]);
+            return {
+                basic: output.basic,
+                configured: configured
+            }
+        });
+        return {
+            pluginHandle: response.content.pluginHandle,
+            outputList: corrected
+        };
+    }
 }

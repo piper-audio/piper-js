@@ -19,9 +19,11 @@ function createOutputDescriptor(hasDuration: boolean, sampleRate: number, sample
             identifier: "stub",
             name: "Stub OutputDescriptor"
         },
-        hasDuration: hasDuration,
-        sampleRate: sampleRate,
-        sampleType: sampleType,
+        configured: {
+            hasDuration: hasDuration,
+            sampleRate: sampleRate,
+            sampleType: sampleType,
+        }
     };
 }
 
@@ -70,8 +72,10 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
                         identifier: "stub",
                         name: "Stub OutputDescriptor"
                     },
-                    hasDuration: false,
-                    sampleType: SampleType.VariableSampleRate,
+                    configured: {
+                        hasDuration: false,
+                        sampleType: SampleType.VariableSampleRate,
+                    }
                 };
                 const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
                 const expectedDuration: Timestamp = {s: 0, n: 0};
@@ -89,9 +93,11 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
                         identifier: "stub",
                         name: "Stub OutputDescriptor"
                     },
-                    hasDuration: false,
-                    sampleType: SampleType.VariableSampleRate,
-                    sampleRate: 0
+                    configured: {
+                        hasDuration: false,
+                        sampleType: SampleType.VariableSampleRate,
+                        sampleRate: 0
+                    }
                 };
                 const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
                 const expectedDuration: Timestamp = {s: 0, n: 0};
@@ -184,8 +190,10 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
                     identifier: "stub",
                     name: "Stub OutputDescriptor"
                 },
-                hasDuration: false,
-                sampleType: SampleType.FixedSampleRate,
+                configured: {
+                    hasDuration: false,
+                    sampleType: SampleType.FixedSampleRate
+                }
             };
             chai.expect(() => new FixedSampleRateFeatureTimeAdjuster(descriptor)).to.throw(Error);
         });

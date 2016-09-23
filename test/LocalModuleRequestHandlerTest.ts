@@ -6,18 +6,19 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
     ModuleRequestHandler, StaticData, Response, LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, Configuration, Request
+    ConfigurationRequest, Configuration, Request, ProcessRequest
 } from "../src/ClientServer";
-import {LocalModuleRequestHandler, Plugin, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
+import {LocalModuleRequestHandler, PluginFactory, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
 import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
+import {FeatureSet, FeatureList} from "../src/Feature";
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("LocalModuleRequestHandler", () => {
     const zcMetadata: StaticData = require('../plugins/example-module/zero-crossings/feats-config.json').description;
-    const zcFactory: FeatureExtractorFactory = sr => new ZeroCrossings(sr, zcMetadata);
-    const plugins: Plugin[] = [];
+    const zcFactory: FeatureExtractorFactory = sr => new ZeroCrossings(sr);
+    const plugins: PluginFactory[] = [];
     plugins.push({extractor: zcFactory, metadata: zcMetadata});
 
     describe("List request handling", () => {
@@ -94,7 +95,7 @@ describe("LocalModuleRequestHandler", () => {
         it("Resolves to a response whose content body is a ConfigurationResponse", () => {
             const expectedResponse: ConfigurationResponse = require('./fixtures/expected-configuration-response-js.json');
             const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
-            const client: FeatsModuleClient = new FeatsModuleClient(handler);
+            const client: FeatsModuleClient = new FeatsModuleClient(handler); // using in a client because that handles the SampleType enum stuff
             return client.loadPlugin(loadRequest.content).then(response => {
                 const configResponse: Promise<ConfigurationResponse> = client.configurePlugin({
                     pluginHandle: response.pluginHandle,
@@ -102,6 +103,40 @@ describe("LocalModuleRequestHandler", () => {
                 });
                 return configResponse.then(response => response.should.eql(expectedResponse));
             });
+        });
+    });
+
+    describe("Process and Finish request handling", () => {
+        const expectedFeatures: {one: FeatureSet, two: FeatureSet, merged: FeatureSet} = require("./fixtures/expected-feature-sets");
+        const expectedTimestamps = (expectedFeatures.one.get("zerocrossings") as FeatureList).map(feature => feature.timestamp);
+        const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
+
+
+        it("Rejects when the wrong number of channels are supplied", () => {
+            const request: ProcessRequest = {
+                pluginHandle: 1,
+                processInput: {
+                    timestamp: {s: 0, n: 0},
+                    inputBuffers: []
+                }
+            };
+            return handler.handle({type: "process", content: request}).should.eventually.be.rejected;
+        });
+
+        it("Rejects when the plugin handle is not valid", () => {
+            const request: ProcessRequest = {
+                pluginHandle: 666,
+                processInput: {
+                    timestamp: {s: 0, n: 0},
+                    inputBuffers: []
+                }
+            };
+            return handler.handle({type: "process", content: request}).should.eventually.be.rejected;
+        });
+
+
+        it("Resolves to a response whose content body contains the extracted features", () => {
+
         });
     });
 });
