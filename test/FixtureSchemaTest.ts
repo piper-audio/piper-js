@@ -4,7 +4,7 @@ import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 
 import {
-    StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
+    StaticData, LoadRequest, AdapterFlags, LoadResponse, ListResponse, ConfigurationRequest,
     Configuration, ConfigurationResponse, ProcessRequest, ProcessInput, SampleType
 } from "../src/ClientServer";
 
@@ -69,6 +69,9 @@ describe("FixtureSchema", () => {
     const loadResponse =
         loadFixture("expected-load-response") as LoadResponse;
 
+    const listResponse =
+        loadFixture("expected-plugin-list") as ListResponse;
+
     const report = function(e : any) : string {
 	return "Error: \"" + e.message + "\" at data path " + e.dataPath
 	    + " and schema path " + e.schemaPath;
@@ -85,6 +88,14 @@ describe("FixtureSchema", () => {
     it("Validates load response", function(done) {
         if (!tv4.validate(loadResponse,
 		          vampSchemaBase + "loadresponse#")) {
+            throw new Error(report(tv4.error));
+        }
+        done();
+    });
+    
+    it("Validates list response", function(done) {
+        if (!tv4.validate(listResponse,
+		          vampSchemaBase + "listresponse#")) {
             throw new Error(report(tv4.error));
         }
         done();
