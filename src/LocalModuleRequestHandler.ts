@@ -5,7 +5,10 @@ import {
     ModuleRequestHandler, Request, Response, ProcessEncoding, LoadRequest,
     LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, ProcessResponse, WireFeatureSet
 } from "./ClientServer";
-import {FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData} from "./FeatureExtractor";
+import {
+    FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
+    SampleType
+} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
@@ -111,6 +114,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         const plugin: Plugin = this.loaded.get(request.pluginHandle);
         // TODO this is probably where the error handling for channel mismatch should be...
         const outputs: ConfiguredOutputs = plugin.extractor.configure(request.configuration);
+        [...outputs.keys()].forEach(key => (outputs.get(key) as any).sampleType = SampleType[outputs.get(key).sampleType]);
         this.configured.set(request.pluginHandle, plugin);
         const outputList: OutputList = plugin.metadata.basicOutputInfo.map(basic => {
             return {

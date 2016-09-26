@@ -10,7 +10,6 @@ import {
 } from "../src/ClientServer";
 import {LocalModuleRequestHandler, PluginFactory, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
 import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
-import {FeatsModuleClient} from "../src/FeatsModuleClient";
 import {StaticData, Configuration} from "../src/FeatureExtractor";
 chai.should();
 chai.use(chaiAsPromised);
@@ -95,13 +94,15 @@ describe("LocalModuleRequestHandler", () => {
         it("Resolves to a response whose content body is a ConfigurationResponse", () => {
             const expectedResponse: ConfigurationResponse = require('./fixtures/expected-configuration-response-js.json');
             const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
-            const client: FeatsModuleClient = new FeatsModuleClient(handler); // using in a client because that handles the SampleType enum stuff
-            return client.loadPlugin(loadRequest.content).then(response => {
-                const configResponse: Promise<ConfigurationResponse> = client.configurePlugin({
-                    pluginHandle: response.pluginHandle,
-                    configuration: config
+            return handler.handle(loadRequest).then(response => {
+                const configResponse: Promise<Response> = handler.handle({
+                    type: "configure",
+                    content: {
+                        pluginHandle: response.content.pluginHandle,
+                        configuration: config
+                    }
                 });
-                return configResponse.then(response => response.should.eql(expectedResponse));
+                return configResponse.then(response => response.content.should.eql(expectedResponse));
             });
         });
     });
