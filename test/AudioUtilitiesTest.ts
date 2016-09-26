@@ -6,7 +6,7 @@ import chaiAsPromised = require("chai-as-promised");
 chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
-import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
+import ZeroCrossings from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {ProcessInput} from "../src/FeatureExtractor.ts";
 import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment} from "../src/AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";

@@ -9,7 +9,7 @@ import {
     ConfigurationRequest, Request, ProcessRequest
 } from "../src/ClientServer";
 import {LocalModuleRequestHandler, PluginFactory, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
-import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
+import ZeroCrossings from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {StaticData, Configuration} from "../src/FeatureExtractor";
 chai.should();
 chai.use(chaiAsPromised);

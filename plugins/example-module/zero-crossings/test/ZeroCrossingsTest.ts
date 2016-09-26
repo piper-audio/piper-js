@@ -2,7 +2,7 @@
  * Created by lucas on 26/08/2016.
  */
 
-import {ZeroCrossings} from "../src/ZeroCrossings";
+import ZeroCrossings from "../src/ZeroCrossings";
 import {FeatureSet} from "../../../../src/Feature"
 import chai = require('chai');
 import {Timestamp, frame2timestamp} from "../../../../src/Timestamp";

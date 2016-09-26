@@ -8,7 +8,7 @@ import {
 import {FeatureSet, FeatureList} from "../../../../src/Feature";
 import {frame2timestamp} from "../../../../src/Timestamp";
 
-export class ZeroCrossings implements FeatureExtractor {
+export default class ZeroCrossings implements FeatureExtractor {
     private previousSample: number;
     private inputSampleRate: number;
 

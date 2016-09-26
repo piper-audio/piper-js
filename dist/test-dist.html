@@ -13,6 +13,7 @@
 </body>
 <script src="../ext/VampExamplePlugins.js"></script>
 <script src="bundle.js"></script>
+<script src="example-module.js"></script>
 <script>
     function extractFeatures(pluginServer, pluginKey, audioBuffer, config) {
         var loadPlugin = function (pluginKey) {
@@ -48,13 +49,14 @@
     }
 
     var pluginSelect = document.getElementById('plugins');
-    var featsClient = new feats.FeatsModuleClient.createFromModule(VampExamplePluginsModule());
+//    var featsClient = feats.FeatsModuleClient.createFromModule(VampExamplePluginsModule());
+    var featsClient = new feats.FeatsModuleClient(ExampleModule.create());
     var audioContext = new (window.AudioContext || window.webkitAudioContext)();
     var sampleRate = 44100;
     var sineLengthSeconds = 120;
     var config = {
         blockSize: 2048,
-        stepSize: 256,
+        stepSize: 2048,
         channelCount: 1
     };
     var buffer = audioContext.createBuffer(config.channelCount, sineLengthSeconds * sampleRate, sampleRate);
