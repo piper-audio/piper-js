@@ -114,7 +114,6 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         const plugin: Plugin = this.loaded.get(request.pluginHandle);
         // TODO this is probably where the error handling for channel mismatch should be...
         const outputs: ConfiguredOutputs = plugin.extractor.configure(request.configuration);
-        [...outputs.keys()].forEach(key => (outputs.get(key) as any).sampleType = SampleType[outputs.get(key).sampleType]);
         this.configured.set(request.pluginHandle, plugin);
         const outputList: OutputList = plugin.metadata.basicOutputInfo.map(basic => {
             return {
@@ -122,6 +121,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
                 configured: Object.assign({binNames: [], sampleRate: 0}, outputs.get(basic.identifier))
             };
         });
+        outputList.forEach(output => (output.configured as any).sampleType = SampleType[output.configured.sampleType]);
         return {pluginHandle: request.pluginHandle, outputList: outputList};
     }
 
