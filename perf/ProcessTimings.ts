@@ -39,7 +39,7 @@ describe('ProcessTimings', () => {
             inputSampleRate : rate,
             adapterFlags : [AdapterFlags.AdaptAllSafe]
         }).then(response => {
-            const centroidHandle : number = response.pluginHandle;
+            const phandle : number = response.pluginHandle;
             let stepSize : number = response.defaultConfiguration.stepSize;
             let blockSize : number = response.defaultConfiguration.blockSize;
 	    if (blockSize === 0) {
@@ -47,7 +47,7 @@ describe('ProcessTimings', () => {
 		stepSize = blockSize;
 	    }
             server.configurePlugin({
-                pluginHandle : centroidHandle,
+                pluginHandle : phandle,
                 configuration : {
                     blockSize : blockSize,
                     stepSize : stepSize,
@@ -69,7 +69,7 @@ describe('ProcessTimings', () => {
                 const results = batchProcess(
                     blocks,
                     b => server.process({
-                        pluginHandle : centroidHandle,
+                        pluginHandle : phandle,
                         processInput : b
                     }));
                 results.then(features => {
