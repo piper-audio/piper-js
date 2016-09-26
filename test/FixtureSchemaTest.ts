@@ -3,10 +3,7 @@
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 
-import {
-    StaticData, LoadRequest, AdapterFlags, LoadResponse, ListResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessInput, SampleType
-} from "../src/ClientServer";
+import {LoadResponse, ListResponse, ConfigurationResponse} from "../src/ClientServer";
 
 import fs = require("fs");
 

@@ -2,11 +2,10 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    ModuleRequestHandler, Request, Response, ProcessEncoding, StaticData, LoadRequest,
-    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, Configuration, OutputList,
-    ConfiguredOutputs, ProcessResponse, WireFeatureSet
+    ModuleRequestHandler, Request, Response, ProcessEncoding, LoadRequest,
+    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, ProcessResponse, WireFeatureSet
 } from "./ClientServer";
-import {FeatureExtractor} from "./FeatureExtractor";
+import {FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;

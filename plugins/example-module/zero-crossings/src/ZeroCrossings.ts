@@ -1,11 +1,11 @@
 /**
  * Created by lucas on 25/08/2016.
  */
-import {FeatureExtractor} from "../../../../src/FeatureExtractor";
-import {FeatureSet, FeatureList} from "../../../../src/Feature";
 import {
-    ProcessInput, OutputIdentifier, SampleType,  ConfiguredOutputs, Configuration, ConfiguredOutputDescriptor
-} from "../../../../src/ClientServer";
+    FeatureExtractor, Configuration, OutputIdentifier,
+    ConfiguredOutputDescriptor, SampleType, ProcessInput, ConfiguredOutputs
+} from "../../../../src/FeatureExtractor";
+import {FeatureSet, FeatureList} from "../../../../src/Feature";
 import {frame2timestamp} from "../../../../src/Timestamp";
 
 export class ZeroCrossings implements FeatureExtractor {

@@ -2,20 +2,11 @@
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
-
-import {
-    StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessInput, SampleType
-} from "../src/ClientServer";
-
+import {LoadRequest, LoadResponse} from "../src/ClientServer";
 import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
-import {FeatureSet, FeatureList} from "../src/Feature";
-import {Timestamp} from "../src/Timestamp";
-import {batchProcess} from "../src/AudioUtilities";
-
 import VampTestPlugin = require('../ext/VampTestPlugin');
+import {AdapterFlags} from "../src/FeatureExtractor";
 
 chai.should();
 chai.use(chaiAsPromised);

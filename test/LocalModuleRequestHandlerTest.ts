@@ -5,13 +5,13 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
-    ModuleRequestHandler, StaticData, Response, LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, Configuration, Request, ProcessRequest
+    ModuleRequestHandler, Response, LoadResponse, ConfigurationResponse,
+    ConfigurationRequest, Request, ProcessRequest
 } from "../src/ClientServer";
 import {LocalModuleRequestHandler, PluginFactory, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
 import {ZeroCrossings} from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
-import {FeatureSet, FeatureList} from "../src/Feature";
+import {StaticData, Configuration} from "../src/FeatureExtractor";
 chai.should();
 chai.use(chaiAsPromised);
 
