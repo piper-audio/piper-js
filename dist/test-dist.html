@@ -20,7 +20,7 @@
             return pluginServer.loadPlugin({
                 pluginKey: pluginKey,
                 inputSampleRate: audioBuffer.sampleRate,
-                adapterFlags: [feats.AdapterFlags.AdaptAllSafe]
+                adapterFlags: [Feats.AdapterFlags.AdaptAllSafe]
             });
         };
 
@@ -32,7 +32,7 @@
         };
 
         var processBlocks = function (response) {
-            return feats.batchProcess(feats.segmentAudioBuffer(config.blockSize, config.stepSize, audioBuffer), function (block) {
+            return Feats.batchProcess(Feats.segmentAudioBuffer(config.blockSize, config.stepSize, audioBuffer), function (block) {
                 return pluginServer.process({pluginHandle: response.pluginHandle, processInput: block})
             });
         };
@@ -49,8 +49,8 @@
     }
 
     var pluginSelect = document.getElementById('plugins');
-//    var featsClient = feats.FeatsModuleClient.createFromModule(VampExamplePluginsModule());
-    var featsClient = new feats.FeatsModuleClient(ExampleModule.create());
+//    var featsClient = Feats.FeatsModuleClient.createFromModule(VampExamplePluginsModule());
+    var featsClient = new Feats.FeatsModuleClient(ExampleModule.create());
     var audioContext = new (window.AudioContext || window.webkitAudioContext)();
     var sampleRate = 44100;
     var sineLengthSeconds = 120;
@@ -60,7 +60,7 @@
         channelCount: 1
     };
     var buffer = audioContext.createBuffer(config.channelCount, sineLengthSeconds * sampleRate, sampleRate);
-    buffer.getChannelData(0).set(feats.generateSineWave(440.0, sineLengthSeconds, sampleRate, 0.5));
+    buffer.getChannelData(0).set(Feats.generateSineWave(440.0, sineLengthSeconds, sampleRate, 0.5));
 
     var renderPluginSelectElement = function (plugins) {
         plugins.plugins.forEach(function (plugin) {

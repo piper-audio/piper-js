@@ -1,5 +1,5 @@
 {
-  "main": "src/ZeroCrossings.ts",
+  "main": "src/ZeroCrossings.js",
   "description": {
     "basic": {
       "description": "Detect and count zero crossing points",

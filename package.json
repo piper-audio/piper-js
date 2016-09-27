@@ -1,13 +1,16 @@
 {
   "name": "feats",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Feature extraction library, written in TypeScript.",
   "main": "dist/index.js",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
     "postinstall": "typings install",
-    "build": "tsc && browserify dist/ts/feats.js  -t babelify --standalone feats -o ./dist/bundle.js && rm -rf dist/ts",
-    "build-module": "tsc --outDir dist/ts ./plugins/example-module/zero-crossings/src/ZeroCrossings.ts -t es6 && browserify dist/adhoc-build.js -t babelify -t brfs --standalone ExampleModule -o ./dist/example-module.js && rm -rf dist/ts"
+    "build-browser": "tsc && browserify dist/ts/feats.js  -t babelify --standalone Feats -o ./dist/bundle.js && rm -rf dist/ts",
+    "build-example-module": "tsc ./plugins/example-module/zero-crossings/src/ZeroCrossings.ts -t es6 && bin/build-module.js --rootDir ./plugins/example-module --moduleName ExampleModule --outPath ./dist/example-module.js && rm -rf plugins/example-module/dist/ plugins/example-module/zero-crossings/src/*.js src/*.js"
+  },
+  "bin": {
+    "feats-build": "bin/build-module.js"
   },
   "repository": {
     "type": "git",
@@ -33,11 +36,15 @@
     "browserify": "^13.1.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
-    "glob": "^7.1.0",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-insert": "^0.5.0",
     "mocha": "^3.0.2",
     "ts-node": "^1.3.0",
     "tv4": "^1.2.7",
     "typescript": "^1.8.10",
-    "typings": "^1.3.3"
+    "typings": "^1.3.3",
+    "vinyl-source-stream": "^1.1.0",
+    "yargs": "^5.0.0"
   }
 }
