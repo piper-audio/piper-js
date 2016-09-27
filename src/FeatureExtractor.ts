@@ -100,5 +100,5 @@ export interface Configuration {
 
 export interface ProcessInput {
     timestamp: Timestamp;
-    inputBuffers: {values: Float32Array}[];
+    inputBuffers: Float32Array[];
 }

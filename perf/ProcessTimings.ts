@@ -6,10 +6,14 @@ import chaiAsPromised = require('chai-as-promised');
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
 
 import {
-    Response, StaticData, LoadRequest, AdapterFlags, LoadResponse,
-    ConfigurationRequest, Configuration, ConfigurationResponse,
-    ProcessRequest, ProcessInput
+    Response, LoadRequest, LoadResponse,
+    ConfigurationRequest, ConfigurationResponse,
+    ProcessRequest
 } from "../src/ClientServer";
+
+import {
+    AdapterFlags, StaticData, Configuration, ProcessInput
+} from "../src/FeatureExtractor";
 
 import {Feature} from "../src/Feature";
 import {Timestamp,frame2timestamp} from "../src/Timestamp";
