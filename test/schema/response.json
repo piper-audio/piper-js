@@ -14,7 +14,13 @@
 	    "type": "string"
 	},
 	"content": {
-	    "type": "object"
+            "anyOf": [
+                { "$ref": "http://vamp-plugins.org/json/schema/listresponse#" },
+                { "$ref": "http://vamp-plugins.org/json/schema/loadresponse#" },
+                { "$ref": "http://vamp-plugins.org/json/schema/configurationresponse#" },
+                { "$ref": "http://vamp-plugins.org/json/schema/processresponse#" },
+                { "$ref": "http://vamp-plugins.org/json/schema/finishresponse#" }
+            ]                
 	}
     },
     "required": [ "type", "success" ],

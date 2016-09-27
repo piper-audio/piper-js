@@ -158,7 +158,7 @@ describe("LocalModuleRequestHandler", () => {
                         pluginHandle: response.content.pluginHandle,
                         processInput: {
                             timestamp: {s:0, n: 0},
-                            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+                            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
                         }
                     }
                 });

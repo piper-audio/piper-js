@@ -27,8 +27,8 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
             const responseJson: Pointer =
                 (request.type === "process") ? this.processRaw(request.content) : this.processRequest(request);
 
-            const response: Response = JSON.parse(
-                this.server.Pointer_stringify(responseJson));
+            const responseJstr = this.server.Pointer_stringify(responseJson);
+            const response: Response = JSON.parse(responseJstr);
             this.freeJson(responseJson);
 
             response.success ? resolve(response) : reject(response.errorText);
@@ -51,7 +51,7 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
 
     private processRaw(request: ProcessRequest): Pointer {
         const nChannels: number = request.processInput.inputBuffers.length;
-        const nFrames: number = request.processInput.inputBuffers[0].values.length;
+        const nFrames: number = request.processInput.inputBuffers[0].length;
 
         const buffersPtr: Pointer = this.server._malloc(nChannels * 4);
         const buffers: Uint32Array = new Uint32Array(
@@ -61,7 +61,7 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
             const framesPtr: Pointer = this.server._malloc(nFrames * 4);
             const frames: Float32Array = new Float32Array(
                 this.server.HEAPU8.buffer, framesPtr, nFrames);
-            frames.set(request.processInput.inputBuffers[i].values);
+            frames.set(request.processInput.inputBuffers[i]);
             buffers[i] = framesPtr;
         }
 

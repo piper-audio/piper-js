@@ -46,7 +46,7 @@ export class ZeroCrossings implements FeatureExtractor {
         let returnFeatures: FeatureSet = new Map();
         let crossingPoints: FeatureList = [];
 
-        const channel = block.inputBuffers[0].values; // ignore stereo channels
+        const channel = block.inputBuffers[0]; // ignore stereo channels
         channel.forEach((sample, nSample) => {
             if (this.hasCrossedAxis(sample)) {
                 ++count;
@@ -55,7 +55,7 @@ export class ZeroCrossings implements FeatureExtractor {
             this.previousSample = sample;
         });
 
-        returnFeatures.set("counts", [{values: new Float32Array([count])}]);
+        returnFeatures.set("counts", [{featureValues: new Float32Array([count])}]);
         if (crossingPoints.length > 0) returnFeatures.set("crossings", crossingPoints);
         return returnFeatures;
     }

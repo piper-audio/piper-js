@@ -15,19 +15,19 @@ import {FeatsAudioBuffer} from "../src/AudioBuffer";
 describe("BatchBlockProcess", () => {
     it("should aggregate features extracted from multiple blocks", () => {
         const expectedFeatures: FeatureList = [];
-        expectedFeatures.push({values: new Float32Array([5])} as Feature);
-        expectedFeatures.push({values: new Float32Array([6])} as Feature);
+        expectedFeatures.push({featureValues: new Float32Array([5])} as Feature);
+        expectedFeatures.push({featureValues: new Float32Array([6])} as Feature);
 
         const blocks: ProcessInput[] = [];
 
         blocks.push({
             timestamp: {s: 0, n: 0},
-            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
         });
 
         blocks.push({
             timestamp: {s: 0, n: 500000000},
-            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
         });
 
         const zc: FeatureExtractor = new ZeroCrossings(16);
@@ -39,19 +39,19 @@ describe("BatchBlockProcess", () => {
 
     it("processes the blocks sequentially", () => {
         const expectedFeatures: FeatureList = [];
-        expectedFeatures.push({values: new Float32Array([1])} as Feature);
-        expectedFeatures.push({values: new Float32Array([1])} as Feature);
+        expectedFeatures.push({featureValues: new Float32Array([1])} as Feature);
+        expectedFeatures.push({featureValues: new Float32Array([1])} as Feature);
 
         const blocks: ProcessInput[] = [];
 
         blocks.push({
             timestamp: {s: 0, n: 0},
-            inputBuffers: [{values: new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])}]
+            inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
         });
 
         blocks.push({
             timestamp: {s: 0, n: 500000000},
-            inputBuffers: [{values: new Float32Array([0, 0, 0, 0, 0, 0, 0, 0])}]
+            inputBuffers: [new Float32Array([0, 0, 0, 0, 0, 0, 0, 0])]
         });
 
         const zc: FeatureExtractor = new ZeroCrossings(16);

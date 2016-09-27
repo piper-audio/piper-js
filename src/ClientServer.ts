@@ -130,7 +130,7 @@ export interface Configuration {
 
 export interface ProcessInput {
     timestamp: Timestamp;
-    inputBuffers: {values: Float32Array}[];
+    inputBuffers: Float32Array[];
 }
 
 export interface ProcessRequest {
@@ -186,8 +186,7 @@ export interface WireFeature {
     timestamp?: Timestamp;
     duration?: Timestamp;
     label?: string;
-    values?: number[];
-    b64values?: string;
+    featureValues?: number[] | string;
 }
 
 export type WireFeatureList = WireFeature[];

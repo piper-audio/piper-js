@@ -60,7 +60,7 @@ export function* segmentAudioBuffer(blockSize: number, stepSize: number, audioBu
             subArrays = channels.map(channel => Float32Array.of(...subArrays[channel], ...new Float32Array(blockSize - subArrays[channel].length)));
         yield {
             timestamp: currentTimestamp,
-            inputBuffers: subArrays.map(subArray => {return {values: subArray}})
+            inputBuffers: subArrays
         };
     } while (!isDone(nStep))
 }

@@ -62,9 +62,7 @@ describe('ProcessTimings', () => {
                     }
                     return {
                         timestamp : frame2timestamp(n * blockSize, rate),
-                        inputBuffers : [
-                            { values : arr }
-                        ],
+                        inputBuffers : [ arr ],
                     }
                 });
                 const blocks : ProcessInput[] =
@@ -78,7 +76,7 @@ describe('ProcessTimings', () => {
                 results.then(features => {
                     let sum = features.get(outputId).reduce(
                         (acc, f) => {
-                            return acc + f.values.reduce((acc, v) => acc + v, 0.0);
+                            return acc + f.featureValues.reduce((acc, v) => acc + v, 0.0);
                         }, 0.0);
                     if (sum === 0) throw("This should not happen");
                     console.log("      sum = " + sum);

@@ -167,8 +167,8 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         let wireFeatures: any = {};
         for (let [key, featureList] of features.entries()) {
             featureList.forEach(feature => {
-                if (feature.hasOwnProperty("values"))
-                    feature.values = [...feature.values] as any; // this is mutating the input FeatureSet, ergh
+                if (feature.hasOwnProperty("featureValues"))
+                    feature.featureValues = [...feature.featureValues] as any; // this is mutating the input FeatureSet, ergh
             });
             wireFeatures[key] = featureList;
         }

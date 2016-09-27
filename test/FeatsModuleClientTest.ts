@@ -88,7 +88,7 @@ describe("FeatsModuleClient", () => {
             pluginHandle: pluginHandles[0],
             processInput: {
                 timestamp: {s: 0, n: 0} as Timestamp,
-                inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+                inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
             } as ProcessInput
         } as ProcessRequest);
 
@@ -110,12 +110,12 @@ describe("FeatsModuleClient", () => {
 
         blocks.push({
             timestamp: {s: 0, n: 0} as Timestamp,
-            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
         } as ProcessInput);
 
         blocks.push({
             timestamp: {s: 0, n: 500000000} as Timestamp,
-            inputBuffers: [{values: new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])}]
+            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
         } as ProcessInput);
 
 

@@ -13,12 +13,17 @@
 	"label": {
 	    "type": "string"
 	},
-	"values": {
-	    "type": "array",
-	    "items": { "type": "number" }
-	},
-	"b64values": {
-	    "type": "string"
+	"featureValues": {
+            "anyOf": [
+                {
+		    "type": "array",
+		    "items": { "type": "number" }
+		},
+                {
+		    "type": "string",
+                    "pattern": "^[a-zA-Z0-9+/]*=*$"
+		}
+            ]
 	}
     },
     "additionalProperties": false
