@@ -96,8 +96,7 @@ export interface WireFeature {
     timestamp?: Timestamp;
     duration?: Timestamp;
     label?: string;
-    values?: number[];
-    b64values?: string;
+    featureValues?: number[] | string;
 }
 
 export type WireFeatureList = WireFeature[];

@@ -6,10 +6,14 @@ import chaiAsPromised = require('chai-as-promised');
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
 
 import {
-    Response, StaticData, LoadRequest, AdapterFlags, LoadResponse,
-    ConfigurationRequest, Configuration, ConfigurationResponse,
-    ProcessRequest, ProcessInput
+    Response, LoadRequest, LoadResponse,
+    ConfigurationRequest, ConfigurationResponse,
+    ProcessRequest
 } from "../src/ClientServer";
+
+import {
+    AdapterFlags, StaticData, Configuration, ProcessInput
+} from "../src/FeatureExtractor";
 
 import {Feature} from "../src/Feature";
 import {Timestamp,frame2timestamp} from "../src/Timestamp";
@@ -39,7 +43,7 @@ describe('ProcessTimings', () => {
             inputSampleRate : rate,
             adapterFlags : [AdapterFlags.AdaptAllSafe]
         }).then(response => {
-            const centroidHandle : number = response.pluginHandle;
+            const phandle : number = response.pluginHandle;
             let stepSize : number = response.defaultConfiguration.stepSize;
             let blockSize : number = response.defaultConfiguration.blockSize;
 	    if (blockSize === 0) {
@@ -47,21 +51,22 @@ describe('ProcessTimings', () => {
 		stepSize = blockSize;
 	    }
             server.configurePlugin({
-                pluginHandle : centroidHandle,
+                pluginHandle : phandle,
                 configuration : {
                     blockSize : blockSize,
                     stepSize : stepSize,
                     channelCount : 1
                 }
             }).then(response => {
-                const makeBlock = ((n : number) => { 
+
+                const makeBlock = ((n : number) => {
+                    const arr = new Float32Array(blockSize);
+                    for (let i = 0; i < blockSize; ++i) {
+                        arr[i] = i / blockSize;
+                    }
                     return {
                         timestamp : frame2timestamp(n * blockSize, rate),
-                        inputBuffers : [
-                          { values : new Float32Array(
-                              Array.from(Array(blockSize).keys(),
-                                         n => n / blockSize)) }
-                        ],
+                        inputBuffers : [ arr ],
                     }
                 });
                 const blocks : ProcessInput[] =
@@ -69,13 +74,13 @@ describe('ProcessTimings', () => {
                 const results = batchProcess(
                     blocks,
                     b => server.process({
-                        pluginHandle : centroidHandle,
+                        pluginHandle : phandle,
                         processInput : b
                     }));
                 results.then(features => {
                     let sum = features.get(outputId).reduce(
                         (acc, f) => {
-                            return acc + f.values.reduce((acc, v) => acc + v, 0.0);
+                            return acc + f.featureValues.reduce((acc, v) => acc + v, 0.0);
                         }, 0.0);
                     if (sum === 0) throw("This should not happen");
                     console.log("      sum = " + sum);

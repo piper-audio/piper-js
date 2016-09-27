@@ -8,7 +8,12 @@
 	    "type": "string"
 	},
 	"content": {
-	    "type": "object"
+            "anyOf": [
+                { "$ref": "http://vamp-plugins.org/json/schema/loadrequest#" },
+                { "$ref": "http://vamp-plugins.org/json/schema/configurationrequest#" },
+                { "$ref": "http://vamp-plugins.org/json/schema/processrequest#" },
+                { "$ref": "http://vamp-plugins.org/json/schema/finishrequest#" }
+            ]                
 	}
     },
     "required": [ "type" ],

@@ -22,7 +22,7 @@ import {SampleType, AdapterFlags} from "./FeatureExtractor";
 
 interface WireProcessInput {
     timestamp: Timestamp;
-    inputBuffers: {values?: number[]; b64values?: string;}[];
+    inputBuffers: number[][] | string[];
 }
 interface WireProcessRequest {
     pluginHandle: PluginHandle;
@@ -95,7 +95,7 @@ export class FeatsModuleClient implements ModuleClient {
 
     private static encodeJson(request: ProcessRequest): WireProcessRequest {
         const encoded = request.processInput.inputBuffers.map(channel => {
-            return {values: [...channel.values]}
+            return [...channel]
         });
         return {
             pluginHandle: request.pluginHandle,
@@ -107,9 +107,7 @@ export class FeatsModuleClient implements ModuleClient {
     }
 
     private static encodeBase64(request: ProcessRequest): WireProcessRequest {
-        const encoded: {b64values: string}[] = request.processInput.inputBuffers.map(channel => {
-            return {b64values: toBase64(channel.values)};
-        });
+        const encoded: string[] = request.processInput.inputBuffers.map(toBase64);
         return {
             pluginHandle: request.pluginHandle,
             processInput: {
@@ -138,10 +136,13 @@ export class FeatsModuleClient implements ModuleClient {
         if (wfeature.label != null) {
             out.label = wfeature.label;
         }
-        if (wfeature.b64values != null && wfeature.b64values !== "") {
-            out.values = fromBase64(wfeature.b64values);
-        } else if (wfeature.values != null) {
-            out.values = new Float32Array(wfeature.values);
+        const vv = wfeature.featureValues;
+        if (vv != null) {
+            if (typeof vv === "string") {
+                out.featureValues = fromBase64(vv);
+            } else {
+                out.featureValues = new Float32Array(vv);
+            }
         }
         return out;
     }

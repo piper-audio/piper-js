@@ -1,5 +1,5 @@
 module.exports.one = new Map([
-    ["counts", [{"values": new Float32Array([5])}]],
+    ["counts", [{"featureValues": new Float32Array([5])}]],
     ["zerocrossings", [{"timestamp": {"n": 62500000, "s": 0}},
         {"timestamp": {"n": 125000000, "s": 0}},
         {"timestamp": {"n": 250000000, "s": 0}},
@@ -8,7 +8,7 @@ module.exports.one = new Map([
 ]);
 
 module.exports.two = new Map([
-    ["counts", [{"values": new Float32Array([6])}]],
+    ["counts", [{"featureValues": new Float32Array([6])}]],
     ["zerocrossings", [{"timestamp": {"n": 500000000, "s": 0}},
         {"timestamp": {"n": 562500000, "s": 0}},
         {"timestamp": {"n": 625000000, "s": 0}},
@@ -18,7 +18,7 @@ module.exports.two = new Map([
 ]);
 
 module.exports.merged = new Map([
-    ["counts", [{"values": new Float32Array([5])}, {"values": new Float32Array([6])}]],
+    ["counts", [{"featureValues": new Float32Array([5])}, {"featureValues": new Float32Array([6])}]],
     ["zerocrossings", [
             {"timestamp": {"n": 62500000, "s": 0}},
             {"timestamp": {"n": 125000000, "s": 0}},

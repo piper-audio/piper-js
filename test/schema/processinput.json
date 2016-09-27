@@ -10,16 +10,16 @@
 	"inputBuffers": {
 	    "type": "array",
 	    "items": {
-		"type": "object",
-		"properties": {
-		    "values": {
+                "anyOf": [
+                    {
 			"type": "array",
 			"items": { "type": "number" }
 		    },
-		    "b64values": {
-			"type": "string"
+                    {
+		        "type": "string",
+                        "pattern": "^[a-zA-Z0-9+/]*=*$"
 		    }
-		}
+                ]
 	    }
 	}
     },
