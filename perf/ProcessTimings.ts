@@ -54,13 +54,16 @@ describe('ProcessTimings', () => {
                     channelCount : 1
                 }
             }).then(response => {
-                const makeBlock = ((n : number) => { 
+
+                const makeBlock = ((n : number) => {
+                    const arr = new Float32Array(blockSize);
+                    for (let i = 0; i < blockSize; ++i) {
+                        arr[i] = i / blockSize;
+                    }
                     return {
                         timestamp : frame2timestamp(n * blockSize, rate),
                         inputBuffers : [
-                          { values : new Float32Array(
-                              Array.from(Array(blockSize).keys(),
-                                         n => n / blockSize)) }
+                            { values : arr }
                         ],
                     }
                 });
