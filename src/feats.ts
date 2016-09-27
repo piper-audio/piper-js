@@ -3,5 +3,6 @@
  */
 
 export {FeatsModuleClient} from "./FeatsModuleClient";
-export {AdapterFlags} from "./ClientServer";
+export {AdapterFlags} from "./FeatureExtractor";
+export {LocalModuleRequestHandler} from "./LocalModuleRequestHandler";
 export {batchProcess, generateSineWave, segmentAudioBuffer} from "./AudioUtilities";

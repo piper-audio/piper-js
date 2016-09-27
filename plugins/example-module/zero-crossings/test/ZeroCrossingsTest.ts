@@ -2,11 +2,11 @@
  * Created by lucas on 26/08/2016.
  */
 
-import {ZeroCrossings} from "../src/ZeroCrossings";
-import {Feature, FeatureSet} from "../../../../src/Feature"
+import ZeroCrossings from "../src/ZeroCrossings";
+import {FeatureSet} from "../../../../src/Feature"
 import chai = require('chai');
 import {Timestamp, frame2timestamp} from "../../../../src/Timestamp";
-import {ProcessInput} from "../../../../src/ClientServer";
+import {ProcessInput} from "../../../../src/FeatureExtractor";
 chai.should();
 
 describe('ZeroCrossings', () => {

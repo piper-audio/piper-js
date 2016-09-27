@@ -2,7 +2,7 @@
  * Created by lucast on 08/09/2016.
  */
 import {toSeconds, frame2timestamp} from "./Timestamp";
-import {OutputDescriptor, SampleType} from "./ClientServer";
+import {OutputDescriptor, SampleType} from "./FeatureExtractor";
 import {Feature} from "./Feature";
 
 export interface FeatureTimeAdjuster {

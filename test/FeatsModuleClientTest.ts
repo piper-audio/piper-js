@@ -7,8 +7,8 @@ import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
 import {
-    StaticData, LoadRequest, AdapterFlags, LoadResponse, ConfigurationRequest,
-    Configuration, ConfigurationResponse, ProcessRequest, ProcessInput, SampleType
+    LoadRequest, LoadResponse, ConfigurationRequest,
+    ConfigurationResponse, ProcessRequest
 } from "../src/ClientServer";
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
@@ -16,6 +16,7 @@ import {batchProcess} from "../src/AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
 import fs = require("fs");
+import {Configuration, SampleType, ProcessInput, StaticData, AdapterFlags} from "../src/FeatureExtractor";
 
 chai.should();
 chai.use(chaiAsPromised);

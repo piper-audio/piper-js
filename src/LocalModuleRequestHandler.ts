@@ -2,11 +2,13 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    ModuleRequestHandler, Request, Response, ProcessEncoding, StaticData, LoadRequest,
-    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, Configuration, OutputList,
-    ConfiguredOutputs, ProcessResponse, WireFeatureSet
+    ModuleRequestHandler, Request, Response, ProcessEncoding, LoadRequest,
+    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, ProcessResponse, WireFeatureSet
 } from "./ClientServer";
-import {FeatureExtractor} from "./FeatureExtractor";
+import {
+    FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
+    SampleType
+} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
@@ -119,6 +121,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
                 configured: Object.assign({binNames: [], sampleRate: 0}, outputs.get(basic.identifier))
             };
         });
+        outputList.forEach(output => (output.configured as any).sampleType = SampleType[output.configured.sampleType]);
         return {pluginHandle: request.pluginHandle, outputList: outputList};
     }
 

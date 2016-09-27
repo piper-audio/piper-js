@@ -5,11 +5,11 @@
 
 import {
     ModuleClient,
-    StaticData, ListResponse,
+    ListResponse,
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest,
-    Response, Request, AdapterFlags, SampleType, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
+    Response, Request, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
     ProcessEncoding, WireFeatureSet, ProcessResponse, WireFeatureList, WireFeature
 } from "./ClientServer";
 import {
@@ -18,6 +18,7 @@ import {
 import {FeatureSet, Feature, FeatureList} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {EmscriptenModuleRequestHandler} from "./EmscriptenModuleRequestHandler";
+import {SampleType, AdapterFlags} from "./FeatureExtractor";
 
 interface WireProcessInput {
     timestamp: Timestamp;
