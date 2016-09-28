@@ -6,9 +6,16 @@ import {Timestamp, frame2timestamp} from "./Timestamp";
 import {FeatureList, FeatureSet} from "./Feature";
 import {ProcessInput} from "./FeatureExtractor";
 
-export function batchProcess(blocks: Iterable<ProcessInput>, process: (block: ProcessInput) => Promise<FeatureSet>): Promise<FeatureSet> {
-    const processPromises: (() => Promise<FeatureSet>)[] = [...blocks].map((block) => () => process(block));
-    return processPromises.reduce((runningFeatures, nextBlock) => {
+export function batchProcess(blocks: Iterable<ProcessInput>,
+                             process: (block: ProcessInput) => Promise<FeatureSet>,
+                             finish: () => Promise<FeatureSet>)
+: Promise<FeatureSet> {
+                                 
+    const processThunks: (() => Promise<FeatureSet>)[] =
+        [...blocks].map(block => () => process(block))
+        .concat([finish]);
+    
+    return processThunks.reduce((runningFeatures, nextBlock) => {
         return runningFeatures.then((features) => {
             return concatFeatures(features, nextBlock());
         });

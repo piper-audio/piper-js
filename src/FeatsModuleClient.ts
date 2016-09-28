@@ -8,7 +8,7 @@ import {
     ListResponse,
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
-    ProcessRequest,
+    ProcessRequest, FinishRequest,
     Response, Request, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
     ProcessEncoding, WireFeatureSet, ProcessResponse, WireFeatureList, WireFeature
 } from "./ClientServer";
@@ -86,8 +86,8 @@ export class FeatsModuleClient implements ModuleClient {
         });
     }
 
-    public finish(pluginHandle: number): Promise<FeatureSet> {
-        return this.request({type: "finish", content: {pluginHandle: pluginHandle}}).then((response) => {
+    public finish(request: FinishRequest): Promise<FeatureSet> {
+        return this.request({type: "finish", content: request}).then((response) => {
             const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
             return features;

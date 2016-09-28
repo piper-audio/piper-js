@@ -48,6 +48,10 @@ export interface ProcessRequest {
     processInput: ProcessInput;
 }
 
+export interface FinishRequest {
+    pluginHandle: PluginHandle;
+}
+
 export interface ListResponse {
     plugins: StaticData[];
 }
@@ -57,7 +61,7 @@ export interface ModuleClient {
     loadPlugin(request: LoadRequest) : Promise<LoadResponse>;
     configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>;
     process(request: ProcessRequest): Promise<FeatureSet>;
-    finish(pluginHandle: PluginHandle): Promise<FeatureSet>;
+    finish(request: FinishRequest): Promise<FeatureSet>;
 }
 
 export enum ProcessEncoding {
