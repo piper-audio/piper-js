@@ -6,25 +6,25 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
     ModuleRequestHandler, Response, LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, Request, ProcessRequest
+    ConfigurationRequest, Request, ProcessRequest, ProcessResponse
 } from "../src/ClientServer";
 import {LocalModuleRequestHandler, PluginFactory, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
-import ZeroCrossings from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {StaticData, Configuration} from "../src/FeatureExtractor";
+import {FeatureExtractorStub, MetaDataStub} from "./fixtures/FeatureExtractorStub";
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("LocalModuleRequestHandler", () => {
-    const zcMetadata: StaticData = require('../plugins/example-module/zero-crossings/feats-config.json').description;
-    const zcFactory: FeatureExtractorFactory = sr => new ZeroCrossings(sr);
+    const metadata: StaticData = MetaDataStub;
+    const factory: FeatureExtractorFactory = sr => new FeatureExtractorStub();
     const plugins: PluginFactory[] = [];
-    plugins.push({extractor: zcFactory, metadata: zcMetadata});
+    plugins.push({extractor: factory, metadata: metadata});
 
     describe("List request handling", () => {
         it("Resolves to a response whose content body is {plugins: StaticData[]}", () => {
             const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
             return handler.handle({type: "list"}).then(response => {
-                response.content.should.eql({plugins: [zcMetadata]});
+                response.content.should.eql({plugins: [metadata]});
             });
         });
     });
@@ -46,7 +46,7 @@ describe("LocalModuleRequestHandler", () => {
             const expectedResponse: LoadResponse = require('./fixtures/expected-load-response-js.json');
             const response: Promise<Response> = handler.handle({
                 type: "load", content: {
-                    pluginKey: "example-module:zerocrossing",
+                    pluginKey: "stub:sum",
                     inputSampleRate: 16,
                     adapterFlags: ["AdaptAllSafe"]
                 }
@@ -62,7 +62,7 @@ describe("LocalModuleRequestHandler", () => {
         const configRequest: ConfigurationRequest = {pluginHandle: 1, configuration: config};
         const loadRequest: Request = {
             type: "load", content: {
-                pluginKey: "example-module:zerocrossing",
+                pluginKey: "stub:sum",
                 inputSampleRate: 16,
                 adapterFlags: ["AdaptAllSafe"]
             }
@@ -111,7 +111,7 @@ describe("LocalModuleRequestHandler", () => {
         const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
         const configResponse: Promise<Response> = handler.handle({
             type: "load", content: {
-                pluginKey: "example-module:zerocrossing",
+                pluginKey: "stub:sum",
                 inputSampleRate: 16,
                 adapterFlags: ["AdaptAllSafe"]
             }
@@ -151,7 +151,10 @@ describe("LocalModuleRequestHandler", () => {
 
 
         it("Resolves to a response whose content body contains the extracted features", () => {
-            const expected: any = require("./fixtures/expected-process-response.json");
+            const expected: ProcessResponse = {
+                pluginHandle: 1,
+                features: {cumsum: [{featureValues: [8]}], sum: [{featureValues: [8]}]}
+            };
             const processResponse: Promise<Response> = configResponse.then(response => {
                 return handler.handle({
                     type: "process",
@@ -159,7 +162,7 @@ describe("LocalModuleRequestHandler", () => {
                         pluginHandle: response.content.pluginHandle,
                         processInput: {
                             timestamp: {s:0, n: 0},
-                            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
+                            inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
                         }
                     }
                 });

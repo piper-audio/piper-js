@@ -7,31 +7,26 @@
   "pluginHandle": 1,
   "staticData": {
     "basic": {
-      "description": "Detect and count zero crossing points",
-      "identifier": "zerocrossing",
-      "name": "Zero Crossings"
+      "description": "A stub, returns sum of samples in process block and keeps a cumulative sum.",
+      "identifier": "stub",
+      "name": "Stub"
     },
     "basicOutputInfo": [
       {
-        "description": "The number of zero crossing points per processing block",
-        "identifier": "counts",
-        "name": "Zero Crossing Counts"
+        "description": "The sum of the samples in the input block",
+        "identifier": "sum",
+        "name": "Sum"
       },
       {
-        "description": "The locations of zero crossing points",
-        "identifier": "crossings",
-        "name": "Zero Crossings"
+        "description": "The cumulative sum over all input blocks",
+        "identifier": "cumsum",
+        "name": "Cumulative Sum"
       }
     ],
-    "category": [],
-    "copyright": "Freely redistributable (BSD license)",
     "inputDomain": "TimeDomain",
-    "maker": "Lucas Thompson",
     "maxChannelCount": 1,
     "minChannelCount": 1,
-    "parameters": [],
-    "pluginKey": "example-module:zerocrossing",
-    "pluginVersion": 2,
-    "programs": []
+    "pluginKey": "stub:sum",
+    "pluginVersion": 1
   }
 }
