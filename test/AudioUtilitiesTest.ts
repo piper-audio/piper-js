@@ -6,41 +6,17 @@ import chaiAsPromised = require("chai-as-promised");
 chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
-import ZeroCrossings from "../plugins/example-module/zero-crossings/src/ZeroCrossings";
 import {ProcessInput} from "../src/FeatureExtractor.ts";
 import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment} from "../src/AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {FeatsAudioBuffer} from "../src/AudioBuffer";
+import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
 
 describe("BatchBlockProcess", () => {
     it("should aggregate features extracted from multiple blocks", () => {
         const expectedFeatures: FeatureList = [];
-        expectedFeatures.push({featureValues: new Float32Array([5])} as Feature);
-        expectedFeatures.push({featureValues: new Float32Array([6])} as Feature);
-
-        const blocks: ProcessInput[] = [];
-
-        blocks.push({
-            timestamp: {s: 0, n: 0},
-            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
-        });
-
-        blocks.push({
-            timestamp: {s: 0, n: 500000000},
-            inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
-        });
-
-        const zc: FeatureExtractor = new ZeroCrossings(16);
-        const features: Promise<FeatureSet> = batchProcess(blocks, (block) => Promise.resolve(zc.process(block)));
-        return features.then((aggregate) => {
-            aggregate.get("counts").should.deep.equal(expectedFeatures);
-        });
-    });
-
-    it("processes the blocks sequentially", () => {
-        const expectedFeatures: FeatureList = [];
-        expectedFeatures.push({featureValues: new Float32Array([1])} as Feature);
-        expectedFeatures.push({featureValues: new Float32Array([1])} as Feature);
+        expectedFeatures.push({featureValues: new Float32Array([8])} as Feature);
+        expectedFeatures.push({featureValues: new Float32Array([4])} as Feature);
 
         const blocks: ProcessInput[] = [];
 
@@ -51,27 +27,51 @@ describe("BatchBlockProcess", () => {
 
         blocks.push({
             timestamp: {s: 0, n: 500000000},
-            inputBuffers: [new Float32Array([0, 0, 0, 0, 0, 0, 0, 0])]
+            inputBuffers: [new Float32Array([0, 0, 0, 0, 1, 1, 1, 1])]
         });
 
-        const zc: FeatureExtractor = new ZeroCrossings(16);
+        const extractor: FeatureExtractor = new FeatureExtractorStub();
+        const features: Promise<FeatureSet> = batchProcess(blocks, (block) => Promise.resolve(extractor.process(block)));
+        return features.then((aggregate) => {
+            aggregate.get("sum").should.deep.equal(expectedFeatures);
+        });
+    });
+
+    it("processes the blocks sequentially", () => {
+        const expectedFeatures: FeatureList = [];
+        expectedFeatures.push({featureValues: new Float32Array([4])} as Feature);
+        expectedFeatures.push({featureValues: new Float32Array([12])} as Feature);
+
+        const blocks: ProcessInput[] = [];
+
+        blocks.push({
+            timestamp: {s: 0, n: 0},
+            inputBuffers: [new Float32Array([0, 0, 0, 0, 1, 1, 1, 1])]
+        });
+
+        blocks.push({
+            timestamp: {s: 0, n: 500000000},
+            inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
+        });
+
+        const extractor: FeatureExtractor = new FeatureExtractorStub();
         const times = [100, 1000]; // pop the times out, so the first call takes longer than the second
         const features: Promise<FeatureSet> = batchProcess(blocks, (block) => {
             return new Promise((resolve) => {
-                setTimeout(() => { resolve(zc.process(block)); }, times.pop());
+                setTimeout(() => { resolve(extractor.process(block)); }, times.pop());
             });
         });
         return features.then((aggregate) => {
-            aggregate.get("counts").should.deep.equal(expectedFeatures);
+            aggregate.get("cumsum").should.deep.equal(expectedFeatures);
         });
     });
 
     it("can consume blocks from a generator", () => {
         const audioData: AudioBuffer = FeatsAudioBuffer.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
         const frames: IterableIterator<ProcessInput> = segmentAudioBuffer(256, 64, audioData);
-        const zc: FeatureExtractor = new ZeroCrossings(8000.0);
-        const featureSet: Promise<FeatureSet> = batchProcess(frames, block => Promise.resolve(zc.process(block)));
-        return featureSet.then(featureSet => featureSet.get("counts").length.should.equal((10.0 * 8000.0) / 64.0));
+        const extractor: FeatureExtractor = new FeatureExtractorStub();
+        const featureSet: Promise<FeatureSet> = batchProcess(frames, block => Promise.resolve(extractor.process(block)));
+        return featureSet.then(featureSet => featureSet.get("sum").length.should.equal((10.0 * 8000.0) / 64.0));
     });
 });
 
