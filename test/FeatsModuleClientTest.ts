@@ -102,7 +102,7 @@ describe("FeatsModuleClient", () => {
     });
 
     it("Can get the remaining features and clean up the plugin", () => {
-        const remainingFeatures: Promise<FeatureSet> = server.finish(pluginHandles[0]);
+        const remainingFeatures: Promise<FeatureSet> = server.finish({pluginHandle: pluginHandles[0]});
         return remainingFeatures.then(features => features.size.should.eql(0));
     });
 
@@ -123,7 +123,10 @@ describe("FeatsModuleClient", () => {
 
         const processBlocks: () => Promise<FeatureSet> = () => {
             const zcHandle: number = pluginHandles[pluginHandles.length - 1];
-            return batchProcess(blocks, (block) => server.process({pluginHandle: zcHandle, processInput: block}));
+            return batchProcess(
+                blocks,
+                block => server.process({pluginHandle: zcHandle, processInput: block}),
+                () => server.finish({pluginHandle: zcHandle}));
         };
 
         const features: Promise<FeatureSet> = loadZeroCrossings().then(config).then(processBlocks);

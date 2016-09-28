@@ -31,7 +31,10 @@ describe("BatchBlockProcess", () => {
         });
 
         const extractor: FeatureExtractor = new FeatureExtractorStub();
-        const features: Promise<FeatureSet> = batchProcess(blocks, (block) => Promise.resolve(extractor.process(block)));
+        const features: Promise<FeatureSet> = batchProcess(
+            blocks,
+            block => Promise.resolve(extractor.process(block)),
+            () => Promise.resolve(extractor.finish()));
         return features.then((aggregate) => {
             aggregate.get("sum").should.deep.equal(expectedFeatures);
         });
@@ -56,11 +59,15 @@ describe("BatchBlockProcess", () => {
 
         const extractor: FeatureExtractor = new FeatureExtractorStub();
         const times = [100, 1000]; // pop the times out, so the first call takes longer than the second
-        const features: Promise<FeatureSet> = batchProcess(blocks, (block) => {
-            return new Promise((resolve) => {
-                setTimeout(() => { resolve(extractor.process(block)); }, times.pop());
-            });
-        });
+        const features: Promise<FeatureSet> = batchProcess(
+            blocks,
+            (block) => {
+                return new Promise((resolve) => {
+                    setTimeout(() => { resolve(extractor.process(block)); }, times.pop());
+                })
+            },
+            () => Promise.resolve(extractor.finish()));
+
         return features.then((aggregate) => {
             aggregate.get("cumsum").should.deep.equal(expectedFeatures);
         });
@@ -70,7 +77,10 @@ describe("BatchBlockProcess", () => {
         const audioData: AudioBuffer = FeatsAudioBuffer.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
         const frames: IterableIterator<ProcessInput> = segmentAudioBuffer(256, 64, audioData);
         const extractor: FeatureExtractor = new FeatureExtractorStub();
-        const featureSet: Promise<FeatureSet> = batchProcess(frames, block => Promise.resolve(extractor.process(block)));
+        const featureSet: Promise<FeatureSet> = batchProcess(
+            frames,
+            block => Promise.resolve(extractor.process(block)),
+            () => Promise.resolve(extractor.finish()));
         return featureSet.then(featureSet => featureSet.get("sum").length.should.equal((10.0 * 8000.0) / 64.0));
     });
 });

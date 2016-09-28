@@ -76,6 +76,9 @@ describe('ProcessTimings', () => {
                     b => server.process({
                         pluginHandle : phandle,
                         processInput : b
+                    }),
+                    () => server.finish({
+                        pluginHandle : phandle
                     }));
                 results.then(features => {
                     let sum = features.get(outputId).reduce(
