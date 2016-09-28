@@ -2,7 +2,7 @@
   "name": "feats",
   "version": "0.0.1",
   "description": "Feature extraction library, written in TypeScript.",
-  "main": "dist/index.js",
+  "main": "dist/ts/feats.js",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
     "postinstall": "typings install",
