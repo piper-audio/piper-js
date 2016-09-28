@@ -7,7 +7,8 @@
     "test": "mocha test/*Test.ts --require ts-node/register",
     "postinstall": "typings install",
     "build-browser": "tsc && browserify dist/ts/feats.js  -t babelify --standalone Feats -o ./dist/bundle.js && rm -rf dist/ts",
-    "build-example-module": "tsc ./plugins/example-module/zero-crossings/src/ZeroCrossings.ts -t es6 && bin/build-module.js --rootDir ./plugins/example-module --moduleName ExampleModule --outPath ./dist/example-module.js && rm -rf plugins/example-module/dist/ plugins/example-module/zero-crossings/src/*.js src/*.js"
+    "build": "tsc",
+    "prepublish": "npm run build"
   },
   "bin": {
     "feats-build": "bin/build-module.js"
