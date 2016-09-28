@@ -28,10 +28,10 @@
   "license": "GPL-2.0",
   "homepage": "https://bitbucket.org/LTDSP/feats#readme",
   "dependencies": {
-    "base64-js": "^1.2.0"
+    "base64-js": "^1.2.0",
+    "@types/base64-js": "^1.1.4"
   },
   "devDependencies": {
-    "@types/base64-js": "^1.1.4",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
     "@types/mocha": "^2.2.32",
