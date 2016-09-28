@@ -32,9 +32,15 @@
         };
 
         var processBlocks = function (response) {
-            return Feats.batchProcess(Feats.segmentAudioBuffer(config.blockSize, config.stepSize, audioBuffer), function (block) {
+            var processThunk = function (block) {
                 return pluginServer.process({pluginHandle: response.pluginHandle, processInput: block})
-            });
+            };
+            var finishThunk = function () {
+                return pluginServer.finish({pluginHandle: response.pluginHandle});
+            };
+            return Feats.batchProcess(Feats.segmentAudioBuffer(config.blockSize, config.stepSize, audioBuffer),
+                    processThunk, finishThunk
+            );
         };
 
         return loadPlugin(pluginKey)
