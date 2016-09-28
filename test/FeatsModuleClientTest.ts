@@ -16,7 +16,7 @@ import {batchProcess} from "../src/AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
 import fs = require("fs");
-import {Configuration, SampleType, ProcessInput, StaticData, AdapterFlags} from "../src/FeatureExtractor";
+import {Configuration, SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "../src/FeatureExtractor";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -51,6 +51,7 @@ describe("FeatsModuleClient", () => {
 
     it("Can load an available plugin", () => {
         const expectedResponse = loadFixture("expected-load-response");
+        expectedResponse.staticData.inputDomain = InputDomain[expectedResponse.staticData.inputDomain];
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });
 

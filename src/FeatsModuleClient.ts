@@ -18,7 +18,7 @@ import {
 import {FeatureSet, Feature, FeatureList} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {EmscriptenModuleRequestHandler} from "./EmscriptenModuleRequestHandler";
-import {SampleType, AdapterFlags} from "./FeatureExtractor";
+import {SampleType, AdapterFlags, InputDomain} from "./FeatureExtractor";
 
 interface WireProcessInput {
     timestamp: Timestamp;
@@ -58,7 +58,12 @@ export class FeatsModuleClient implements ModuleClient {
     public loadPlugin(request: LoadRequest): Promise<LoadResponse> {
         (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
         return this.request({type: "load", content: request} as Request).then((response) => {
-            return response.content as LoadResponse;
+            const staticData: any = response.content.staticData;
+            return {
+                pluginHandle: response.content.pluginHandle,
+                staticData: Object.assign({}, staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
+                defaultConfiguration: response.content.defaultConfiguration
+            };
         });
     }
 
