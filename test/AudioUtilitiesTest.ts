@@ -6,7 +6,7 @@ import chaiAsPromised = require("chai-as-promised");
 chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
-import {ProcessInput} from "../src/FeatureExtractor.ts";
+import {ProcessInput} from "../src/FeatureExtractor";
 import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment} from "../src/AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {FeatsAudioBuffer} from "../src/AudioBuffer";

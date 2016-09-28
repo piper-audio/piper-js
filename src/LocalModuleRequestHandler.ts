@@ -183,7 +183,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         // TODO this is to parse the InputDomain field as Enums, and really belongs in the compiling code
         factories.forEach(plugin => {
             if (typeof plugin.metadata.inputDomain === "string") {
-                plugin.metadata.inputDomain = InputDomain[plugin.metadata.inputDomain] as any;
+                plugin.metadata.inputDomain = InputDomain[plugin.metadata.inputDomain as any] as any;
             }
         });
     }
