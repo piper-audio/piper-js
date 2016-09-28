@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Feature extraction library, written in TypeScript.",
   "main": "dist/ts/feats.js",
+  "typings": "dist/ts/feats.d.ts",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
     "build-browser": "tsc && browserify dist/ts/feats.js  -t babelify --standalone Feats -o ./dist/bundle.js && rm -rf dist/ts",
