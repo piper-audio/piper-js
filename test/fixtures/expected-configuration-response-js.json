@@ -3,34 +3,30 @@
   "outputList": [
     {
       "basic": {
-        "description": "The number of zero crossing points per processing block",
-        "identifier": "counts",
-        "name": "Zero Crossing Counts"
+        "description": "The sum of the samples in the input block",
+        "identifier": "sum",
+        "name": "Sum"
       },
       "configured": {
         "binCount": 1,
         "binNames": [],
         "hasDuration": false,
-        "quantizeStep": 1,
         "sampleRate": 0,
-        "sampleType": "OneSamplePerStep",
-        "unit": "crossings"
+        "sampleType": "OneSamplePerStep"
       }
     },
     {
       "basic": {
-        "description": "The locations of zero crossing points",
-        "identifier": "crossings",
-        "name": "Zero Crossings"
+        "description": "The cumulative sum over all input blocks",
+        "identifier": "cumsum",
+        "name": "Cumulative Sum"
       },
       "configured": {
-        "binCount": 0,
+        "binCount": 1,
         "binNames": [],
         "hasDuration": false,
-        "quantizeStep": 1,
-        "sampleRate": 16,
-        "sampleType": "VariableSampleRate",
-        "unit": ""
+        "sampleRate": 0,
+        "sampleType": "OneSamplePerStep"
       }
     }
   ]

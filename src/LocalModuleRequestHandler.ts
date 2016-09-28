@@ -7,7 +7,7 @@ import {
 } from "./ClientServer";
 import {
     FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
-    SampleType
+    SampleType, InputDomain
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
@@ -30,6 +30,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     private countingHandle: number;
 
     constructor(...factories: PluginFactory[]) {
+        LocalModuleRequestHandler.sanitiseStaticData(factories);
         this.factories = new Map(factories.map(plugin => [plugin.metadata.pluginKey, plugin] as [string, PluginFactory]));
         this.loaded = new Map();
         this.configured = new Map();
@@ -102,7 +103,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
 
         return {
             pluginHandle: this.countingHandle,
-            staticData: metadata,
+            staticData: Object.assign({}, metadata, {inputDomain: InputDomain[metadata.inputDomain]}), // convert InputDomain to string over the wire
             defaultConfiguration: defaultConfiguration
         };
     }
@@ -176,5 +177,14 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
             wireFeatures[key] = featureList;
         }
         return wireFeatures;
+    }
+
+    private static sanitiseStaticData(factories: PluginFactory[]): void {
+        // TODO this is to parse the InputDomain field as Enums, and really belongs in the compiling code
+        factories.forEach(plugin => {
+            if (typeof plugin.metadata.inputDomain === "string") {
+                plugin.metadata.inputDomain = InputDomain[plugin.metadata.inputDomain] as any;
+            }
+        });
     }
 }
