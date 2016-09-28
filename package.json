@@ -9,7 +9,7 @@
     "build-browser": "tsc && browserify dist/ts/feats.js  -t babelify --standalone Feats -o ./dist/bundle.js && rm -rf dist/ts",
     "build": "tsc",
     "prepublish": "npm run build",
-    "preinstall": "npm run build"
+    "postinstall": "npm run build"
   },
   "bin": {
     "feats-build": "bin/build-module.js"
