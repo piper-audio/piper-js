@@ -6,3 +6,4 @@ export {FeatsModuleClient} from "./FeatsModuleClient";
 export {AdapterFlags, SampleType} from "./FeatureExtractor";
 export {LocalModuleRequestHandler} from "./LocalModuleRequestHandler";
 export {batchProcess, generateSineWave, segmentAudioBuffer} from "./AudioUtilities";
+export {makeTimestamp, frame2timestamp, toSeconds} from "./Timestamp";
