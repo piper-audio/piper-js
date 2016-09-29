@@ -32,7 +32,9 @@ gulp.task('build-module', () => {
 
 gulp.task('browserify-module', ['build-module'], () => {
     return browserify({ entries: path.join(rootDir, '/dist/', interimModuleName), standalone: moduleName})
-        .transform('babelify')
+        .transform('babelify', {
+            presets: ['es2015']
+        })
         .bundle()
         .pipe(source(outPath))
         .pipe(gulp.dest(process.cwd())); // outPath is relative to the current directory
