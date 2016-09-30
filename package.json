@@ -6,13 +6,13 @@
   "typings": "dist/ts/feats.d.ts",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
-    "build-browser": "tsc && browserify dist/ts/feats.js  -t babelify --standalone Feats -o ./dist/bundle.js && rm -rf dist/ts",
+    "build-browser": "tsc && browserify dist/ts/feats.js  -t babelify --standalone Feats -o ./dist/feats.js",
     "build": "tsc",
-    "prepublish": "npm run build",
-    "postinstall": "npm run build"
+    "prepublish": "npm run build-browser",
+    "postinstall": "npm run build-browser"
   },
   "bin": {
-    "feats-build": "bin/build-module.js"
+    "feats-bundle": "bin/build-module.js"
   },
   "repository": {
     "type": "git",
