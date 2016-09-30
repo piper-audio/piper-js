@@ -7,9 +7,8 @@ import {Timestamp} from "../src/Timestamp";
 import {Feature} from "../src/Feature";
 import {
     FeatureTimeAdjuster, VariableSampleRateFeatureTimeAdjuster,
-    FixedSampleRateFeatureTimeAdjuster
+    FixedSampleRateFeatureTimeAdjuster, OneSamplePerStepFeatureTimeAdjuster
 } from "../src/FeatureTimeAdjuster";
-
 chai.should();
 
 function createOutputDescriptor(hasDuration: boolean, sampleRate: number, sampleType: SampleType) {
@@ -26,6 +25,29 @@ function createOutputDescriptor(hasDuration: boolean, sampleRate: number, sample
         }
     };
 }
+
+describe("OneSamplePerStepFeatureTimeAdjuster", () => {
+    const stepSize: number = 8;
+    const sr: number = 16;
+
+    it("Should use the timestamp provided to the process call", () => {
+        const adjuster: FeatureTimeAdjuster = new OneSamplePerStepFeatureTimeAdjuster(stepSize, sr);
+        const expectedTimestamp: Timestamp = {s: 2, n: 0};
+        const feature: Feature = {} as Feature;
+        adjuster.adjust(feature, expectedTimestamp);
+        feature.timestamp.should.deep.equal(expectedTimestamp);
+    });
+
+    it("When a timestamp is missing, calculate the next equally-spaced timestamp process block should / would have had", () => {
+        const adjuster: FeatureTimeAdjuster = new OneSamplePerStepFeatureTimeAdjuster(stepSize, sr);
+        const expectedTimestamp: Timestamp = {s: 2, n: 500000000};
+
+        adjuster.adjust({}, {s: 2.0, n: 0.0});
+        const feature: Feature = {} as Feature;
+        adjuster.adjust(feature);
+        feature.timestamp.should.deep.equal(expectedTimestamp);
+    });
+});
 
 describe("VariableSampleRateFeatureTimeAdjuster", () => {
 

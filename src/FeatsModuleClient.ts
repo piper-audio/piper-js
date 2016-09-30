@@ -33,6 +33,7 @@ export class FeatsModuleClient implements ModuleClient {
     private timeAdjusters: Map<string, FeatureTimeAdjuster>;
     private handler: ModuleRequestHandler;
     private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<Response>>;
+    private handleToSampleRate: Map<PluginHandle, number>;
 
     constructor(handler: ModuleRequestHandler) {
         this.handler = handler;
@@ -42,6 +43,7 @@ export class FeatsModuleClient implements ModuleClient {
             [ProcessEncoding.Base64, (request: ProcessRequest) => this.processEncoded(FeatsModuleClient.encodeBase64(request))],
             [ProcessEncoding.Json, (request: ProcessRequest) => this.processEncoded(FeatsModuleClient.encodeJson(request))]
         ]);
+        this.handleToSampleRate = new Map();
     }
 
     public static createFromModule(module: any): FeatsModuleClient { // TODO need to define an actual interface for the module
@@ -58,6 +60,7 @@ export class FeatsModuleClient implements ModuleClient {
     public loadPlugin(request: LoadRequest): Promise<LoadResponse> {
         (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
         return this.request({type: "load", content: request} as Request).then((response) => {
+            this.handleToSampleRate.set(response.content.pluginHandle, request.inputSampleRate);
             const staticData: any = response.content.staticData;
             return {
                 pluginHandle: response.content.pluginHandle,
@@ -71,7 +74,9 @@ export class FeatsModuleClient implements ModuleClient {
         return this.request({type: "configure", content: request}).then((response) => {
             for (let output of response.content.outputList) {
                 (output.configured as any).sampleType = SampleType[output.configured.sampleType];
-                this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(output));
+                this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
+                    output, request.configuration.stepSize, this.handleToSampleRate.get(request.pluginHandle))
+                );
             }
             return response.content as ConfigurationResponse;
         });
@@ -81,7 +86,7 @@ export class FeatsModuleClient implements ModuleClient {
         const response: Promise<Response> = this.encodingMap.get(this.handler.getProcessEncoding())(request);
         return response.then(response => {
             let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
-            this.adjustFeatureTimes(features);
+            this.adjustFeatureTimes(features, request.processInput.timestamp);
             return features;
         });
     }
@@ -90,6 +95,7 @@ export class FeatsModuleClient implements ModuleClient {
         return this.request({type: "finish", content: request}).then((response) => {
             const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
+            this.handleToSampleRate.delete(request.pluginHandle);
             return features;
         });
     }
@@ -166,10 +172,10 @@ export class FeatsModuleClient implements ModuleClient {
         return features;
     }
 
-    private adjustFeatureTimes(features: FeatureSet) {
+    private adjustFeatureTimes(features: FeatureSet, inputTimestamp?: Timestamp) {
         for (let [i, featureList] of features.entries()) {
             const adjuster: FeatureTimeAdjuster = this.timeAdjusters.get(i);
-            featureList.map(feature => adjuster.adjust(feature));
+            featureList.map(feature => adjuster.adjust(feature, inputTimestamp));
         }
     }
 }

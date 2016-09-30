@@ -1,12 +1,12 @@
 /**
  * Created by lucast on 08/09/2016.
  */
-import {toSeconds, frame2timestamp} from "./Timestamp";
+import {toSeconds, frame2timestamp, Timestamp, makeTimestamp} from "./Timestamp";
 import {OutputDescriptor, SampleType} from "./FeatureExtractor";
 import {Feature} from "./Feature";
 
 export interface FeatureTimeAdjuster {
-    adjust(feature: Feature): void;
+    adjust(feature: Feature, inputTimestamp?: Timestamp): void;
 }
 
 export class VariableSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
@@ -38,17 +38,41 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
 }
 
 export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster {
-    adjust(feature: Feature): void {} // This doesn"t need to do anything, is this pointless?
+    private stepSizeSeconds: number;
+    private inputSampleRate: number;
+    private previousTimestamp: Timestamp;
+
+    constructor(stepSize: number, inputSampleRate: number) {
+        if (stepSize === undefined || inputSampleRate === undefined)
+            throw new Error("Host must provide a configuration and sample rate.");
+        this.inputSampleRate = inputSampleRate;
+        this.stepSizeSeconds = stepSize / this.inputSampleRate;
+        this.previousTimestamp = {s: 0.0, n: 0.0};
+    }
+
+    adjust(feature: Feature, inputTimestamp: Timestamp): void {
+        const isValidTimestamp = inputTimestamp && inputTimestamp.hasOwnProperty("s") && inputTimestamp.hasOwnProperty("n");
+        feature.timestamp = isValidTimestamp ? inputTimestamp : this.calculateNextTimestamp();
+        delete feature.duration; // host should ignore duration
+        this.previousTimestamp = feature.timestamp;
+    }
+
+    private calculateNextTimestamp() {
+        return makeTimestamp(toSeconds(this.previousTimestamp) + this.stepSizeSeconds);
+    }
 }
 
-export function createFeatureTimeAdjuster(descriptor: OutputDescriptor): FeatureTimeAdjuster {
+export function
+createFeatureTimeAdjuster(descriptor: OutputDescriptor, stepSize?: number, sampleRate?: number)
+: FeatureTimeAdjuster {
 
     switch (descriptor.configured.sampleType) {
         case SampleType.OneSamplePerStep:
-            return new OneSamplePerStepFeatureTimeAdjuster();
+            return new OneSamplePerStepFeatureTimeAdjuster(stepSize, sampleRate);
         case SampleType.VariableSampleRate:
             return new VariableSampleRateFeatureTimeAdjuster(descriptor);
         case SampleType.FixedSampleRate:
             return new FixedSampleRateFeatureTimeAdjuster(descriptor);
     }
+    throw new Error("No valid FeatureTimeAdjuster could be constructed.");
 }
