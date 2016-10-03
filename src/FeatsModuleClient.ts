@@ -75,7 +75,7 @@ export class FeatsModuleClient implements ModuleClient {
             for (let output of response.content.outputList) {
                 (output.configured as any).sampleType = SampleType[output.configured.sampleType];
                 this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                    output, request.configuration.stepSize, this.handleToSampleRate.get(request.pluginHandle))
+                    output, request.configuration.stepSize / this.handleToSampleRate.get(request.pluginHandle))
                 );
             }
             return response.content as ConfigurationResponse;

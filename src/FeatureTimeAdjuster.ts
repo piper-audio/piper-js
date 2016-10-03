@@ -39,14 +39,12 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
 
 export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster {
     private stepSizeSeconds: number;
-    private inputSampleRate: number;
     private previousTimestamp: Timestamp;
 
-    constructor(stepSize: number, inputSampleRate: number) {
-        if (stepSize === undefined || inputSampleRate === undefined)
-            throw new Error("Host must provide a configuration and sample rate.");
-        this.inputSampleRate = inputSampleRate;
-        this.stepSizeSeconds = stepSize / this.inputSampleRate;
+    constructor(stepSizeSeconds: number) {
+        if (stepSizeSeconds === undefined)
+            throw new Error("Host must provide the step size (seconds).");
+        this.stepSizeSeconds = stepSizeSeconds;
         this.previousTimestamp = {s: 0.0, n: 0.0};
     }
 
@@ -63,12 +61,12 @@ export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster 
 }
 
 export function
-createFeatureTimeAdjuster(descriptor: OutputDescriptor, stepSize?: number, sampleRate?: number)
+createFeatureTimeAdjuster(descriptor: OutputDescriptor, stepSizeSeconds?: number)
 : FeatureTimeAdjuster {
 
     switch (descriptor.configured.sampleType) {
         case SampleType.OneSamplePerStep:
-            return new OneSamplePerStepFeatureTimeAdjuster(stepSize, sampleRate);
+            return new OneSamplePerStepFeatureTimeAdjuster(stepSizeSeconds);
         case SampleType.VariableSampleRate:
             return new VariableSampleRateFeatureTimeAdjuster(descriptor);
         case SampleType.FixedSampleRate:
