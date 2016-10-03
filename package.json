@@ -6,6 +6,8 @@
   "typings": "dist/ts/feats.d.ts",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
+    "timings": "mocha perf/*.ts --require ts-node/register",
+    "profile": "npm run timings && node --prof-process $(ls -1tr isolate*.log | tail -1) > profile.txt",
     "build-browser": "tsc && browserify dist/ts/feats.js  -t babelify --standalone Feats -o ./dist/feats.js",
     "build": "tsc",
     "prepublish": "npm run build-browser",
