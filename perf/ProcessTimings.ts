@@ -9,7 +9,7 @@ import {
     Response, LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest
-} from "../src/ClientServer";
+} from "Piper.ts";
 
 import {
     AdapterFlags, StaticData, Configuration, ProcessInput

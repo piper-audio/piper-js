@@ -2,7 +2,7 @@
  * Created by lucast on 16/09/2016.
  */
 import {EmscriptenModule, Allocator} from "./Emscripten";
-import {Response, Request, ModuleRequestHandler, ProcessRequest, ProcessEncoding} from "./ClientServer";
+import {Response, Request, ModuleRequestHandler, ProcessRequest, ProcessEncoding} from "./Piper";
 
 type Pointer = number;
 export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {

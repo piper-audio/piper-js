@@ -3,7 +3,7 @@
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
-import {LoadRequest, LoadResponse} from "../src/ClientServer";
+import {LoadRequest, LoadResponse} from "Piper.ts";
 import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
 import VampTestPlugin = require('../ext/VampTestPlugin');
 import {AdapterFlags} from "../src/FeatureExtractor";

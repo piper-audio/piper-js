@@ -7,7 +7,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import {
     ModuleRequestHandler, Response, LoadResponse, ConfigurationResponse,
     ConfigurationRequest, Request, ProcessRequest, ProcessResponse
-} from "../src/ClientServer";
+} from "Piper.ts";
 import {LocalModuleRequestHandler, PluginFactory, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
 import {StaticData, Configuration} from "../src/FeatureExtractor";
 import {FeatureExtractorStub, MetaDataStub} from "./fixtures/FeatureExtractorStub";

@@ -3,7 +3,7 @@
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 
-import {LoadResponse, ListResponse, ConfigurationResponse} from "../src/ClientServer";
+import {LoadResponse, ListResponse, ConfigurationResponse} from "Piper.ts";
 
 import fs = require("fs");
 

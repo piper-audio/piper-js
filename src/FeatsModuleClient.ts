@@ -3,15 +3,7 @@
  * Created by lucast on 31/08/2016.
  */
 
-import {
-    ModuleClient,
-    ListResponse,
-    LoadRequest, LoadResponse,
-    ConfigurationRequest, ConfigurationResponse,
-    ProcessRequest, FinishRequest,
-    Response, Request, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
-    ProcessEncoding, WireFeatureSet, ProcessResponse, WireFeatureList, WireFeature
-} from "./ClientServer";
+
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
@@ -19,17 +11,13 @@ import {FeatureSet, Feature, FeatureList} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {EmscriptenModuleRequestHandler} from "./EmscriptenModuleRequestHandler";
 import {SampleType, AdapterFlags, InputDomain} from "./FeatureExtractor";
+import {
+    PluginHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
+    LoadResponse, ProcessRequest, FinishRequest
+} from "./Piper";
+import {FeatureExtractionClient} from "./Client";
 
-interface WireProcessInput {
-    timestamp: Timestamp;
-    inputBuffers: number[][] | string[];
-}
-interface WireProcessRequest {
-    pluginHandle: PluginHandle;
-    processInput: WireProcessInput;
-}
-
-export class FeatsModuleClient implements ModuleClient {
+export class FeatsModuleClient implements FeatureExtractionClient {
     private timeAdjusters: Map<string, FeatureTimeAdjuster>;
     private handler: ModuleRequestHandler;
     private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<Response>>;
@@ -51,13 +39,13 @@ export class FeatsModuleClient implements ModuleClient {
         return isEmscriptenModule ? new FeatsModuleClient(new EmscriptenModuleRequestHandler(module)) : null; // TODO complete factory when more Handlers exist
     }
 
-    public listPlugins(): Promise<ListResponse> {
+    public list(): Promise<ListResponse> {
         return this.request({type: "list"} as Request).then((response) => {
             return response.content as ListResponse;
         });
     }
 
-    public loadPlugin(request: LoadRequest): Promise<LoadResponse> {
+    public load(request: LoadRequest): Promise<LoadResponse> {
         (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
         return this.request({type: "load", content: request} as Request).then((response) => {
             this.handleToSampleRate.set(response.content.pluginHandle, request.inputSampleRate);
@@ -70,7 +58,7 @@ export class FeatsModuleClient implements ModuleClient {
         });
     }
 
-    public configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
+    public configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
         return this.request({type: "configure", content: request}).then((response) => {
             for (let output of response.content.outputList) {
                 (output.configured as any).sampleType = SampleType[output.configured.sampleType];
@@ -98,78 +86,6 @@ export class FeatsModuleClient implements ModuleClient {
             this.handleToSampleRate.delete(request.pluginHandle);
             return features;
         });
-    }
-
-    private request(request: Request): Promise<Response> {
-        return this.handler.handle(request);
-    }
-
-    private static encodeJson(request: ProcessRequest): WireProcessRequest {
-        const encoded = request.processInput.inputBuffers.map(channel => {
-            return [...channel]
-        });
-        return {
-            pluginHandle: request.pluginHandle,
-            processInput: {
-                timestamp: request.processInput.timestamp,
-                inputBuffers: encoded
-            }
-        };
-    }
-
-    private static encodeBase64(request: ProcessRequest): WireProcessRequest {
-        const encoded: string[] = request.processInput.inputBuffers.map(toBase64);
-        return {
-            pluginHandle: request.pluginHandle,
-            processInput: {
-                timestamp: request.processInput.timestamp,
-                inputBuffers: encoded
-            }
-        };
-    }
-
-    private processEncoded(request: WireProcessRequest): Promise<Response> {
-        return this.handler.handle({type: "process", content: request})
-    }
-
-    private processRaw(request: ProcessRequest): Promise<Response> {
-        return this.handler.handle({type: "process", content: request})
-    }
-
-    private static convertWireFeature(wfeature: WireFeature): Feature {
-        let out: Feature = {};
-        if (wfeature.timestamp != null) {
-            out.timestamp = wfeature.timestamp;
-        }
-        if (wfeature.duration != null) {
-            out.duration = wfeature.duration;
-        }
-        if (wfeature.label != null) {
-            out.label = wfeature.label;
-        }
-        const vv = wfeature.featureValues;
-        if (vv != null) {
-            if (typeof vv === "string") {
-                out.featureValues = fromBase64(vv);
-            } else {
-                out.featureValues = new Float32Array(vv);
-            }
-        }
-        return out;
-    }
-
-    private static convertWireFeatureList(wfeatures: WireFeatureList): FeatureList {
-        return wfeatures.map(FeatsModuleClient.convertWireFeature);
-    }
-
-    private static responseToFeatureSet(response: Response): FeatureSet {
-        const features: FeatureSet = new Map();
-        const processResponse: ProcessResponse = response.content;
-        const wireFeatures: WireFeatureSet = processResponse.features;
-        Object.keys(wireFeatures).forEach(key => {
-            return features.set(key, FeatsModuleClient.convertWireFeatureList(wireFeatures[key]));
-        });
-        return features;
     }
 
     private adjustFeatureTimes(features: FeatureSet, inputTimestamp?: Timestamp) {

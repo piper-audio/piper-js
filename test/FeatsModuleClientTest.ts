@@ -9,7 +9,7 @@ import {FeatsModuleClient} from "../src/FeatsModuleClient";
 import {
     LoadRequest, LoadResponse, ConfigurationRequest,
     ConfigurationResponse, ProcessRequest
-} from "../src/ClientServer";
+} from "Piper.ts";
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";

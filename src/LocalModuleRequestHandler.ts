@@ -3,8 +3,8 @@
  */
 import {
     ModuleRequestHandler, Request, Response, ProcessEncoding, LoadRequest,
-    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, ProcessResponse, WireFeatureSet
-} from "./ClientServer";
+    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, WireProcessResponse, WireFeatureSet
+} from "./Piper";
 import {
     FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
     SampleType, InputDomain
@@ -129,8 +129,8 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     // process, should be a direct call to process, may need to alter the shape of the return (not sure)
     // TODO what about FrequencyDomain input?, or channel count mis-match?
     // ^^ The AdapterFlags will indicate the work to be done, but I've not yet implemented anything which does it
-    //     - ProcessResponse (there is no JSON schema for this, but copy the shape of the latest VamPipe)
-    private process(request: ProcessRequest): ProcessResponse { // TODO what if this was over the wire?
+    //     - WireProcessResponse (there is no JSON schema for this, but copy the shape of the latest VamPipe)
+    private process(request: ProcessRequest): WireProcessResponse { // TODO what if this was over the wire?
         if (!this.configured.has(request.pluginHandle))
             throw new Error("Invalid plugin handle, or plugin not configured.");
 
@@ -148,8 +148,8 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     }
 
     // finish, directly call finish
-    //     - ProcessResponse?
-    private finish(handle: PluginHandle): ProcessResponse {
+    //     - WireProcessResponse?
+    private finish(handle: PluginHandle): WireProcessResponse {
         if (!this.configured.has(handle))
             throw new Error("Invalid plugin handle, or plugin not configured.");
         const plugin: Plugin = this.configured.get(handle);
