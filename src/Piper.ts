@@ -50,27 +50,30 @@ export interface FinishRequest {
 }
 
 //
-export type RawRequest = string;
 
 export interface Protocol {
-    writeListResponse(response: ListResponse): RawRequest;
-    writeLoadResponse(response: LoadResponse): RawRequest;
-    writeConfigurationResponse(response: ConfigurationResponse): RawRequest;
-    writeProcessResponse(response: ProcessResponse): RawRequest;
-    readLoadRequest(request: RawRequest): LoadRequest;
-    readConfigurationRequest(request: RawRequest): ConfigurationRequest;
-    readProcessRequest(request: RawRequest): ProcessRequest;
-    readFinishRequest(request: RawRequest): FinishRequest;
+    writeListResponse(response: ListResponse): void;
+    writeLoadResponse(response: LoadResponse): void;
+    writeConfigurationResponse(response: ConfigurationResponse): void;
+    writeProcessResponse(response: ProcessResponse): void;
+    readLoadRequest(): LoadRequest;
+    readConfigurationRequest(): ConfigurationRequest;
+    readProcessRequest(): ProcessRequest;
+    readFinishRequest(): FinishRequest;
 }
-//
-// export interface Service {
-//     handle(request: Request): Promise<Response>;
-// }
-//
-// export interface FeatureExtractionClient {
-//     list(): Promise<ListResponse>;
-//     load(request: LoadRequest) : Promise<LoadResponse>;
-//     configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
-//     process(request: ProcessRequest): Promise<FeatureSet>;
-//     finish(request: FinishRequest): Promise<FeatureSet>;
-// }
+
+export interface FeatureExtractionService {
+    list(): ListResponse;
+    load(request: LoadRequest) : LoadResponse;
+    configure(request: ConfigurationRequest): ConfigurationResponse;
+    process(request: ProcessRequest): FeatureSet;
+    finish(request: FinishRequest): FeatureSet;
+}
+
+export interface FeatureExtractionClient {
+    list(): Promise<ListResponse>;
+    load(request: LoadRequest) : Promise<LoadResponse>;
+    configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
+    process(request: ProcessRequest): Promise<FeatureSet>;
+    finish(request: FinishRequest): Promise<FeatureSet>;
+}
