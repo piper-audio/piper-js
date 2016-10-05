@@ -2,7 +2,7 @@
  * Created by lucast on 16/09/2016.
  */
 import {EmscriptenModule, Allocator} from "./Emscripten";
-import {Response, Request, ModuleRequestHandler, ProcessRequest, ProcessEncoding} from "./ClientServer";
+import {ResponseEnvelope, RequestEnvelope, ModuleRequestHandler, ProcessRequest, ProcessEncoding} from "./ClientServer";
 
 type Pointer = number;
 export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
@@ -19,16 +19,17 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
         this.freeJson = this.server.cwrap("vampipeFreeJson", "void", ["number"]) as (ptr: number) => void;
     }
 
-    handle(request: Request): Promise<Response> {
-        return new Promise<Response>((resolve, reject) => {
-            const responseJson: Pointer =
-                (request.type === "process") ? this.processRaw(request.content) : this.processRequest(request);
+    handle(request: RequestEnvelope): Promise<ResponseEnvelope> {
+        return new Promise<ResponseEnvelope>((resolve, reject) => {
+
+	    const responseJson: Pointer =
+                (request.method === "process") ? this.processRaw(request.params) : this.processRequest(request);
 
             const responseJstr = this.server.Pointer_stringify(responseJson);
-            const response: Response = JSON.parse(responseJstr);
+            const response: ResponseEnvelope = JSON.parse(responseJstr);
             this.freeJson(responseJson);
 
-            response.success ? resolve(response) : reject(response.errorText);
+            response.result ? resolve(response) : reject(response.error.message);
         });
     }
 
@@ -36,7 +37,7 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
         return ProcessEncoding.Raw;
     }
 
-    private processRequest(request: Request): Pointer {
+    private processRequest(request: RequestEnvelope): Pointer {
         const requestJson: Pointer = this.server.allocate(
             this.server.intArrayFromString(JSON.stringify(request)), "i8",
             Allocator.ALLOC_NORMAL);

@@ -1,0 +1,17 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/finishresponse#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised response from finishing processing with a Vamp plugin; normally served as the content field of an object matching the plain response schema",
+    "type": "object",
+    "properties": {
+	"pluginHandle": {
+	    "type": "number"
+	},
+	"features": {
+	    "$ref": "http://vamp-plugins.org/json/schema/featureset#"
+	}
+    },
+    "required": [ "pluginHandle", "features" ],
+    "additionalProperties": false
+}
+

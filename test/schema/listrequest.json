@@ -1,0 +1,9 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/listrequest#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised list request for feature extractors; normally served as the content field of an object matching the plain request schema",
+    "type": "object",
+    "properties": {
+    },
+    "additionalProperties": false
+}

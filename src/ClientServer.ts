@@ -7,16 +7,20 @@ import {FeatureSet} from "./Feature";
 import * as base64 from "base64-js";
 import {AdapterFlags, StaticData, Configuration, OutputList, ProcessInput} from "./FeatureExtractor";
 
-export interface Request {
-    type: string;
-    content?: any; // TODO create a more meaningful type for this
+export interface RequestEnvelope {
+    method: string;
+    params?: any; // TODO create a more meaningful type for this
 }
 
-export interface Response {
-    type: string;
-    success: boolean;
-    errorText?: string;
-    content?: any; // TODO create a more meaningful type for this
+export interface ResponseError {
+    code: number;
+    message: string;
+}
+
+export interface ResponseEnvelope {
+    method: string;
+    result?: any; // TODO create a more meaningful type for this
+    error?: ResponseError;
 }
 
 export interface LoadRequest {
@@ -71,7 +75,7 @@ export enum ProcessEncoding {
 }
 
 export interface ModuleRequestHandler { // should this just be called Server?
-    handle(request: Request): Promise<Response>;
+    handle(request: RequestEnvelope): Promise<ResponseEnvelope>;
     getProcessEncoding(): ProcessEncoding;
 }
 

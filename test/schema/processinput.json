@@ -10,18 +10,9 @@
 	"inputBuffers": {
 	    "type": "array",
 	    "items": {
-                "anyOf": [
-                    {
-			"type": "array",
-			"items": { "type": "number" }
-		    },
-                    {
-		        "type": "string",
-                        "pattern": "^[a-zA-Z0-9+/]*=*$"
-		    }
-                ]
-	    }
-	}
+                "$ref": "http://vamp-plugins.org/json/schema/serialisedarray#"
+            }
+        }
     },
     "additionalProperties": false
 }

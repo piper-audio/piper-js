@@ -1,22 +1,32 @@
 {
     "id": "http://vamp-plugins.org/json/schema/request#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a simple serialised request",
+    "description": "schema for a serialised request compatible with JSON-RPC",
     "type": "object",
     "properties": {
-	"type": {
+	"method": {
 	    "type": "string"
 	},
-	"content": {
+	"params": {
             "anyOf": [
+                { "$ref": "http://vamp-plugins.org/json/schema/listrequest#" },
                 { "$ref": "http://vamp-plugins.org/json/schema/loadrequest#" },
                 { "$ref": "http://vamp-plugins.org/json/schema/configurationrequest#" },
                 { "$ref": "http://vamp-plugins.org/json/schema/processrequest#" },
                 { "$ref": "http://vamp-plugins.org/json/schema/finishrequest#" }
             ]                
-	}
+	},
+        "id": {
+            "anyOf": [
+                { "type": "string" },
+                { "type": "number" }
+            ]
+        },
+        "jsonrpc": {
+            "type": "string"
+        }
     },
-    "required": [ "type" ],
+    "required": [ "method" ],
     "additionalProperties": false
 }
 

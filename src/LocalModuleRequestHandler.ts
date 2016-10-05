@@ -2,7 +2,7 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    ModuleRequestHandler, Request, Response, ProcessEncoding, LoadRequest,
+    ModuleRequestHandler, RequestEnvelope, ResponseEnvelope, ProcessEncoding, LoadRequest,
     LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, ProcessResponse, WireFeatureSet
 } from "./ClientServer";
 import {
@@ -37,40 +37,35 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         this.countingHandle = 0;
     }
 
-    public handle(request: Request): Promise<Response> {
+    public handle(request: RequestEnvelope): Promise<ResponseEnvelope> {
         // TODO switch statement suggests the interface should just be list, load, config, process, finish?
         // or that it belongs somewhere else, at this point it looks like a bit like request router
         try {
-            switch (request.type) {
+            switch (request.method) {
                 case "list":
                     return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: {plugins: this.list()}
+                        method: request.method,
+                        result: {plugins: this.list()}
                     });
                 case "load":
                     return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.load(request.content)
+                        method: request.method,
+                        result: this.load(request.params)
                     });
                 case "configure":
                     return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.configure(request.content)
+                        method: request.method,
+                        result: this.configure(request.params)
                     });
                 case "process":
                     return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.process(request.content)
+                        method: request.method,
+                        result: this.process(request.params)
                     });
                 case "finish":
                     return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.finish(request.content.pluginHandle)
+                        method: request.method,
+                        result: this.finish(request.params.pluginHandle)
                     });
                 default:
                     return LocalModuleRequestHandler.rejectRequest("Unsupported request type.", request);
@@ -159,11 +154,13 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         return {pluginHandle: handle, features: LocalModuleRequestHandler.toWireFeatureSet(features)};
     }
 
-    private static rejectRequest(err: string, request: Request): Promise<Request> {
-        return Promise.reject<Response>({
-            type: request.type,
-            success: false,
-            errorText: err
+    private static rejectRequest(err: string, request: RequestEnvelope): Promise<RequestEnvelope> {
+        return Promise.reject<ResponseEnvelope>({
+            method: request.method,
+	    error: {
+		code: 0, //!!!
+		message: err
+	    }
         });
     }
 
