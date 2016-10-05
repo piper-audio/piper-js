@@ -2,7 +2,7 @@
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import {FeatsModuleClient} from "../src/FeatsModuleClient";
+import {FeatsModuleClient} from "FeatureExtractionClient.ts";
 import {LoadRequest, LoadResponse} from "Piper.ts";
 import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
 import VampTestPlugin = require('../ext/VampTestPlugin');

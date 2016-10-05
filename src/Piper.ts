@@ -8,7 +8,6 @@ import {FeatureSet} from "./Feature";
 
 export type PluginHandle = number;
 
-
 export interface ListResponse {
     plugins: StaticData[];
 }
@@ -51,26 +50,52 @@ export interface FinishRequest {
 
 //
 
-export interface Protocol {
-    writeListResponse(response: ListResponse): void;
-    writeLoadResponse(response: LoadResponse): void;
-    writeConfigurationResponse(response: ConfigurationResponse): void;
-    writeProcessResponse(response: ProcessResponse): void;
-    readLoadRequest(): LoadRequest;
-    readConfigurationRequest(): ConfigurationRequest;
-    readProcessRequest(): ProcessRequest;
-    readFinishRequest(): FinishRequest;
+export abstract class Protocol {
+    public transport: Transport;
+
+    constructor(transport: Transport) {
+        this.transport = transport;
+    }
+
+    // writing
+    abstract writeListRequest(): void; // TODO huh
+    abstract writeListResponse(response: ListResponse): void;
+    abstract writeLoadRequest(request: LoadRequest): void;
+    abstract writeLoadResponse(response: LoadResponse): void;
+    abstract writeConfigurationRequest(request: ConfigurationRequest): void;
+    abstract writeConfigurationResponse(response: ConfigurationResponse): void;
+    abstract writeProcessRequest(request: ProcessRequest): void;
+    abstract writeProcessResponse(response: ProcessResponse): void;
+    abstract writeFinishRequest(request: FinishRequest): void;
+
+    // reading
+    abstract readListRequest(): void; // TODO huh
+    abstract readListResponse(): ListResponse;
+    abstract readLoadRequest(): LoadRequest;
+    abstract readLoadResponse(): LoadResponse;
+    abstract readConfigurationRequest(): ConfigurationRequest;
+    abstract readConfigurationResponse(): ConfigurationResponse;
+    abstract readProcessRequest(): ProcessRequest;
+    abstract readProcessResponse(): ProcessResponse;
+    abstract readFinishRequest(): FinishRequest;
+
 }
 
-export interface FeatureExtractionService {
+export interface Transport {
+    read(): void;
+    write(): void;
+    flush(): void;
+}
+
+export interface Service {
     list(): ListResponse;
     load(request: LoadRequest) : LoadResponse;
     configure(request: ConfigurationRequest): ConfigurationResponse;
-    process(request: ProcessRequest): FeatureSet;
-    finish(request: FinishRequest): FeatureSet;
+    process(request: ProcessRequest): ProcessResponse;
+    finish(request: FinishRequest): ProcessResponse;
 }
 
-export interface FeatureExtractionClient {
+export interface Client {
     list(): Promise<ListResponse>;
     load(request: LoadRequest) : Promise<LoadResponse>;
     configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;

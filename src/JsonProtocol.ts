@@ -3,16 +3,18 @@
  */
 import {Timestamp} from "./Timestamp";
 import {
-    PluginHandle, ProcessRequest, Protocol, ListResponse, RawRequest, LoadResponse,
-    ConfigurationResponse, ProcessResponse, LoadRequest, ConfigurationRequest, FinishRequest
+    PluginHandle, ProcessRequest, Protocol, ListResponse, LoadResponse,
+    ConfigurationResponse, ProcessResponse, LoadRequest, ConfigurationRequest, FinishRequest, Transport
 } from "./Piper";
 import {Feature, FeatureList, FeatureSet} from "./Feature";
+import * as base64 from "base64-js";
+import {AdapterFlags, InputDomain} from "./FeatureExtractor";
 
-interface WireFeature {
+export interface WireFeature {
     timestamp?: Timestamp;
     duration?: Timestamp;
     label?: string;
-    featureValues?: number[];
+    featureValues?: number[] | string;
 }
 
 type WireFeatureList = WireFeature[];
@@ -28,7 +30,7 @@ interface WireProcessResponse {
 
 interface WireProcessInput {
     timestamp: Timestamp;
-    inputBuffers: number[][];
+    inputBuffers: number[][] | string[];
 }
 
 interface WireProcessRequest {
@@ -36,36 +38,79 @@ interface WireProcessRequest {
     processInput: WireProcessInput;
 }
 
-export class JsonProtocol implements Protocol {
-    writeListResponse(response: ListResponse): RawRequest {
+export class JsonProtocol extends Protocol {
+
+    constructor(transport: Transport) {
+        super(transport);
+    }
+
+    writeListRequest(): void {
+    }
+
+    writeListResponse(response: ListResponse): void {
+    }
+
+    writeLoadRequest(request: LoadRequest): void {
+        (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
+    }
+
+    writeLoadResponse(response: LoadResponse): void {
+    }
+
+    writeConfigurationRequest(request: ConfigurationRequest): void {
+    }
+
+    writeConfigurationResponse(response: ConfigurationResponse): void {
+    }
+
+    writeProcessRequest(request: ProcessRequest): void {
+    }
+
+    writeProcessResponse(response: ProcessResponse): void {
+    }
+
+    writeFinishRequest(request: FinishRequest): void {
+    }
+
+    readListRequest(): void {
+    }
+
+    readListResponse(): ListResponse {
         return undefined;
     }
 
-    writeLoadResponse(response: LoadResponse): RawRequest {
+    readLoadRequest(): LoadRequest {
         return undefined;
     }
 
-    writeConfigurationResponse(response: ConfigurationResponse): RawRequest {
+    readLoadResponse(): LoadResponse {
+        this.transport.read();
+        const staticData: any = response.staticData;
+        return {
+            pluginHandle: response.pluginHandle,
+            staticData: Object.assign({}, staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
+            defaultConfiguration: response.defaultConfiguration
+        };
         return undefined;
     }
 
-    writeProcessResponse(response: ProcessResponse): RawRequest {
+    readConfigurationRequest(): ConfigurationRequest {
         return undefined;
     }
 
-    readLoadRequest(request: RawRequest): LoadRequest {
+    readConfigurationResponse(): ConfigurationResponse {
         return undefined;
     }
 
-    readConfigurationRequest(request: RawRequest): ConfigurationRequest {
+    readProcessRequest(): ProcessRequest {
         return undefined;
     }
 
-    readProcessRequest(request: RawRequest): ProcessRequest {
+    readProcessResponse(): ProcessResponse {
         return undefined;
     }
 
-    readFinishRequest(request: RawRequest): FinishRequest {
+    readFinishRequest(): FinishRequest {
         return undefined;
     }
 
@@ -93,7 +138,15 @@ export class JsonProtocol implements Protocol {
         if (wfeature.label != null) {
             out.label = wfeature.label;
         }
-        return out.featureValues = new Float32Array(wfeature.featureValues);
+        const vv = wfeature.featureValues;
+        if (vv != null) {
+            if (typeof vv === "string") {
+                out.featureValues = fromBase64(vv);
+            } else {
+                out.featureValues = new Float32Array(vv);
+            }
+        }
+        return out;
     }
 
     private static convertWireFeatureList(wfeatures: WireFeatureList): FeatureList {
@@ -108,4 +161,25 @@ export class JsonProtocol implements Protocol {
         });
         return features;
     }
+}
+
+function toBase64(values: Float32Array): string {
+    // We want a base-64 encoding of the raw memory backing the
+    // typed array. We assume byte order will be the same when the
+    // base-64 stuff is decoded, but I guess that might not be
+    // true in a network situation. The Float32Array docs say "If
+    // control over byte order is needed, use DataView instead" so
+    // I guess that's a !!! todo item
+    return base64.fromByteArray(new Uint8Array(values.buffer));
+}
+
+function fromBase64(b64: string): Float32Array {
+    // The base64 module expects input to be padded to a
+    // 4-character boundary, but the C++ VampJson code does not do
+    // that, so let's do it here
+    while (b64.length % 4 > 0) {
+        b64 += "=";
+    }
+    // !!! endianness, as above.
+    return new Float32Array(base64.toByteArray(b64).buffer);
 }

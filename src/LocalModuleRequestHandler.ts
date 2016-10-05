@@ -80,9 +80,6 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         }
     }
 
-    public getProcessEncoding(): ProcessEncoding {
-        return ProcessEncoding.Raw;
-    }
     // TODO this might all belong somewhere else
 
     private list(): StaticData[] {

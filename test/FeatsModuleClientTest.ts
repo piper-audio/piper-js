@@ -5,7 +5,7 @@
 
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
-import {FeatsModuleClient} from "../src/FeatsModuleClient";
+import {FeatsModuleClient} from "PiperClient.ts";
 import {
     LoadRequest, LoadResponse, ConfigurationRequest,
     ConfigurationResponse, ProcessRequest

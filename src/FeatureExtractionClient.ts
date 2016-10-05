@@ -7,55 +7,40 @@
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
-import {FeatureSet, Feature, FeatureList} from "./Feature";
+import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
-import {EmscriptenModuleRequestHandler} from "./EmscriptenModuleRequestHandler";
 import {SampleType, AdapterFlags, InputDomain} from "./FeatureExtractor";
 import {
     PluginHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
-    LoadResponse, ProcessRequest, FinishRequest
+    LoadResponse, ProcessRequest, FinishRequest, Protocol
 } from "./Piper";
-import {FeatureExtractionClient} from "./Client";
+import {Client} from "./Piper";
 
-export class FeatsModuleClient implements FeatureExtractionClient {
+export class FeatureExtractionClient implements Client {
     private timeAdjusters: Map<string, FeatureTimeAdjuster>;
-    private handler: ModuleRequestHandler;
-    private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<Response>>;
     private handleToSampleRate: Map<PluginHandle, number>;
+    private protocol: Protocol;
 
-    constructor(handler: ModuleRequestHandler) {
-        this.handler = handler;
+    constructor(protocol: Protocol) {
         this.timeAdjusters = new Map();
-        this.encodingMap = new Map([
-            [ProcessEncoding.Raw, (request: ProcessRequest) => this.processRaw(request)],
-            [ProcessEncoding.Base64, (request: ProcessRequest) => this.processEncoded(FeatsModuleClient.encodeBase64(request))],
-            [ProcessEncoding.Json, (request: ProcessRequest) => this.processEncoded(FeatsModuleClient.encodeJson(request))]
-        ]);
         this.handleToSampleRate = new Map();
-    }
-
-    public static createFromModule(module: any): FeatsModuleClient { // TODO need to define an actual interface for the module
-        const isEmscriptenModule: boolean = typeof module.ccall === "function"; // TODO this is an arbitrary way of deciding
-        return isEmscriptenModule ? new FeatsModuleClient(new EmscriptenModuleRequestHandler(module)) : null; // TODO complete factory when more Handlers exist
+        this.protocol = protocol;
     }
 
     public list(): Promise<ListResponse> {
-        return this.request({type: "list"} as Request).then((response) => {
-            return response.content as ListResponse;
-        });
+        this.protocol.writeListRequest();
+        this.protocol.transport.flush();
+        return Promise.resolve(this.protocol.readListResponse()); // TODO doesn't feel right at all (Promise.resolve)
     }
 
     public load(request: LoadRequest): Promise<LoadResponse> {
-        (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
-        return this.request({type: "load", content: request} as Request).then((response) => {
-            this.handleToSampleRate.set(response.content.pluginHandle, request.inputSampleRate);
-            const staticData: any = response.content.staticData;
-            return {
-                pluginHandle: response.content.pluginHandle,
-                staticData: Object.assign({}, staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
-                defaultConfiguration: response.content.defaultConfiguration
-            };
-        });
+        this.protocol.writeLoadRequest(request);
+        this.protocol.transport.flush();
+        return Promise.resolve(this.protocol.readLoadResponse())
+            .then(response => {
+                this.handleToSampleRate.set(response.pluginHandle, request.inputSampleRate);
+                return response;
+            });
     }
 
     public configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
@@ -73,7 +58,7 @@ export class FeatsModuleClient implements FeatureExtractionClient {
     public process(request: ProcessRequest): Promise<FeatureSet> {
         const response: Promise<Response> = this.encodingMap.get(this.handler.getProcessEncoding())(request);
         return response.then(response => {
-            let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
+            let features: FeatureSet = PiperClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features, request.processInput.timestamp);
             return features;
         });
@@ -81,7 +66,7 @@ export class FeatsModuleClient implements FeatureExtractionClient {
 
     public finish(request: FinishRequest): Promise<FeatureSet> {
         return this.request({type: "finish", content: request}).then((response) => {
-            const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
+            const features: FeatureSet = PiperClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
             this.handleToSampleRate.delete(request.pluginHandle);
             return features;

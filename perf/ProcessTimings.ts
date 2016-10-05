@@ -3,7 +3,7 @@
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 
-import {FeatsModuleClient} from "../src/FeatsModuleClient";
+import {FeatsModuleClient} from "FeatureExtractionClient.ts";
 
 import {
     Response, LoadRequest, LoadResponse,
