@@ -44,20 +44,21 @@ export class FeatureExtractionClient implements Client {
     }
 
     public configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        return this.request({type: "configure", content: request}).then((response) => {
-            for (let output of response.content.outputList) {
-                (output.configured as any).sampleType = SampleType[output.configured.sampleType];
-                this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                    output, request.configuration.stepSize / this.handleToSampleRate.get(request.pluginHandle))
-                );
-            }
-            return response.content as ConfigurationResponse;
-        });
+        this.protocol.writeConfigurationRequest(request);
+        this.protocol.transport.flush();
+        return Promise.resolve(this.protocol.readConfigurationResponse())
+            .then(response => {
+                for (let output of response.outputList) {
+                    this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
+                        output, request.configuration.stepSize / this.handleToSampleRate.get(request.pluginHandle))
+                    );
+                }
+                return response;
+            });
     }
 
     public process(request: ProcessRequest): Promise<FeatureSet> {
-        const response: Promise<Response> = this.encodingMap.get(this.handler.getProcessEncoding())(request);
-        return response.then(response => {
+        return Promise.resolve(this.protocol).then(response => {
             let features: FeatureSet = PiperClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features, request.processInput.timestamp);
             return features;

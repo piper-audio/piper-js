@@ -8,7 +8,7 @@ import {
 } from "./Piper";
 import {Feature, FeatureList, FeatureSet} from "./Feature";
 import * as base64 from "base64-js";
-import {AdapterFlags, InputDomain} from "./FeatureExtractor";
+import {AdapterFlags, InputDomain, SampleType} from "./FeatureExtractor";
 
 export interface WireFeature {
     timestamp?: Timestamp;
@@ -84,14 +84,13 @@ export class JsonProtocol extends Protocol {
     }
 
     readLoadResponse(): LoadResponse {
-        this.transport.read();
+        const response: LoadResponse = JSON.parse(this.transport.read()); // TODO this can't be safe
         const staticData: any = response.staticData;
         return {
             pluginHandle: response.pluginHandle,
             staticData: Object.assign({}, staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
             defaultConfiguration: response.defaultConfiguration
         };
-        return undefined;
     }
 
     readConfigurationRequest(): ConfigurationRequest {
@@ -99,7 +98,9 @@ export class JsonProtocol extends Protocol {
     }
 
     readConfigurationResponse(): ConfigurationResponse {
-        return undefined;
+        const response: ConfigurationResponse = JSON.parse(this.transport.read()); // TODO this can't be safe
+        response.outputList.forEach((output: any) => output.sampleType = SampleType[output.configured.sampleType]);
+        return response;
     }
 
     readProcessRequest(): ProcessRequest {

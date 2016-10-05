@@ -81,9 +81,11 @@ export abstract class Protocol {
 
 }
 
+type TransportData = any; // TODO hello JS, my old friend - bodge
+
 export interface Transport {
-    read(): void;
-    write(): void;
+    read(): TransportData;
+    write(buffer: TransportData): void;
     flush(): void;
 }
 
