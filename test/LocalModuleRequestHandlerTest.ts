@@ -5,8 +5,8 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
-    ModuleRequestHandler, ResponseEnvelope, LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, RequestEnvelope, ProcessRequest, ProcessResponse
+    ModuleRequestHandler, RpcResponse, LoadResponse, ConfigurationResponse,
+    ConfigurationRequest, RpcRequest, ProcessRequest, ProcessResponse
 } from "../src/ClientServer";
 import {LocalModuleRequestHandler, PluginFactory, FeatureExtractorFactory} from "../src/LocalModuleRequestHandler";
 import {StaticData, Configuration} from "../src/FeatureExtractor";
@@ -32,7 +32,7 @@ describe("LocalModuleRequestHandler", () => {
     describe("Load request handling", () => {
         const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
         it("Rejects when the request contains an invalid plugin key", () => {
-            const response: Promise<ResponseEnvelope> = handler.handle({
+            const response: Promise<RpcResponse> = handler.handle({
                 method: "load", params: {
                     pluginKey: "not-a-real:plugin",
                     inputSampleRate: 666,
@@ -44,7 +44,7 @@ describe("LocalModuleRequestHandler", () => {
 
         it("Resolves to a response where the content body is a LoadResponse", () => {
             const expectedResponse: LoadResponse = require('./fixtures/expected-load-response-js.json');
-            const response: Promise<ResponseEnvelope> = handler.handle({
+            const response: Promise<RpcResponse> = handler.handle({
                 method: "load", params: {
                     pluginKey: "stub:sum",
                     inputSampleRate: 16,
@@ -60,7 +60,7 @@ describe("LocalModuleRequestHandler", () => {
     describe("Configure request handling", () => {
         const config: Configuration = {blockSize: 8, channelCount: 1, stepSize: 8};
         const configRequest: ConfigurationRequest = {pluginHandle: 1, configuration: config};
-        const loadRequest: RequestEnvelope = {
+        const loadRequest: RpcRequest = {
             method: "load", params: {
                 pluginKey: "stub:sum",
                 inputSampleRate: 16,
@@ -78,8 +78,8 @@ describe("LocalModuleRequestHandler", () => {
 
         it("Rejects when the plugin mapping to the handle in the request has already been configured", () => {
             const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
-            const loadResponse: Promise<ResponseEnvelope> = handler.handle(loadRequest);
-            const configure = (response: ResponseEnvelope): Promise<ResponseEnvelope> => {
+            const loadResponse: Promise<RpcResponse> = handler.handle(loadRequest);
+            const configure = (response: RpcResponse): Promise<RpcResponse> => {
                 return handler.handle({
                     method: "configure",
                     params: {
@@ -95,7 +95,7 @@ describe("LocalModuleRequestHandler", () => {
             const expectedResponse: ConfigurationResponse = require('./fixtures/expected-configuration-response-js.json');
             const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
             return handler.handle(loadRequest).then(response => {
-                const configResponse: Promise<ResponseEnvelope> = handler.handle({
+                const configResponse: Promise<RpcResponse> = handler.handle({
                     method: "configure",
                     params: {
                         pluginHandle: response.result.pluginHandle,
@@ -109,7 +109,7 @@ describe("LocalModuleRequestHandler", () => {
 
     describe("Process and Finish request handling", () => {
         const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
-        const configResponse: Promise<ResponseEnvelope> = handler.handle({
+        const configResponse: Promise<RpcResponse> = handler.handle({
             method: "load", params: {
                 pluginKey: "stub:sum",
                 inputSampleRate: 16,
@@ -155,7 +155,7 @@ describe("LocalModuleRequestHandler", () => {
                 pluginHandle: 1,
                 features: {cumsum: [{featureValues: [8]}], sum: [{featureValues: [8]}]}
             };
-            const processResponse: Promise<ResponseEnvelope> = configResponse.then(response => {
+            const processResponse: Promise<RpcResponse> = configResponse.then(response => {
                 return handler.handle({
                     method: "process",
                     params: {

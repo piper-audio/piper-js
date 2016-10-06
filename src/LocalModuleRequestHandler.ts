@@ -2,7 +2,7 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    ModuleRequestHandler, RequestEnvelope, ResponseEnvelope, ProcessEncoding, LoadRequest,
+    ModuleRequestHandler, RpcRequest, RpcResponse, ProcessEncoding, LoadRequest,
     LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, ProcessResponse, WireFeatureSet
 } from "./ClientServer";
 import {
@@ -37,7 +37,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         this.countingHandle = 0;
     }
 
-    public handle(request: RequestEnvelope): Promise<ResponseEnvelope> {
+    public handle(request: RpcRequest): Promise<RpcResponse> {
         // TODO switch statement suggests the interface should just be list, load, config, process, finish?
         // or that it belongs somewhere else, at this point it looks like a bit like request router
         try {
@@ -154,8 +154,8 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         return {pluginHandle: handle, features: LocalModuleRequestHandler.toWireFeatureSet(features)};
     }
 
-    private static rejectRequest(err: string, request: RequestEnvelope): Promise<RequestEnvelope> {
-        return Promise.reject<ResponseEnvelope>({
+    private static rejectRequest(err: string, request: RpcRequest): Promise<RpcRequest> {
+        return Promise.reject<RpcResponse>({
             method: request.method,
 	    error: {
 		code: 0, //!!!

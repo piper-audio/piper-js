@@ -7,7 +7,7 @@ import {FeatureSet} from "./Feature";
 import * as base64 from "base64-js";
 import {AdapterFlags, StaticData, Configuration, OutputList, ProcessInput} from "./FeatureExtractor";
 
-export interface RequestEnvelope {
+export interface RpcRequest {
     method: string;
     params?: any; // TODO create a more meaningful type for this
 }
@@ -17,7 +17,7 @@ export interface ResponseError {
     message: string;
 }
 
-export interface ResponseEnvelope {
+export interface RpcResponse {
     method: string;
     result?: any; // TODO create a more meaningful type for this
     error?: ResponseError;
@@ -75,7 +75,7 @@ export enum ProcessEncoding {
 }
 
 export interface ModuleRequestHandler { // should this just be called Server?
-    handle(request: RequestEnvelope): Promise<ResponseEnvelope>;
+    handle(request: RpcRequest): Promise<RpcResponse>;
     getProcessEncoding(): ProcessEncoding;
 }
 
