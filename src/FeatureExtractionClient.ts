@@ -11,7 +11,7 @@ import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {
     PluginHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
-    LoadResponse, ProcessRequest, FinishRequest, Protocol
+    LoadResponse, ProcessRequest, FinishRequest, Protocol, ProcessResponse, FinishResponse
 } from "./Piper";
 import {Client} from "./Piper";
 
@@ -56,21 +56,28 @@ export class FeatureExtractionClient implements Client {
             });
     }
 
-    public process(request: ProcessRequest): Promise<FeatureSet> {
+    public process(request: ProcessRequest): Promise<ProcessResponse> {
         this.protocol.writeProcessRequest(request);
         this.protocol.transport.flush();
         return Promise.resolve(this.protocol.readProcessResponse()).then(response => {
             this.adjustFeatureTimes(response.features, request.processInput.timestamp);
-            return response.features;
+            return {
+                pluginHandle: request.pluginHandle,
+                features: response.features
+            } as ProcessResponse;
         });
     }
 
-    public finish(request: FinishRequest): Promise<FeatureSet> {
-        return this.request({type: "finish", content: request}).then((response) => {
-            const features: FeatureSet = PiperClient.responseToFeatureSet(response);
-            this.adjustFeatureTimes(features);
+    public finish(request: FinishRequest): Promise<FinishResponse> {
+        this.protocol.writeFinishRequest(request);
+        this.protocol.transport.flush();
+        return Promise.resolve(this.protocol.readFinishResponse()).then(response => {
+            this.adjustFeatureTimes(response.features);
             this.handleToSampleRate.delete(request.pluginHandle);
-            return features;
+            return {
+                pluginHandle: request.pluginHandle,
+                features: response.features
+            } as FinishResponse;
         });
     }
 

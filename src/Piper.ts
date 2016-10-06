@@ -48,6 +48,8 @@ export interface FinishRequest {
     pluginHandle: PluginHandle;
 }
 
+export type FinishResponse = ProcessResponse;
+
 //
 
 export abstract class Protocol {
@@ -58,7 +60,7 @@ export abstract class Protocol {
     }
 
     // writing
-    abstract writeListRequest(): void; // TODO huh
+    abstract writeListRequest(): void;
     abstract writeListResponse(response: ListResponse): void;
     abstract writeLoadRequest(request: LoadRequest): void;
     abstract writeLoadResponse(response: LoadResponse): void;
@@ -67,9 +69,10 @@ export abstract class Protocol {
     abstract writeProcessRequest(request: ProcessRequest): void;
     abstract writeProcessResponse(response: ProcessResponse): void;
     abstract writeFinishRequest(request: FinishRequest): void;
+    abstract writeFinishResponse(response: FinishResponse): void;
 
     // reading
-    abstract readListRequest(): void; // TODO huh
+    abstract readListRequest(): void;
     abstract readListResponse(): ListResponse;
     abstract readLoadRequest(): LoadRequest;
     abstract readLoadResponse(): LoadResponse;
@@ -78,7 +81,7 @@ export abstract class Protocol {
     abstract readProcessRequest(): ProcessRequest;
     abstract readProcessResponse(): ProcessResponse;
     abstract readFinishRequest(): FinishRequest;
-
+    abstract readFinishResponse(): FinishResponse;
 }
 
 type TransportData = any; // TODO hello JS, my old friend - bodge
@@ -94,13 +97,13 @@ export interface Service {
     load(request: LoadRequest) : LoadResponse;
     configure(request: ConfigurationRequest): ConfigurationResponse;
     process(request: ProcessRequest): ProcessResponse;
-    finish(request: FinishRequest): ProcessResponse;
+    finish(request: FinishRequest): FinishResponse;
 }
 
 export interface Client {
     list(): Promise<ListResponse>;
     load(request: LoadRequest) : Promise<LoadResponse>;
     configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
-    process(request: ProcessRequest): Promise<FeatureSet>;
-    finish(request: FinishRequest): Promise<FeatureSet>;
+    process(request: ProcessRequest): Promise<ProcessResponse>;
+    finish(request: FinishRequest): Promise<FinishResponse>;
 }
