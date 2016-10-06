@@ -104,28 +104,33 @@ export class JsonProtocol extends Protocol {
     }
 
     readProcessRequest(): ProcessRequest {
-        return undefined;
+        const request: WireProcessRequest = JSON.parse(this.transport.read()); // TODO this can't be safe
+        return JsonProtocol.decodeRequest(request);
     }
 
     readProcessResponse(): ProcessResponse {
-        return undefined;
+        const response: WireProcessResponse = JSON.parse(this.transport.read()); // TODO this can't be safe
+        return JsonProtocol.decodeResponse(response);
     }
 
     readFinishRequest(): FinishRequest {
         return undefined;
     }
 
-    private static encodeJson(request: ProcessRequest): WireProcessRequest {
-        const encoded = request.processInput.inputBuffers.map(channel => {
-            return [...channel]
-        });
+    private static encodeRequest(request: ProcessRequest, featuresAsBase64?: boolean): WireProcessRequest {
         return {
             pluginHandle: request.pluginHandle,
             processInput: {
                 timestamp: request.processInput.timestamp,
-                inputBuffers: encoded
+                inputBuffers: featuresAsBase64?
+                    request.processInput.inputBuffers.map(toBase64) :
+                    request.processInput.inputBuffers.map(channel => [...channel])
             }
-        };
+        }
+    }
+
+    private static decodeRequest(request: WireProcessRequest): ProcessRequest {
+        return undefined; //TODO write test and implement
     }
 
     private static convertWireFeature(wfeature: WireFeature): Feature {
@@ -150,18 +155,22 @@ export class JsonProtocol extends Protocol {
         return out;
     }
 
+    private static decodeResponse(response: WireProcessResponse): ProcessResponse {
+        const features: FeatureSet = new Map();
+        const wireFeatures: WireFeatureSet = response.features;
+        Object.keys(wireFeatures).forEach(key => {
+            return features.set(key, JsonProtocol.convertWireFeatureList(wireFeatures[key]));
+        });
+        return {
+            pluginHandle: response.pluginHandle,
+            features: features
+        };
+    }
+
     private static convertWireFeatureList(wfeatures: WireFeatureList): FeatureList {
         return wfeatures.map(JsonProtocol.convertWireFeature);
     }
 
-    private static responseToFeatureSet(processResponse: WireProcessResponse): FeatureSet {
-        const features: FeatureSet = new Map();
-        const wireFeatures: WireFeatureSet = processResponse.features;
-        Object.keys(wireFeatures).forEach(key => {
-            return features.set(key, JsonProtocol.convertWireFeatureList(wireFeatures[key]));
-        });
-        return features;
-    }
 }
 
 function toBase64(values: Float32Array): string {

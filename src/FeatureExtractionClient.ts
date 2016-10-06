@@ -9,7 +9,6 @@ import {
 } from "./FeatureTimeAdjuster";
 import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
-import {SampleType, AdapterFlags, InputDomain} from "./FeatureExtractor";
 import {
     PluginHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
     LoadResponse, ProcessRequest, FinishRequest, Protocol
@@ -30,7 +29,7 @@ export class FeatureExtractionClient implements Client {
     public list(): Promise<ListResponse> {
         this.protocol.writeListRequest();
         this.protocol.transport.flush();
-        return Promise.resolve(this.protocol.readListResponse()); // TODO doesn't feel right at all (Promise.resolve)
+        return Promise.resolve(this.protocol.readListResponse()); // TODO this isn't right at all (Promise.resolve)
     }
 
     public load(request: LoadRequest): Promise<LoadResponse> {
@@ -58,10 +57,11 @@ export class FeatureExtractionClient implements Client {
     }
 
     public process(request: ProcessRequest): Promise<FeatureSet> {
-        return Promise.resolve(this.protocol).then(response => {
-            let features: FeatureSet = PiperClient.responseToFeatureSet(response);
-            this.adjustFeatureTimes(features, request.processInput.timestamp);
-            return features;
+        this.protocol.writeProcessRequest(request);
+        this.protocol.transport.flush();
+        return Promise.resolve(this.protocol.readProcessResponse()).then(response => {
+            this.adjustFeatureTimes(response.features, request.processInput.timestamp);
+            return response.features;
         });
     }
 
