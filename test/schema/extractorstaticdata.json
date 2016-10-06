@@ -1,10 +1,10 @@
 {
     "id": "http://vamp-plugins.org/json/schema/pluginstaticdata#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a serialised bundle of the static data associated with a Vamp Plugin",
+    "description": "schema for the static metadata associated with a feature extractor",
     "type": "object",
     "properties": {
-	"pluginKey": {
+	"key": {
 	    "type": "string"
 	},
 	"basic": {
@@ -16,7 +16,7 @@
 	"copyright": {
 	    "type": "string"
 	},
-	"pluginVersion": {
+	"version": {
 	    "type": "integer"
 	},
 	"category": {
@@ -45,7 +45,7 @@
 	    "items": { "$ref": "http://vamp-plugins.org/json/schema/basic#" }
 	}
     },
-    "required": [ "pluginKey", "basic", "pluginVersion",
+    "required": [ "key", "basic", "version",
 		  "minChannelCount", "maxChannelCount",
 		  "inputDomain", "basicOutputInfo" ],
     "additionalProperties": false

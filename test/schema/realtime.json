@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/realtime#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a Vamp::RealTime serialisation",
+    "description": "schema for a timestamp given in seconds and nanoseconds",
     "type": "object",
     "properties": {
 	"s": { "type": "integer" },

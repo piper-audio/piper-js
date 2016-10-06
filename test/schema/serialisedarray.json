@@ -1,0 +1,20 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/serialisedarray#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for alternate serialisations of an array of floating-point values",
+    "anyOf": [
+        {
+	    "type": "array",
+	    "items": { "type": "number" }
+	},
+        {
+	    "type": "string",
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "application/octet-stream"
+            }
+	}
+    ]
+}
+
+	

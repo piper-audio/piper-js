@@ -34,13 +34,13 @@ describe("FeatsModuleClient", () => {
 
     it("Can list available plugins in the module", () => {
         const expectedList: StaticData[] = loadFixture("expected-plugin-list") as StaticData[];
-        return server.listPlugins().should.eventually.deep.equal(expectedList);
+        return server.list({}).should.eventually.deep.equal(expectedList);
     });
 
     const loadZeroCrossings = (): Promise<LoadResponse> => {
-        return server.listPlugins().then((resp) => {
-            return server.loadPlugin({
-                pluginKey: resp.plugins[resp.plugins.length - 1].pluginKey, // zero crossings
+        return server.list({}).then((resp) => {
+            return server.load({
+                key: resp.available[resp.available.length - 1].key, // zero crossings
                 inputSampleRate: 16,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]
             } as LoadRequest);
@@ -55,11 +55,11 @@ describe("FeatsModuleClient", () => {
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });
 
-    const pluginHandles: number[] = [];
+    const handles: number[] = [];
     const config = (response: LoadResponse): Promise<ConfigurationResponse> => {
-        pluginHandles.push(response.pluginHandle);
-        return server.configurePlugin({
-            pluginHandle: response.pluginHandle,
+        handles.push(response.handle);
+        return server.configure({
+            handle: response.handle,
             configuration: {
                 blockSize: 8,
                 channelCount: 1,
@@ -87,7 +87,7 @@ describe("FeatsModuleClient", () => {
         const expectedTimestamps = (expectedFeatures.one.get("zerocrossings") as FeatureList).map(feature => feature.timestamp);
 
         const features: Promise<FeatureSet> = server.process({
-            pluginHandle: pluginHandles[0],
+            handle: handles[0],
             processInput: {
                 timestamp: {s: 0, n: 0} as Timestamp,
                 inputBuffers: [new Float32Array([0, 1, -1, 0, 1, -1, 0, 1])]
@@ -102,7 +102,7 @@ describe("FeatsModuleClient", () => {
     });
 
     it("Can get the remaining features and clean up the plugin", () => {
-        const remainingFeatures: Promise<FeatureSet> = server.finish({pluginHandle: pluginHandles[0]});
+        const remainingFeatures: Promise<FeatureSet> = server.finish({handle: handles[0]});
         return remainingFeatures.then(features => features.size.should.eql(0));
     });
 
@@ -122,11 +122,11 @@ describe("FeatsModuleClient", () => {
 
 
         const processBlocks: () => Promise<FeatureSet> = () => {
-            const zcHandle: number = pluginHandles[pluginHandles.length - 1];
+            const zcHandle: number = handles[handles.length - 1];
             return batchProcess(
                 blocks,
-                block => server.process({pluginHandle: zcHandle, processInput: block}),
-                () => server.finish({pluginHandle: zcHandle}));
+                block => server.process({handle: zcHandle, processInput: block}),
+                () => server.finish({handle: zcHandle}));
         };
 
         const features: Promise<FeatureSet> = loadZeroCrossings().then(config).then(processBlocks);

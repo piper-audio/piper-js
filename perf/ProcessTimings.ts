@@ -6,7 +6,7 @@ import chaiAsPromised = require('chai-as-promised');
 import {FeatsModuleClient} from "../src/FeatsModuleClient";
 
 import {
-    Response, LoadRequest, LoadResponse,
+    LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest
 } from "../src/ClientServer";
@@ -38,20 +38,20 @@ describe('ProcessTimings', () => {
 
         const rate : number = 44100;
         
-        server.loadPlugin({
-            pluginKey : key,
+        server.load({
+            key : key,
             inputSampleRate : rate,
             adapterFlags : [AdapterFlags.AdaptAllSafe]
         }).then(response => {
-            const phandle : number = response.pluginHandle;
+            const phandle : number = response.handle;
             let stepSize : number = response.defaultConfiguration.stepSize;
             let blockSize : number = response.defaultConfiguration.blockSize;
 	    if (blockSize === 0) {
 		blockSize = 1024;
 		stepSize = blockSize;
 	    }
-            server.configurePlugin({
-                pluginHandle : phandle,
+            server.configure({
+                handle : phandle,
                 configuration : {
                     blockSize : blockSize,
                     stepSize : stepSize,
@@ -74,11 +74,11 @@ describe('ProcessTimings', () => {
                 const results = batchProcess(
                     blocks,
                     b => server.process({
-                        pluginHandle : phandle,
+                        handle : phandle,
                         processInput : b
                     }),
                     () => server.finish({
-                        pluginHandle : phandle
+                        handle : phandle
                     }));
                 results.then(features => {
                     let sum = features.get(outputId).reduce(

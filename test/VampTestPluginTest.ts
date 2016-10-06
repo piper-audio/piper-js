@@ -15,9 +15,9 @@ describe('VampTestPlugin', () => {
     const server = new FeatsModuleClient(new EmscriptenModuleRequestHandler(VampTestPlugin()));
 
     const loadResponse: Promise<LoadResponse> =
-	server.listPlugins().then((resp) => {
-            return server.loadPlugin({
-                pluginKey: resp.plugins[0].pluginKey, // time-domain
+	server.list({}).then((resp) => {
+            return server.load({
+                key: resp.available[0].key, // time-domain
                 inputSampleRate: 44100,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]
             } as LoadRequest);
@@ -26,7 +26,7 @@ describe('VampTestPlugin', () => {
     it('Can load test plugin', () => {
         // yuk
         loadResponse.then(resp => {
-            resp.pluginHandle.should.equal(1);
+            resp.handle.should.equal(1);
         })
     });
     

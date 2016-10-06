@@ -7,59 +7,66 @@ import {FeatureSet} from "./Feature";
 import * as base64 from "base64-js";
 import {AdapterFlags, StaticData, Configuration, OutputList, ProcessInput} from "./FeatureExtractor";
 
-export interface Request {
-    type: string;
-    content?: any; // TODO create a more meaningful type for this
+export interface RpcRequest {
+    method: string;
+    params?: any; // TODO create a more meaningful type for this
 }
 
-export interface Response {
-    type: string;
-    success: boolean;
-    errorText?: string;
-    content?: any; // TODO create a more meaningful type for this
+export interface ResponseError {
+    code: number;
+    message: string;
+}
+
+export interface RpcResponse {
+    method: string;
+    result?: any; // TODO create a more meaningful type for this
+    error?: ResponseError;
 }
 
 export interface LoadRequest {
-    pluginKey: string;
+    key: string;
     inputSampleRate: number;
     adapterFlags: AdapterFlags[];
 }
 
-export type PluginHandle = number;
+export type ExtractorHandle = number;
+
+export interface ListRequest {
+}
+
+export interface ListResponse {
+    available: StaticData[];
+}
 
 export interface LoadResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     staticData: StaticData;
     defaultConfiguration: Configuration;
 }
 
 export interface ConfigurationRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     configuration: Configuration;
 }
 
 export interface ConfigurationResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     outputList: OutputList;
 }
 
 export interface ProcessRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     processInput: ProcessInput;
 }
 
 export interface FinishRequest {
-    pluginHandle: PluginHandle;
-}
-
-export interface ListResponse {
-    plugins: StaticData[];
+    handle: ExtractorHandle;
 }
 
 export interface ModuleClient {
-    listPlugins(): Promise<ListResponse>;
-    loadPlugin(request: LoadRequest) : Promise<LoadResponse>;
-    configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>;
+    list(request: ListRequest): Promise<ListResponse>;
+    load(request: LoadRequest) : Promise<LoadResponse>;
+    configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
     process(request: ProcessRequest): Promise<FeatureSet>;
     finish(request: FinishRequest): Promise<FeatureSet>;
 }
@@ -71,7 +78,7 @@ export enum ProcessEncoding {
 }
 
 export interface ModuleRequestHandler { // should this just be called Server?
-    handle(request: Request): Promise<Response>;
+    handle(request: RpcRequest): Promise<RpcResponse>;
     getProcessEncoding(): ProcessEncoding;
 }
 
@@ -110,7 +117,7 @@ export interface WireFeatureSet {
 }
 
 export interface ProcessResponse {
-    pluginHandle: number,
+    handle: number,
     features: WireFeatureSet
 }
 

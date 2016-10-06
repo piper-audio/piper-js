@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/pluginconfiguration#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a serialised bundle of configuration data associated with a Vamp Plugin",
+    "description": "schema for a bundle of configuration data capturing the setup of a feature extractor",
     "type": "object",
     "properties": {
 	"parameterValues": {

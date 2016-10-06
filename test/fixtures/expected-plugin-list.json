@@ -1,5 +1,5 @@
 {
-"plugins": [
+"available": [
   {
     "basic": {
       "description": "Track the amplitude of the audio signal",
@@ -49,8 +49,8 @@
         "valueNames": []
       }
     ],
-    "pluginKey": "vamp-example-plugins:amplitudefollower",
-    "pluginVersion": 1,
+    "key": "vamp-example-plugins:amplitudefollower",
+    "version": 1,
     "programs": []
   },
   {
@@ -136,8 +136,8 @@
         "valueNames": []
       }
     ],
-    "pluginKey": "vamp-example-plugins:fixedtempo",
-    "pluginVersion": 1,
+    "key": "vamp-example-plugins:fixedtempo",
+    "version": 1,
     "programs": []
   },
   {
@@ -194,8 +194,8 @@
         "valueNames": []
       }
     ],
-    "pluginKey": "vamp-example-plugins:percussiononsets",
-    "pluginVersion": 2,
+    "key": "vamp-example-plugins:percussiononsets",
+    "version": 2,
     "programs": []
   },
   {
@@ -218,8 +218,8 @@
     "maxChannelCount": 1,
     "minChannelCount": 1,
     "parameters": [],
-    "pluginKey": "vamp-example-plugins:powerspectrum",
-    "pluginVersion": 1,
+    "key": "vamp-example-plugins:powerspectrum",
+    "version": 1,
     "programs": []
   },
   {
@@ -247,8 +247,8 @@
     "maxChannelCount": 1,
     "minChannelCount": 1,
     "parameters": [],
-    "pluginKey": "vamp-example-plugins:spectralcentroid",
-    "pluginVersion": 2,
+    "key": "vamp-example-plugins:spectralcentroid",
+    "version": 2,
     "programs": []
   },
   {
@@ -276,8 +276,8 @@
     "maxChannelCount": 1,
     "minChannelCount": 1,
     "parameters": [],
-    "pluginKey": "vamp-example-plugins:zerocrossing",
-    "pluginVersion": 2,
+    "key": "vamp-example-plugins:zerocrossing",
+    "version": 2,
     "programs": []
   }
 ]

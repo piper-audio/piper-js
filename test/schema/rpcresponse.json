@@ -1,0 +1,55 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/rpcresponse#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a serialised response to an RPC request; compatible with JSON-RPC, except that the method name must be included here as well as in the request",
+    "type": "object",
+    "oneOf": [ {
+        "properties": {
+	    "method": {
+	        "type": "string"
+	    },
+	    "result": {
+                "anyOf": [
+                    { "$ref": "http://vamp-plugins.org/json/schema/listresponse#" },
+                    { "$ref": "http://vamp-plugins.org/json/schema/loadresponse#" },
+                    { "$ref": "http://vamp-plugins.org/json/schema/configurationresponse#" },
+                    { "$ref": "http://vamp-plugins.org/json/schema/processresponse#" },
+                    { "$ref": "http://vamp-plugins.org/json/schema/finishresponse#" }
+                ]                
+	    },
+            "id": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "type": "number" }
+                ]
+            },
+            "jsonrpc": {
+                "type": "string"
+            }
+        },
+        "required": [ "method", "result" ],
+        "additionalProperties": false
+    }, {
+        "properties": {
+	    "method": {
+	        "type": "string"
+	    },
+	    "error": {
+                "$ref": "http://vamp-plugins.org/json/schema/error#"
+	    },
+            "id": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "type": "number" }
+                ]
+            },
+            "jsonrpc": {
+                "type": "string"
+            }
+        },
+        "required": [ "method", "error" ],
+        "additionalProperties": false
+    } ]
+}
+    
+        

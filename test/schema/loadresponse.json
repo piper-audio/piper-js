@@ -1,17 +1,17 @@
 {
     "id": "http://vamp-plugins.org/json/schema/loadresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a serialised response to a load request for a Vamp Plugin; normally served as the content field of an object matching the plain response schema",
+    "description": "schema for a response to a request to load a feature extractor; may be served in the result field of a load-method rpcresponse",
     "type": "object",
     "properties": {
-	"pluginHandle": {
+	"handle": {
 	    "type": "number"
 	},
 	"staticData": {
-	    "$ref": "http://vamp-plugins.org/json/schema/pluginstaticdata#"
+	    "$ref": "http://vamp-plugins.org/json/schema/extractorstaticdata#"
 	},
 	"defaultConfiguration": {
-	    "$ref": "http://vamp-plugins.org/json/schema/pluginconfiguration#"
+	    "$ref": "http://vamp-plugins.org/json/schema/configuration#"
 	}
     },
     "additionalProperties": false

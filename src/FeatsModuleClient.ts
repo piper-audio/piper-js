@@ -5,11 +5,11 @@
 
 import {
     ModuleClient,
-    ListResponse,
+    ListRequest, ListResponse,
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest, FinishRequest,
-    Response, Request, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
+    RpcResponse, RpcRequest, ModuleRequestHandler, toBase64, fromBase64, ExtractorHandle,
     ProcessEncoding, WireFeatureSet, ProcessResponse, WireFeatureList, WireFeature
 } from "./ClientServer";
 import {
@@ -25,15 +25,15 @@ interface WireProcessInput {
     inputBuffers: number[][] | string[];
 }
 interface WireProcessRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     processInput: WireProcessInput;
 }
 
 export class FeatsModuleClient implements ModuleClient {
     private timeAdjusters: Map<string, FeatureTimeAdjuster>;
     private handler: ModuleRequestHandler;
-    private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<Response>>;
-    private handleToSampleRate: Map<PluginHandle, number>;
+    private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<RpcResponse>>;
+    private handleToSampleRate: Map<ExtractorHandle, number>;
 
     constructor(handler: ModuleRequestHandler) {
         this.handler = handler;
@@ -51,39 +51,39 @@ export class FeatsModuleClient implements ModuleClient {
         return isEmscriptenModule ? new FeatsModuleClient(new EmscriptenModuleRequestHandler(module)) : null; // TODO complete factory when more Handlers exist
     }
 
-    public listPlugins(): Promise<ListResponse> {
-        return this.request({type: "list"} as Request).then((response) => {
-            return response.content as ListResponse;
+    public list(request: ListRequest): Promise<ListResponse> {
+        return this.request({method: "list"} as RpcRequest).then((response) => {
+            return response.result as ListResponse;
         });
     }
 
-    public loadPlugin(request: LoadRequest): Promise<LoadResponse> {
+    public load(request: LoadRequest): Promise<LoadResponse> {
         (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
-        return this.request({type: "load", content: request} as Request).then((response) => {
-            this.handleToSampleRate.set(response.content.pluginHandle, request.inputSampleRate);
-            const staticData: any = response.content.staticData;
+        return this.request({method: "load", params: request} as RpcRequest).then((response) => {
+            this.handleToSampleRate.set(response.result.handle, request.inputSampleRate);
+            const staticData: any = response.result.staticData;
             return {
-                pluginHandle: response.content.pluginHandle,
+                handle: response.result.handle,
                 staticData: Object.assign({}, staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
-                defaultConfiguration: response.content.defaultConfiguration
+                defaultConfiguration: response.result.defaultConfiguration
             };
         });
     }
 
-    public configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        return this.request({type: "configure", content: request}).then((response) => {
-            for (let output of response.content.outputList) {
+    public configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
+        return this.request({method: "configure", params: request}).then((response) => {
+            for (let output of response.result.outputList) {
                 (output.configured as any).sampleType = SampleType[output.configured.sampleType];
                 this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                    output, request.configuration.stepSize / this.handleToSampleRate.get(request.pluginHandle))
+                    output, request.configuration.stepSize / this.handleToSampleRate.get(request.handle))
                 );
             }
-            return response.content as ConfigurationResponse;
+            return response.result as ConfigurationResponse;
         });
     }
 
     public process(request: ProcessRequest): Promise<FeatureSet> {
-        const response: Promise<Response> = this.encodingMap.get(this.handler.getProcessEncoding())(request);
+        const response: Promise<RpcResponse> = this.encodingMap.get(this.handler.getProcessEncoding())(request);
         return response.then(response => {
             let features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features, request.processInput.timestamp);
@@ -92,15 +92,15 @@ export class FeatsModuleClient implements ModuleClient {
     }
 
     public finish(request: FinishRequest): Promise<FeatureSet> {
-        return this.request({type: "finish", content: request}).then((response) => {
+        return this.request({method: "finish", params: request}).then((response) => {
             const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
-            this.handleToSampleRate.delete(request.pluginHandle);
+            this.handleToSampleRate.delete(request.handle);
             return features;
         });
     }
 
-    private request(request: Request): Promise<Response> {
+    private request(request: RpcRequest): Promise<RpcResponse> {
         return this.handler.handle(request);
     }
 
@@ -109,7 +109,7 @@ export class FeatsModuleClient implements ModuleClient {
             return [...channel]
         });
         return {
-            pluginHandle: request.pluginHandle,
+            handle: request.handle,
             processInput: {
                 timestamp: request.processInput.timestamp,
                 inputBuffers: encoded
@@ -120,7 +120,7 @@ export class FeatsModuleClient implements ModuleClient {
     private static encodeBase64(request: ProcessRequest): WireProcessRequest {
         const encoded: string[] = request.processInput.inputBuffers.map(toBase64);
         return {
-            pluginHandle: request.pluginHandle,
+            handle: request.handle,
             processInput: {
                 timestamp: request.processInput.timestamp,
                 inputBuffers: encoded
@@ -128,12 +128,12 @@ export class FeatsModuleClient implements ModuleClient {
         };
     }
 
-    private processEncoded(request: WireProcessRequest): Promise<Response> {
-        return this.handler.handle({type: "process", content: request})
+    private processEncoded(request: WireProcessRequest): Promise<RpcResponse> {
+        return this.handler.handle({method: "process", params: request})
     }
 
-    private processRaw(request: ProcessRequest): Promise<Response> {
-        return this.handler.handle({type: "process", content: request})
+    private processRaw(request: ProcessRequest): Promise<RpcResponse> {
+        return this.handler.handle({method: "process", params: request})
     }
 
     private static convertWireFeature(wfeature: WireFeature): Feature {
@@ -162,9 +162,9 @@ export class FeatsModuleClient implements ModuleClient {
         return wfeatures.map(FeatsModuleClient.convertWireFeature);
     }
 
-    private static responseToFeatureSet(response: Response): FeatureSet {
+    private static responseToFeatureSet(response: RpcResponse): FeatureSet {
         const features: FeatureSet = new Map();
-        const processResponse: ProcessResponse = response.content;
+        const processResponse: ProcessResponse = response.result;
         const wireFeatures: WireFeatureSet = processResponse.features;
         Object.keys(wireFeatures).forEach(key => {
             return features.set(key, FeatsModuleClient.convertWireFeatureList(wireFeatures[key]));

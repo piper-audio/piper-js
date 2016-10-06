@@ -1,10 +1,10 @@
 {
     "id": "http://vamp-plugins.org/json/schema/configurationresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a serialised response to a request to configure a Vamp plugin; normally served as the content field of an object matching the plain response schema",
+    "description": "schema for a response to a request to configure a feature extractor; may be served in the result field of a configure-method rpcresponse",
     "type": "object",
     "properties": {
-	"pluginHandle": {
+	"handle": {
 	    "type": "number"
 	},
 	"outputList": {
