@@ -24,46 +24,49 @@ export interface RpcResponse {
 }
 
 export interface LoadRequest {
-    pluginKey: string;
+    key: string;
     inputSampleRate: number;
     adapterFlags: AdapterFlags[];
 }
 
-export type PluginHandle = number;
+export type ExtractorHandle = number;
+
+export interface ListRequest {
+}
+
+export interface ListResponse {
+    available: StaticData[];
+}
 
 export interface LoadResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     staticData: StaticData;
     defaultConfiguration: Configuration;
 }
 
 export interface ConfigurationRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     configuration: Configuration;
 }
 
 export interface ConfigurationResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     outputList: OutputList;
 }
 
 export interface ProcessRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     processInput: ProcessInput;
 }
 
 export interface FinishRequest {
-    pluginHandle: PluginHandle;
-}
-
-export interface ListResponse {
-    plugins: StaticData[];
+    handle: ExtractorHandle;
 }
 
 export interface ModuleClient {
-    listPlugins(): Promise<ListResponse>;
-    loadPlugin(request: LoadRequest) : Promise<LoadResponse>;
-    configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse>;
+    list(request: ListRequest): Promise<ListResponse>;
+    load(request: LoadRequest) : Promise<LoadResponse>;
+    configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
     process(request: ProcessRequest): Promise<FeatureSet>;
     finish(request: FinishRequest): Promise<FeatureSet>;
 }
@@ -114,7 +117,7 @@ export interface WireFeatureSet {
 }
 
 export interface ProcessResponse {
-    pluginHandle: number,
+    handle: number,
     features: WireFeatureSet
 }
 

@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/error#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for an error object in a response to a request",
+    "description": "schema for an error object in a response to an rpcrequest",
     "type": "object",
     "properties": {
 	"code": {

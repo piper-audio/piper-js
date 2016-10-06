@@ -1,7 +1,7 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/response#",
+    "id": "http://vamp-plugins.org/json/schema/rpcresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a success or failure response to a request",
+    "description": "schema for a serialised response to an RPC request; compatible with JSON-RPC, except that the method name must be included here as well as in the request",
     "type": "object",
     "oneOf": [ {
         "properties": {

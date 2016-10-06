@@ -5,11 +5,11 @@
 
 import {
     ModuleClient,
-    ListResponse,
+    ListRequest, ListResponse,
     LoadRequest, LoadResponse,
     ConfigurationRequest, ConfigurationResponse,
     ProcessRequest, FinishRequest,
-    RpcResponse, RpcRequest, ModuleRequestHandler, toBase64, fromBase64, PluginHandle,
+    RpcResponse, RpcRequest, ModuleRequestHandler, toBase64, fromBase64, ExtractorHandle,
     ProcessEncoding, WireFeatureSet, ProcessResponse, WireFeatureList, WireFeature
 } from "./ClientServer";
 import {
@@ -25,7 +25,7 @@ interface WireProcessInput {
     inputBuffers: number[][] | string[];
 }
 interface WireProcessRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     processInput: WireProcessInput;
 }
 
@@ -33,7 +33,7 @@ export class FeatsModuleClient implements ModuleClient {
     private timeAdjusters: Map<string, FeatureTimeAdjuster>;
     private handler: ModuleRequestHandler;
     private encodingMap: Map<ProcessEncoding, (request: ProcessRequest) => Promise<RpcResponse>>;
-    private handleToSampleRate: Map<PluginHandle, number>;
+    private handleToSampleRate: Map<ExtractorHandle, number>;
 
     constructor(handler: ModuleRequestHandler) {
         this.handler = handler;
@@ -51,31 +51,31 @@ export class FeatsModuleClient implements ModuleClient {
         return isEmscriptenModule ? new FeatsModuleClient(new EmscriptenModuleRequestHandler(module)) : null; // TODO complete factory when more Handlers exist
     }
 
-    public listPlugins(): Promise<ListResponse> {
+    public list(request: ListRequest): Promise<ListResponse> {
         return this.request({method: "list"} as RpcRequest).then((response) => {
             return response.result as ListResponse;
         });
     }
 
-    public loadPlugin(request: LoadRequest): Promise<LoadResponse> {
+    public load(request: LoadRequest): Promise<LoadResponse> {
         (request as any).adapterFlags = request.adapterFlags.map((flag) => AdapterFlags[flag]);
         return this.request({method: "load", params: request} as RpcRequest).then((response) => {
-            this.handleToSampleRate.set(response.result.pluginHandle, request.inputSampleRate);
+            this.handleToSampleRate.set(response.result.handle, request.inputSampleRate);
             const staticData: any = response.result.staticData;
             return {
-                pluginHandle: response.result.pluginHandle,
+                handle: response.result.handle,
                 staticData: Object.assign({}, staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
                 defaultConfiguration: response.result.defaultConfiguration
             };
         });
     }
 
-    public configurePlugin(request: ConfigurationRequest): Promise<ConfigurationResponse> {
+    public configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
         return this.request({method: "configure", params: request}).then((response) => {
             for (let output of response.result.outputList) {
                 (output.configured as any).sampleType = SampleType[output.configured.sampleType];
                 this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                    output, request.configuration.stepSize / this.handleToSampleRate.get(request.pluginHandle))
+                    output, request.configuration.stepSize / this.handleToSampleRate.get(request.handle))
                 );
             }
             return response.result as ConfigurationResponse;
@@ -95,7 +95,7 @@ export class FeatsModuleClient implements ModuleClient {
         return this.request({method: "finish", params: request}).then((response) => {
             const features: FeatureSet = FeatsModuleClient.responseToFeatureSet(response);
             this.adjustFeatureTimes(features);
-            this.handleToSampleRate.delete(request.pluginHandle);
+            this.handleToSampleRate.delete(request.handle);
             return features;
         });
     }
@@ -109,7 +109,7 @@ export class FeatsModuleClient implements ModuleClient {
             return [...channel]
         });
         return {
-            pluginHandle: request.pluginHandle,
+            handle: request.handle,
             processInput: {
                 timestamp: request.processInput.timestamp,
                 inputBuffers: encoded
@@ -120,7 +120,7 @@ export class FeatsModuleClient implements ModuleClient {
     private static encodeBase64(request: ProcessRequest): WireProcessRequest {
         const encoded: string[] = request.processInput.inputBuffers.map(toBase64);
         return {
-            pluginHandle: request.pluginHandle,
+            handle: request.handle,
             processInput: {
                 timestamp: request.processInput.timestamp,
                 inputBuffers: encoded

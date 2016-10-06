@@ -21,10 +21,10 @@ describe("LocalModuleRequestHandler", () => {
     plugins.push({extractor: factory, metadata: metadata});
 
     describe("List request handling", () => {
-        it("Resolves to a response whose content body is {plugins: StaticData[]}", () => {
+        it("Resolves to a response whose content body is {available: StaticData[]}", () => {
             const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
             return handler.handle({method: "list"}).then(response => {
-                response.result.should.eql({plugins: [metadata]});
+                response.result.should.eql({available: [metadata]});
             });
         });
     });
@@ -34,7 +34,7 @@ describe("LocalModuleRequestHandler", () => {
         it("Rejects when the request contains an invalid plugin key", () => {
             const response: Promise<RpcResponse> = handler.handle({
                 method: "load", params: {
-                    pluginKey: "not-a-real:plugin",
+                    key: "not-a-real:plugin",
                     inputSampleRate: 666,
                     adapterFlags: ["AdaptAllSafe"]
                 }
@@ -46,7 +46,7 @@ describe("LocalModuleRequestHandler", () => {
             const expectedResponse: LoadResponse = require('./fixtures/expected-load-response-js.json');
             const response: Promise<RpcResponse> = handler.handle({
                 method: "load", params: {
-                    pluginKey: "stub:sum",
+                    key: "stub:sum",
                     inputSampleRate: 16,
                     adapterFlags: ["AdaptAllSafe"]
                 }
@@ -59,10 +59,10 @@ describe("LocalModuleRequestHandler", () => {
 
     describe("Configure request handling", () => {
         const config: Configuration = {blockSize: 8, channelCount: 1, stepSize: 8};
-        const configRequest: ConfigurationRequest = {pluginHandle: 1, configuration: config};
+        const configRequest: ConfigurationRequest = {handle: 1, configuration: config};
         const loadRequest: RpcRequest = {
             method: "load", params: {
-                pluginKey: "stub:sum",
+                key: "stub:sum",
                 inputSampleRate: 16,
                 adapterFlags: ["AdaptAllSafe"]
             }
@@ -83,7 +83,7 @@ describe("LocalModuleRequestHandler", () => {
                 return handler.handle({
                     method: "configure",
                     params: {
-                        pluginHandle: response.result.pluginHandle,
+                        handle: response.result.handle,
                         configuration: config
                     }
                 });
@@ -98,7 +98,7 @@ describe("LocalModuleRequestHandler", () => {
                 const configResponse: Promise<RpcResponse> = handler.handle({
                     method: "configure",
                     params: {
-                        pluginHandle: response.result.pluginHandle,
+                        handle: response.result.handle,
                         configuration: config
                     }
                 });
@@ -111,7 +111,7 @@ describe("LocalModuleRequestHandler", () => {
         const handler: ModuleRequestHandler = new LocalModuleRequestHandler(...plugins);
         const configResponse: Promise<RpcResponse> = handler.handle({
             method: "load", params: {
-                pluginKey: "stub:sum",
+                key: "stub:sum",
                 inputSampleRate: 16,
                 adapterFlags: ["AdaptAllSafe"]
             }
@@ -119,7 +119,7 @@ describe("LocalModuleRequestHandler", () => {
             return handler.handle(
                 {method: "configure",
                     params: {
-                        pluginHandle: loadResponse.result.pluginHandle,
+                        handle: loadResponse.result.handle,
                         configuration: {blockSize: 8, channelCount: 1, stepSize: 8}
                     }
                 })
@@ -128,7 +128,7 @@ describe("LocalModuleRequestHandler", () => {
         it("Rejects when the wrong number of channels are supplied", () => {
             return configResponse.then(response => {
                 const request: ProcessRequest = {
-                    pluginHandle: response.result.pluginHandle,
+                    handle: response.result.handle,
                     processInput: {
                         timestamp: {s: 0, n: 0},
                         inputBuffers: []
@@ -140,7 +140,7 @@ describe("LocalModuleRequestHandler", () => {
 
         it("Rejects when the plugin handle is not valid", () => {
             const request: ProcessRequest = {
-                pluginHandle: 666,
+                handle: 666,
                 processInput: {
                     timestamp: {s: 0, n: 0},
                     inputBuffers: []
@@ -152,14 +152,14 @@ describe("LocalModuleRequestHandler", () => {
 
         it("Resolves to a response whose content body contains the extracted features", () => {
             const expected: ProcessResponse = {
-                pluginHandle: 1,
+                handle: 1,
                 features: {cumsum: [{featureValues: [8]}], sum: [{featureValues: [8]}]}
             };
             const processResponse: Promise<RpcResponse> = configResponse.then(response => {
                 return handler.handle({
                     method: "process",
                     params: {
-                        pluginHandle: response.result.pluginHandle,
+                        handle: response.result.handle,
                         processInput: {
                             timestamp: {s:0, n: 0},
                             inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
@@ -171,11 +171,11 @@ describe("LocalModuleRequestHandler", () => {
         });
 
         it("Finish - Returns the remaining features and clears up the plugin", () => {
-            const expected: any = {features: {}, pluginHandle: 1};
+            const expected: any = {features: {}, handle: 1};
             return configResponse
                 .then(response => handler.handle({
                     method: "finish",
-                    params: {pluginHandle: response.result.pluginHandle}
+                    params: {handle: response.result.handle}
                 }))
                 .then(response => {
                     if (!response.result.should.eql(expected)) {
@@ -183,7 +183,7 @@ describe("LocalModuleRequestHandler", () => {
                     }
                     return handler.handle({
                         method: "finish",
-                        params: {pluginHandle: response.result.pluginHandle}
+                        params: {handle: response.result.handle}
                     }).should.eventually.be.rejected;
                 });
         });

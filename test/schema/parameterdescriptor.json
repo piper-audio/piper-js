@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/parameterdescriptor#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a Vamp::PluginBase::ParameterDescriptor serialisation",
+    "description": "schema for a metadata about an adjustable parameter of a feature extractor",
     "type": "object",
     "properties": {
 	"basic": {

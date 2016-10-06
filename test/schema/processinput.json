@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/processinput#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a serialised input into a plugin process call",
+    "description": "schema for a chunk of input data provided to a process request",
     "type": "object",
     "properties": {
 	"timestamp": {

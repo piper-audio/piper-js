@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/enums#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for Vamp serialisation enums",
+    "description": "schema for common feature extractor enum types",
     "definitions": {
 	"input_domain": {
 	    "type": "string",

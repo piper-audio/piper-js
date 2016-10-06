@@ -1,17 +1,17 @@
 {
     "id": "http://vamp-plugins.org/json/schema/processresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a serialised response from processing a data block using a Vamp plugin; normally served as the content field of an object matching the plain response schema",
+    "description": "schema for a response to a request to process a chunk of data using a feature extractor; may be served in the result field of a process-method rpcresponse",
     "type": "object",
     "properties": {
-	"pluginHandle": {
+	"handle": {
 	    "type": "number"
 	},
 	"features": {
 	    "$ref": "http://vamp-plugins.org/json/schema/featureset#"
 	}
     },
-    "required": [ "pluginHandle", "features" ],
+    "required": [ "handle", "features" ],
     "additionalProperties": false
 }
 
