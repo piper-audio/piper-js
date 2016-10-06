@@ -2,14 +2,14 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    ModuleRequestHandler, Request, Response, ProcessEncoding, LoadRequest,
-    LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest, PluginHandle, WireProcessResponse, WireFeatureSet
-} from "./Piper";
-import {
     FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
     SampleType, InputDomain
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
+import {
+    Service, LoadRequest, LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest,
+    ProcessResponse, PluginHandle, Protocol
+} from "./Piper";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 
@@ -23,70 +23,27 @@ export interface Plugin {
     metadata: StaticData;
 }
 
-export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO Local? This also has an identity crisis
+export class FeatureExtractionService implements Service {
     private factories: Map<string, PluginFactory>;
     private loaded: Map<number, Plugin>;
     private configured: Map<number, Plugin>;
     private countingHandle: number;
+    private protocol: Protocol;
 
-    constructor(...factories: PluginFactory[]) {
-        LocalModuleRequestHandler.sanitiseStaticData(factories);
+    constructor(protocol: Protocol, ...factories: PluginFactory[]) {
+        FeatureExtractionService.sanitiseStaticData(factories);
         this.factories = new Map(factories.map(plugin => [plugin.metadata.pluginKey, plugin] as [string, PluginFactory]));
         this.loaded = new Map();
         this.configured = new Map();
         this.countingHandle = 0;
+        this.protocol = Protocol;
     }
 
-    public handle(request: Request): Promise<Response> {
-        // TODO switch statement suggests the interface should just be list, load, config, process, finish?
-        // or that it belongs somewhere else, at this point it looks like a bit like request router
-        try {
-            switch (request.type) {
-                case "list":
-                    return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: {plugins: this.list()}
-                    });
-                case "load":
-                    return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.load(request.content)
-                    });
-                case "configure":
-                    return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.configure(request.content)
-                    });
-                case "process":
-                    return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.process(request.content)
-                    });
-                case "finish":
-                    return Promise.resolve({
-                        type: request.type,
-                        success: true,
-                        content: this.finish(request.content.pluginHandle)
-                    });
-                default:
-                    return LocalModuleRequestHandler.rejectRequest("Unsupported request type.", request);
-            }
-        } catch(err) {
-            return LocalModuleRequestHandler.rejectRequest(err, request);
-        }
-    }
-
-    // TODO this might all belong somewhere else
-
-    private list(): StaticData[] {
+    list(): StaticData[] {
         return [...this.factories.values()].map(plugin => plugin.metadata);
     }
 
-    private load(request: LoadRequest): LoadResponse {
+    load(request: LoadRequest): LoadResponse {
         // TODO what do I do with adapter flags? channel adapting stuff, frequency domain transformation etc
         // TODO what about parameterValues?
         if (!this.factories.has(request.pluginKey)) throw new Error("Invalid plugin key.");
@@ -105,7 +62,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         };
     }
 
-    private configure(request: ConfigurationRequest): ConfigurationResponse {
+    configure(request: ConfigurationRequest): ConfigurationResponse {
         if (!this.loaded.has(request.pluginHandle)) throw new Error("Invalid plugin handle");
         if (this.configured.has(request.pluginHandle)) throw new Error("PluginFactory is already configured");
 
@@ -127,7 +84,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
     // TODO what about FrequencyDomain input?, or channel count mis-match?
     // ^^ The AdapterFlags will indicate the work to be done, but I've not yet implemented anything which does it
     //     - WireProcessResponse (there is no JSON schema for this, but copy the shape of the latest VamPipe)
-    private process(request: ProcessRequest): WireProcessResponse { // TODO what if this was over the wire?
+    process(request: ProcessRequest): ProcessResponse { // TODO what if this was over the wire?
         if (!this.configured.has(request.pluginHandle))
             throw new Error("Invalid plugin handle, or plugin not configured.");
 
@@ -146,7 +103,7 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
 
     // finish, directly call finish
     //     - WireProcessResponse?
-    private finish(handle: PluginHandle): WireProcessResponse {
+    finish(handle: PluginHandle): ProcessResponse {
         if (!this.configured.has(handle))
             throw new Error("Invalid plugin handle, or plugin not configured.");
         const plugin: Plugin = this.configured.get(handle);
@@ -156,25 +113,6 @@ export class LocalModuleRequestHandler implements ModuleRequestHandler { // TODO
         return {pluginHandle: handle, features: LocalModuleRequestHandler.toWireFeatureSet(features)};
     }
 
-    private static rejectRequest(err: string, request: Request): Promise<Request> {
-        return Promise.reject<Response>({
-            type: request.type,
-            success: false,
-            errorText: err
-        });
-    }
-
-    private static toWireFeatureSet(features: FeatureSet): WireFeatureSet { // TODO this is horrible
-        let wireFeatures: any = {};
-        for (let [key, featureList] of features.entries()) {
-            featureList.forEach(feature => {
-                if (feature.hasOwnProperty("featureValues"))
-                    feature.featureValues = [...feature.featureValues] as any; // this is mutating the input FeatureSet, ergh
-            });
-            wireFeatures[key] = featureList;
-        }
-        return wireFeatures;
-    }
 
     private static sanitiseStaticData(factories: PluginFactory[]): void {
         // TODO this is to parse the InputDomain field as Enums, and really belongs in the compiling code
