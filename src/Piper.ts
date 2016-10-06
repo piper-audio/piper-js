@@ -84,7 +84,7 @@ export abstract class Protocol {
     abstract readFinishResponse(): FinishResponse;
 }
 
-type TransportData = any; // TODO hello JS, my old friend - bodge
+export type TransportData = any; // TODO hello JS, my old friend - bodge
 
 export interface Transport {
     read(): TransportData;
