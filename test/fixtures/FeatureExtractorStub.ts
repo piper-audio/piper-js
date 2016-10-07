@@ -61,6 +61,6 @@ export const MetaDataStub: StaticData = {
     inputDomain: InputDomain.TimeDomain,
     maxChannelCount: 1,
     minChannelCount: 1,
-    pluginKey: "stub:sum",
-    pluginVersion: 1
+    key: "stub:sum",
+    version: 1
 };

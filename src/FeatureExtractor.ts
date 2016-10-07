@@ -53,11 +53,11 @@ export interface ParameterDescriptor {
 }
 
 export interface StaticData {
-    pluginKey: string;
+    key: string;
     basic: BasicDescriptor;
     maker?: string;
     copyright?: string;
-    pluginVersion: number;
+    version: number;
     category?: string[];
     minChannelCount: number;
     maxChannelCount: number;

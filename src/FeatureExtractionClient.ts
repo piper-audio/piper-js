@@ -10,14 +10,14 @@ import {
 import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {
-    PluginHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
+    ExtractorHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
     LoadResponse, ProcessRequest, FinishRequest, Protocol, ProcessResponse, FinishResponse
 } from "./Piper";
 import {Client} from "./Piper";
 
 export class FeatureExtractionClient implements Client {
     private timeAdjusters: Map<string, FeatureTimeAdjuster>;
-    private handleToSampleRate: Map<PluginHandle, number>;
+    private handleToSampleRate: Map<ExtractorHandle, number>;
     private protocol: Protocol;
 
     constructor(protocol: Protocol) {
@@ -37,7 +37,7 @@ export class FeatureExtractionClient implements Client {
         this.protocol.transport.flush();
         return Promise.resolve(this.protocol.readLoadResponse())
             .then(response => {
-                this.handleToSampleRate.set(response.pluginHandle, request.inputSampleRate);
+                this.handleToSampleRate.set(response.handle, request.inputSampleRate);
                 return response;
             });
     }
@@ -49,7 +49,7 @@ export class FeatureExtractionClient implements Client {
             .then(response => {
                 for (let output of response.outputList) {
                     this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                        output, request.configuration.stepSize / this.handleToSampleRate.get(request.pluginHandle))
+                        output, request.configuration.stepSize / this.handleToSampleRate.get(request.handle))
                     );
                 }
                 return response;
@@ -62,7 +62,7 @@ export class FeatureExtractionClient implements Client {
         return Promise.resolve(this.protocol.readProcessResponse()).then(response => {
             this.adjustFeatureTimes(response.features, request.processInput.timestamp);
             return {
-                pluginHandle: request.pluginHandle,
+                handle: request.handle,
                 features: response.features
             } as ProcessResponse;
         });
@@ -73,9 +73,9 @@ export class FeatureExtractionClient implements Client {
         this.protocol.transport.flush();
         return Promise.resolve(this.protocol.readFinishResponse()).then(response => {
             this.adjustFeatureTimes(response.features);
-            this.handleToSampleRate.delete(request.pluginHandle);
+            this.handleToSampleRate.delete(request.handle);
             return {
-                pluginHandle: request.pluginHandle,
+                handle: request.handle,
                 features: response.features
             } as FinishResponse;
         });

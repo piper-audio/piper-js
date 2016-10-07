@@ -3,7 +3,7 @@
  */
 import {Timestamp} from "./Timestamp";
 import {
-    PluginHandle, ProcessRequest, Protocol, ListResponse, LoadResponse,
+    ExtractorHandle, ProcessRequest, Protocol, ListResponse, LoadResponse,
     ConfigurationResponse, ProcessResponse, LoadRequest, ConfigurationRequest, FinishRequest, Transport, FinishResponse
 } from "./Piper";
 import {Feature, FeatureList, FeatureSet} from "./Feature";
@@ -28,7 +28,7 @@ interface WireFeatureSet {
 }
 
 interface WireProcessResponse {
-    pluginHandle: number,
+    handle: number,
     features: WireFeatureSet
 }
 
@@ -38,16 +38,16 @@ interface WireProcessInput {
 }
 
 interface WireProcessRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     processInput: WireProcessInput;
 }
 
 interface WireStaticData {
-    pluginKey: string;
+    key: string;
     basic: BasicDescriptor;
     maker?: string;
     copyright?: string;
-    pluginVersion: number;
+    version: number;
     category?: string[];
     minChannelCount: number;
     maxChannelCount: number;
@@ -58,11 +58,11 @@ interface WireStaticData {
 }
 
 interface WireListResponse {
-    plugins: WireStaticData[];
+    available: WireStaticData[];
 }
 
 interface WireLoadRequest {
-    pluginKey: string;
+    key: string;
     inputSampleRate: number;
     adapterFlags: string[];
 }
@@ -77,17 +77,17 @@ interface WireConfiguration {
 }
 
 interface WireConfigurationRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     configuration: WireConfiguration;
 }
 
 interface WireConfigurationResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     outputList: WireOutputList;
 }
 
 interface WireLoadResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     staticData: WireStaticData;
     defaultConfiguration: WireConfiguration;
 }
@@ -119,70 +119,66 @@ export class JsonProtocol extends Protocol {
     }
 
     writeListRequest(): void {
-        this.transport.write(JSON.stringify({type: "list"}));
+        this.transport.write(JSON.stringify({method: "list"}));
     }
 
     writeListResponse(response: ListResponse): void {
         // TODO error case
         this.transport.write(JSON.stringify({
-            type: "list",
-            success: true,
-            content: response
+            method: "list",
+            result: serialiseListResponse(response)
         }));
     }
 
     writeLoadRequest(request: LoadRequest): void {
         this.transport.write(JSON.stringify({
-            type: "load",
-            content: serialiseLoadRequest(request)
+            method: "load",
+            result: serialiseLoadRequest(request)
         }));
     }
 
     writeLoadResponse(response: LoadResponse): void {
         // TODO error case
         this.transport.write(JSON.stringify({
-            type: "load",
-            success: true,
-            content: serialiseLoadResponse(response)
+            method: "load",
+            result: serialiseLoadResponse(response)
         }));
     }
 
     writeConfigurationRequest(request: ConfigurationRequest): void {
         this.transport.write(JSON.stringify({
-            type: "configure",
-            content: serialiseConfigurationRequest(request)
+            method: "configure",
+            result: serialiseConfigurationRequest(request)
         }));
     }
 
     writeConfigurationResponse(response: ConfigurationResponse): void {
         // TODO error case
         this.transport.write(JSON.stringify({
-            type: "configure",
-            success: true,
-            content: serialiseConfigurationResponse(response)
+            method: "configure",
+            result: serialiseConfigurationResponse(response)
         }));
     }
 
     writeProcessRequest(request: ProcessRequest): void {
         this.transport.write({
-            type: "process",
-            content: serialiseProcessRequest(request, this.asBase64)
+            method: "process",
+            result: serialiseProcessRequest(request, this.asBase64)
         });
     }
 
     writeProcessResponse(response: ProcessResponse): void {
         // TODO error case
         this.transport.write(JSON.stringify({
-            type: "process",
-            success: true,
-            content: serialiseProcessResponse(response)
+            method: "process",
+            result: serialiseProcessResponse(response)
         }));
     }
 
     writeFinishRequest(request: FinishRequest): void {
         this.transport.write(JSON.stringify({
-            type: "finish",
-            content: request
+            method: "finish",
+            result: request
         }));
     }
 
@@ -238,9 +234,15 @@ export class JsonProtocol extends Protocol {
     }
 }
 
+function serialiseListResponse(response: ListResponse): WireListResponse {
+    return {
+        available: response.available.map(data => data.inputDomain = InputDomain[data.inputDomain])
+    }
+}
+
 function deserialiseListResponse(response: WireListResponse): ListResponse {
     return {
-        plugins: response.plugins.map(data => data.inputDomain = InputDomain[data.inputDomain])
+        available: response.available.map(data => data.inputDomain = InputDomain[data.inputDomain])
     }
 }
 
@@ -261,7 +263,7 @@ function serialiseLoadResponse(response: LoadResponse): WireLoadResponse {
 function deserialiseLoadResponse(response: WireLoadResponse): LoadResponse {
     const staticData: WireStaticData = response.staticData;
     return {
-        pluginHandle: response.pluginHandle,
+        handle: response.handle,
         staticData: Object.assign({}, response.staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
         defaultConfiguration: deserialiseConfiguration(response.defaultConfiguration)
     };
@@ -269,14 +271,14 @@ function deserialiseLoadResponse(response: WireLoadResponse): LoadResponse {
 
 function serialiseConfigurationRequest(request: ConfigurationRequest): WireConfigurationRequest {
     return {
-        pluginHandle: request.pluginHandle,
+        handle: request.handle,
         configuration: serialiseConfiguration(request.configuration)
     }
 }
 // TODO dup, all to do with flipping the enum
 function deserialiseConfigurationRequest(request: WireConfigurationRequest): ConfigurationRequest {
     return {
-        pluginHandle: request.pluginHandle,
+        handle: request.handle,
         configuration: deserialiseConfiguration(request.configuration)
     };
 }
@@ -321,7 +323,7 @@ function deserialiseConfiguration(config: WireConfiguration): Configuration {
 
 function serialiseProcessRequest(request: ProcessRequest, asBase64?: boolean): WireProcessRequest {
     return {
-        pluginHandle: request.pluginHandle,
+        handle: request.handle,
         processInput: {
             timestamp: request.processInput.timestamp,
             inputBuffers: asBase64 ?
@@ -333,7 +335,7 @@ function serialiseProcessRequest(request: ProcessRequest, asBase64?: boolean): W
 
 function deserialiseProcessRequest(request: WireProcessRequest): ProcessRequest {
     return {
-        pluginHandle: request.pluginHandle,
+        handle: request.handle,
         processInput: Object.assign({}, request, {
             inputBuffers: typeof request.processInput.inputBuffers[0] === "string" ?
                 request.processInput.inputBuffers.map(fromBase64) :
@@ -345,7 +347,7 @@ function deserialiseProcessRequest(request: WireProcessRequest): ProcessRequest 
 function serialiseProcessResponse(response: ProcessResponse): WireProcessResponse {
     // TODO write test
     return {
-        pluginHandle: response.pluginHandle,
+        handle: response.handle,
         features: [...response.features.entries()].map(pair => {
             const [key, featureList] = pair;
             return {
@@ -365,7 +367,7 @@ function deserialiseProcessResponse(response: WireProcessResponse): ProcessRespo
         return features.set(key, convertWireFeatureList(wireFeatures[key]));
     });
     return {
-        pluginHandle: response.pluginHandle,
+        handle: response.handle,
         features: features
     };
 }

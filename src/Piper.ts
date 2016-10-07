@@ -5,52 +5,72 @@ import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from 
 import {FeatureSet} from "./Feature";
 
 // Types used in the application
+export interface RpcRequest {
+    method: string;
+    params?: RequestParams;
+}
 
-export type PluginHandle = number;
+export interface ResponseError {
+    code: number;
+    message: string;
+}
+
+export interface RpcResponse {
+    method: string;
+    result?: ResponseResult;
+    error?: ResponseError;
+}
+
+export type ExtractorHandle = number;
+
+export interface ListRequest {
+}
 
 export interface ListResponse {
-    plugins: StaticData[];
+    available: StaticData[];
 }
 
 export interface LoadRequest {
-    pluginKey: string;
+    key: string;
     inputSampleRate: number;
     adapterFlags: AdapterFlags[];
 }
 
 export interface LoadResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     staticData: StaticData;
     defaultConfiguration: Configuration;
 }
 
 export interface ConfigurationRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     configuration: Configuration;
 }
 
 export interface ConfigurationResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     outputList: OutputList;
 }
 
 export interface ProcessRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     processInput: ProcessInput;
 }
 
 export interface ProcessResponse {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
     features: FeatureSet;
 }
 
 export interface FinishRequest {
-    pluginHandle: PluginHandle;
+    handle: ExtractorHandle;
 }
 
 export type FinishResponse = ProcessResponse;
 
 //
+export type RequestParams = ListRequest | LoadRequest | ConfigurationRequest | ProcessRequest | FinishRequest;
+export type ResponseResult = ListResponse | LoadResponse | ConfigurationResponse | ProcessResponse | FinishResponse;
 
 export abstract class Protocol {
     public transport: Transport;
@@ -93,7 +113,7 @@ export interface Transport {
 }
 
 export interface Service {
-    list(): ListResponse;
+    list(request: ListRequest): ListResponse;
     load(request: LoadRequest) : LoadResponse;
     configure(request: ConfigurationRequest): ConfigurationResponse;
     process(request: ProcessRequest): ProcessResponse;
@@ -101,7 +121,7 @@ export interface Service {
 }
 
 export interface Client {
-    list(): Promise<ListResponse>;
+    list(request: ListRequest): Promise<ListResponse>;
     load(request: LoadRequest) : Promise<LoadResponse>;
     configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
     process(request: ProcessRequest): Promise<ProcessResponse>;

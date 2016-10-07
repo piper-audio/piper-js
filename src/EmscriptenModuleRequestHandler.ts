@@ -63,7 +63,7 @@ export class EmscriptenModuleRequestHandler implements ModuleRequestHandler {
         }
 
         const responseJson: Pointer = this.doProcess(
-            request.pluginHandle,
+            request.handle,
             buffersPtr,
             request.processInput.timestamp.s,
             request.processInput.timestamp.n);
