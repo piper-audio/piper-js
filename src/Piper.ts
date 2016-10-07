@@ -5,21 +5,6 @@ import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from 
 import {FeatureSet} from "./Feature";
 
 // Types used in the application
-export interface RpcRequest {
-    method: string;
-    params?: RequestParams;
-}
-
-export interface ResponseError {
-    code: number;
-    message: string;
-}
-
-export interface RpcResponse {
-    method: string;
-    result?: ResponseResult;
-    error?: ResponseError;
-}
 
 export type ExtractorHandle = number;
 
@@ -69,8 +54,6 @@ export interface FinishRequest {
 export type FinishResponse = ProcessResponse;
 
 //
-export type RequestParams = ListRequest | LoadRequest | ConfigurationRequest | ProcessRequest | FinishRequest;
-export type ResponseResult = ListResponse | LoadResponse | ConfigurationResponse | ProcessResponse | FinishResponse;
 
 export abstract class Protocol {
     public transport: Transport;
