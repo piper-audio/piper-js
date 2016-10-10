@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/featureset#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a Vamp::Plugin::FeatureSet serialisation",
+    "description": "schema for a set of features returned by a feature extractor, associating an output id with an array of features from that output",
     "type": "object",
     "patternProperties": {
 	"^[a-zA-Z0-9_-]+$": {

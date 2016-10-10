@@ -3,7 +3,7 @@
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 
-import {LoadResponse, ListResponse, ConfigurationResponse} from "Piper.ts";
+import {LoadResponse, ListResponse, ConfigurationResponse} from "../src/Piper.ts";
 
 import fs = require("fs");
 
@@ -32,23 +32,30 @@ describe("FixtureSchema", () => {
     const loadSchema = () => {
         const vampSchema = [
             "basic",
+            "configuration",
             "configurationrequest",
             "configurationresponse",
+            "configuredoutputdescriptor",
             "enums",
+            "error",
+            "extractorstaticdata",
             "feature",
             "featureset",
+            "finishrequest",
+            "finishresponse",
+            "listrequest",
             "listresponse",
             "loadrequest",
             "loadresponse",
             "outputdescriptor",
             "parameterdescriptor",
-            "pluginconfiguration",
-            "pluginstaticdata",
             "processinput",
             "processrequest",
+            "processresponse",
             "realtime",
-            "request",
-            "response",
+            "rpcrequest",
+            "rpcresponse",
+            "serialisedarray",
             "valueextents"
         ];
         vampSchema.map(name => {

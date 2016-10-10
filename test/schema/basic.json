@@ -1,7 +1,7 @@
 {
     "id": "http://vamp-plugins.org/json/schema/basic#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for the basic part of various Vamp descriptors",
+    "description": "schema for a common unit of basic metadata",
     "type": "object",
     "properties": {
 	"identifier": {

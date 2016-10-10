@@ -1,10 +1,10 @@
 {
     "id": "http://vamp-plugins.org/json/schema/loadrequest#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a serialised load request for a Vamp Plugin; normally served as the content field of an object matching the plain request schema",
+    "description": "schema for a request to load a feature extractor; may be served in the params field of a load-method rpcrequest",
     "type": "object",
     "properties": {
-	"pluginKey": {
+	"key": {
 	    "type": "string"
 	},
 	"inputSampleRate": {
@@ -17,7 +17,7 @@
 	    }
 	}
     },
-    "required": [ "pluginKey", "inputSampleRate" ],
+    "required": [ "key", "inputSampleRate" ],
     "additionalProperties": false
 }
 

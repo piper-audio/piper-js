@@ -4,7 +4,7 @@
     "channelCount": 1,
     "stepSize": 0
   },
-  "pluginHandle": 1,
+  "handle": 1,
   "staticData": {
     "basic": {
       "description": "A stub, returns sum of samples in process block and keeps a cumulative sum.",
@@ -26,7 +26,7 @@
     "inputDomain": "TimeDomain",
     "maxChannelCount": 1,
     "minChannelCount": 1,
-    "pluginKey": "stub:sum",
-    "pluginVersion": 1
+    "key": "stub:sum",
+    "version": 1
   }
 }

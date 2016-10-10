@@ -11,7 +11,7 @@ import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {
     ExtractorHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
-    LoadResponse, ProcessRequest, FinishRequest, Protocol, ProcessResponse, FinishResponse
+    LoadResponse, ProcessRequest, FinishRequest, Protocol, ProcessResponse, FinishResponse, ListRequest
 } from "./Piper";
 import {Client} from "./Piper";
 
@@ -26,8 +26,8 @@ export class FeatureExtractionClient implements Client {
         this.protocol = protocol;
     }
 
-    public list(): Promise<ListResponse> {
-        this.protocol.writeListRequest();
+    public list(request: ListRequest): Promise<ListResponse> {
+        this.protocol.writeListRequest(request);
         this.protocol.transport.flush();
         return Promise.resolve(this.protocol.readListResponse()); // TODO this isn't right at all (Promise.resolve)
     }
