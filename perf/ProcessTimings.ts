@@ -3,7 +3,7 @@
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 
-import {FeatsModuleClient} from "FeatureExtractionClient.ts";
+import {FeatsModuleClient} from "PiperClient.ts";
 
 import {
     LoadRequest, LoadResponse,
@@ -20,7 +20,7 @@ import {Timestamp,frame2timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/AudioUtilities";
 
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
-import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
+import {EmscriptenModuleRequestHandler} from "EmscriptenProxy.ts";
 
 chai.should();
 chai.use(chaiAsPromised);

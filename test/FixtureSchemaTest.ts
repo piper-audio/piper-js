@@ -3,7 +3,7 @@
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 
-import {LoadResponse, ListResponse, ConfigurationResponse} from "../src/Piper.ts";
+import {LoadResponse, ListResponse, ConfigurationResponse} from "../src/Piper";
 
 import fs = require("fs");
 
@@ -64,7 +64,7 @@ describe("FixtureSchema", () => {
                     vampSchemaFileBase + name + ".json",
                     "utf8")));
         });
-    }
+    };
 
     const preload = loadSchema();
     
@@ -80,7 +80,7 @@ describe("FixtureSchema", () => {
     const report = function(e : any) : string {
 	return "Error: \"" + e.message + "\" at data path " + e.dataPath
 	    + " and schema path " + e.schemaPath;
-    }
+    };
 
     it("Validates configuration response", function(done) {
         if (!tv4.validate(configurationResponse,

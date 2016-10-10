@@ -2,21 +2,20 @@
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import {FeatsModuleClient} from "FeatureExtractionClient.ts";
-import {LoadRequest, LoadResponse} from "Piper.ts";
-import {EmscriptenModuleRequestHandler} from "../src/EmscriptenModuleRequestHandler";
+import {EmscriptenProxy} from "../src/EmscriptenProxy";
 import VampTestPlugin = require('../ext/VampTestPlugin');
 import {AdapterFlags} from "../src/FeatureExtractor";
+import {LoadResponse, LoadRequest} from "../src/Piper";
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe('VampTestPlugin', () => {
-    const server = new FeatsModuleClient(new EmscriptenModuleRequestHandler(VampTestPlugin()));
+    const client = new EmscriptenProxy(VampTestPlugin());
 
     const loadResponse: Promise<LoadResponse> =
-	server.list({}).then((resp) => {
-            return server.load({
+	client.list({}).then((resp) => {
+            return client.load({
                 key: resp.available[0].key, // time-domain
                 inputSampleRate: 44100,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]

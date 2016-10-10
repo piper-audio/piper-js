@@ -7,7 +7,7 @@ import {
 import {FeatureSet} from "./Feature";
 import {
     Service, LoadRequest, LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest,
-    ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle
+    ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle, ListRequest
 } from "./Piper";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
@@ -22,30 +22,30 @@ export interface Plugin {
     metadata: StaticData;
 }
 
-export class FeatureExtractionService implements Service {
+export class FeatsService implements Service {
     private factories: Map<string, PluginFactory>;
     private loaded: Map<number, Plugin>;
     private configured: Map<number, Plugin>;
     private countingHandle: number;
 
     constructor(...factories: PluginFactory[]) {
-        FeatureExtractionService.sanitiseStaticData(factories);
+        FeatsService.sanitiseStaticData(factories);
         this.factories = new Map(factories.map(plugin => [plugin.metadata.key, plugin] as [string, PluginFactory]));
         this.loaded = new Map();
         this.configured = new Map();
         this.countingHandle = 0;
     }
 
-    list(): ListResponse {
-        return {
+    list(request: ListRequest): Promise<ListResponse> {
+        return Promise.resolve({
             available: [...this.factories.values()].map(plugin => plugin.metadata)
-        }
+        });
     }
 
-    load(request: LoadRequest): LoadResponse {
+    load(request: LoadRequest): Promise<LoadResponse> {
         // TODO what do I do with adapter flags? channel adapting stuff, frequency domain transformation etc
         // TODO what about parameterValues?
-        if (!this.factories.has(request.key)) throw new Error("Invalid plugin key.");
+        if (!this.factories.has(request.key)) return Promise.reject("Invalid plugin key.");
 
         const factory: PluginFactory = this.factories.get(request.key);
         const extractor: FeatureExtractor = factory.extractor(request.inputSampleRate);
@@ -54,16 +54,16 @@ export class FeatureExtractionService implements Service {
 
         const defaultConfiguration: Configuration = extractor.getDefaultConfiguration();
 
-        return {
+        return Promise.resolve({
             handle: this.countingHandle,
             staticData: metadata,
             defaultConfiguration: defaultConfiguration
-        };
+        });
     }
 
-    configure(request: ConfigurationRequest): ConfigurationResponse {
-        if (!this.loaded.has(request.handle)) throw new Error("Invalid plugin handle");
-        if (this.configured.has(request.handle)) throw new Error("PluginFactory is already configured");
+    configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
+        if (!this.loaded.has(request.handle)) return Promise.reject("Invalid plugin handle");
+        if (this.configured.has(request.handle)) return Promise.reject("PluginFactory is already configured");
 
         const plugin: Plugin = this.loaded.get(request.handle);
         // TODO this is probably where the error handling for channel mismatch should be...
@@ -75,38 +75,35 @@ export class FeatureExtractionService implements Service {
                 configured: Object.assign({binNames: [], sampleRate: 0}, outputs.get(basic.identifier))
             };
         });
-        return {handle: request.handle, outputList: outputList};
+        return Promise.resolve({handle: request.handle, outputList: outputList});
     }
 
     // TODO what about FrequencyDomain input?, or channel count mis-match?
     // ^^ The AdapterFlags will indicate the work to be done, but I've not yet implemented anything which does it
-    //     - WireProcessResponse (there is no JSON schema for this, but copy the shape of the latest VamPipe)
-    process(request: ProcessRequest): ProcessResponse { // TODO what if this was over the wire?
+    process(request: ProcessRequest): Promise<ProcessResponse> { // TODO what if this was over the wire?
         if (!this.configured.has(request.handle))
-            throw new Error("Invalid plugin handle, or plugin not configured.");
+            return Promise.reject("Invalid plugin handle, or plugin not configured.");
 
         const plugin: Plugin = this.configured.get(request.handle);
         const numberOfInputs: number = request.processInput.inputBuffers.length;
         const metadata: StaticData = plugin.metadata;
 
         if (numberOfInputs < metadata.minChannelCount || numberOfInputs > metadata.maxChannelCount) // TODO is there a specific number of channels after configure is called?
-            throw new Error("wrong number of channels supplied.");
+            return Promise.reject("wrong number of channels supplied.");
 
-        // TODO again, having to convert between maps and objects, to have to go back again elsewhere is very wasteful
-        // especially as we aren't doing the same thing for ProcessRequest here ~ it is all very confused
         const features: FeatureSet = plugin.extractor.process(request.processInput);
-        return {handle: request.handle, features: features};
+        return Promise.resolve({handle: request.handle, features: features});
     }
 
-    finish(request: FinishRequest): FinishResponse {
+    finish(request: FinishRequest): Promise<FinishResponse> {
         const handle: ExtractorHandle = request.handle;
         if (!this.configured.has(handle))
-            throw new Error("Invalid plugin handle, or plugin not configured.");
+            return Promise.reject("Invalid plugin handle, or plugin not configured.");
         const plugin: Plugin = this.configured.get(handle);
         const features: FeatureSet = plugin.extractor.finish();
         this.loaded.delete(handle);
         this.configured.delete(handle);
-        return {handle: handle, features: features};
+        return Promise.resolve({handle: handle, features: features});
     }
 
     private static sanitiseStaticData(factories: PluginFactory[]): void {

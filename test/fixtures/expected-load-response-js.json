@@ -23,7 +23,7 @@
         "name": "Cumulative Sum"
       }
     ],
-    "inputDomain": "TimeDomain",
+    "inputDomain": 0,
     "maxChannelCount": 1,
     "minChannelCount": 1,
     "key": "stub:sum",

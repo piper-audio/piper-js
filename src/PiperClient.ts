@@ -11,31 +11,26 @@ import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
 import {
     ExtractorHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
-    LoadResponse, ProcessRequest, FinishRequest, Protocol, ProcessResponse, FinishResponse, ListRequest
+    LoadResponse, ProcessRequest, FinishRequest, ProcessResponse, FinishResponse, ListRequest, Service
 } from "./Piper";
-import {Client} from "./Piper";
 
-export class FeatureExtractionClient implements Client {
+export class PiperClient implements Service {
     private timeAdjusters: Map<string, FeatureTimeAdjuster>;
     private handleToSampleRate: Map<ExtractorHandle, number>;
-    private protocol: Protocol;
+    private service: Service;
 
-    constructor(protocol: Protocol) {
+    constructor(service: Service) {
         this.timeAdjusters = new Map();
         this.handleToSampleRate = new Map();
-        this.protocol = protocol;
+        this.service = service;
     }
 
     public list(request: ListRequest): Promise<ListResponse> {
-        this.protocol.writeListRequest(request);
-        this.protocol.transport.flush();
-        return Promise.resolve(this.protocol.readListResponse()); // TODO this isn't right at all (Promise.resolve)
+        return this.service.list(request);
     }
 
     public load(request: LoadRequest): Promise<LoadResponse> {
-        this.protocol.writeLoadRequest(request);
-        this.protocol.transport.flush();
-        return Promise.resolve(this.protocol.readLoadResponse())
+        return this.service.load(request)
             .then(response => {
                 this.handleToSampleRate.set(response.handle, request.inputSampleRate);
                 return response;
@@ -43,9 +38,7 @@ export class FeatureExtractionClient implements Client {
     }
 
     public configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        this.protocol.writeConfigurationRequest(request);
-        this.protocol.transport.flush();
-        return Promise.resolve(this.protocol.readConfigurationResponse())
+        return this.service.configure(request)
             .then(response => {
                 for (let output of response.outputList) {
                     this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
@@ -57,9 +50,7 @@ export class FeatureExtractionClient implements Client {
     }
 
     public process(request: ProcessRequest): Promise<ProcessResponse> {
-        this.protocol.writeProcessRequest(request);
-        this.protocol.transport.flush();
-        return Promise.resolve(this.protocol.readProcessResponse()).then(response => {
+        return this.service.process(request).then(response => {
             this.adjustFeatureTimes(response.features, request.processInput.timestamp);
             return {
                 handle: request.handle,
@@ -69,9 +60,7 @@ export class FeatureExtractionClient implements Client {
     }
 
     public finish(request: FinishRequest): Promise<FinishResponse> {
-        this.protocol.writeFinishRequest(request);
-        this.protocol.transport.flush();
-        return Promise.resolve(this.protocol.readFinishResponse()).then(response => {
+        return this.service.finish(request).then(response => {
             this.adjustFeatureTimes(response.features);
             this.handleToSampleRate.delete(request.handle);
             return {

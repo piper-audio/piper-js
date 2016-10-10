@@ -4,6 +4,22 @@
 import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
+export interface RpcRequest {
+    method: string;
+    params?: any; // TODO create a more meaningful type for this
+}
+
+export interface ResponseError {
+    code: number;
+    message: string;
+}
+
+export interface RpcResponse {
+    method: string;
+    result?: any; // TODO create a more meaningful type for this
+    error?: ResponseError;
+}
+
 // Types used in the application
 
 export type ExtractorHandle = number;
@@ -63,7 +79,7 @@ export abstract class Protocol {
     }
 
     // writing
-    abstract writeListRequest(): void;
+    abstract writeListRequest(request: ListRequest): void;
     abstract writeListResponse(response: ListResponse): void;
     abstract writeLoadRequest(request: LoadRequest): void;
     abstract writeLoadResponse(response: LoadResponse): void;
@@ -75,35 +91,27 @@ export abstract class Protocol {
     abstract writeFinishResponse(response: FinishResponse): void;
 
     // reading
-    abstract readListRequest(): void;
-    abstract readListResponse(): ListResponse;
-    abstract readLoadRequest(): LoadRequest;
-    abstract readLoadResponse(): LoadResponse;
-    abstract readConfigurationRequest(): ConfigurationRequest;
-    abstract readConfigurationResponse(): ConfigurationResponse;
-    abstract readProcessRequest(): ProcessRequest;
-    abstract readProcessResponse(): ProcessResponse;
-    abstract readFinishRequest(): FinishRequest;
-    abstract readFinishResponse(): FinishResponse;
+    abstract readListRequest(): Promise<ListRequest>;
+    abstract readListResponse(): Promise<ListResponse>;
+    abstract readLoadRequest(): Promise<LoadRequest>;
+    abstract readLoadResponse(): Promise<LoadResponse>;
+    abstract readConfigurationRequest(): Promise<ConfigurationRequest>;
+    abstract readConfigurationResponse(): Promise<ConfigurationResponse>;
+    abstract readProcessRequest(): Promise<ProcessRequest>;
+    abstract readProcessResponse(): Promise<ProcessResponse>;
+    abstract readFinishRequest(): Promise<FinishRequest>;
+    abstract readFinishResponse(): Promise<FinishResponse>;
 }
 
-export type TransportData = any; // TODO hello JS, my old friend - bodge
+export type TransportData = string;
 
 export interface Transport {
-    read(): TransportData;
+    read(): Promise<TransportData>;
     write(buffer: TransportData): void;
     flush(): void;
 }
 
 export interface Service {
-    list(request: ListRequest): ListResponse;
-    load(request: LoadRequest) : LoadResponse;
-    configure(request: ConfigurationRequest): ConfigurationResponse;
-    process(request: ProcessRequest): ProcessResponse;
-    finish(request: FinishRequest): FinishResponse;
-}
-
-export interface Client {
     list(request: ListRequest): Promise<ListResponse>;
     load(request: LoadRequest) : Promise<LoadResponse>;
     configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;

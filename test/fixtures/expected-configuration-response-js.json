@@ -12,7 +12,7 @@
         "binNames": [],
         "hasDuration": false,
         "sampleRate": 0,
-        "sampleType": "OneSamplePerStep"
+        "sampleType": 0
       }
     },
     {
@@ -26,7 +26,7 @@
         "binNames": [],
         "hasDuration": false,
         "sampleRate": 0,
-        "sampleType": "OneSamplePerStep"
+        "sampleType": 0
       }
     }
   ]
