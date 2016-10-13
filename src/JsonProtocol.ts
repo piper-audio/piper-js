@@ -6,7 +6,6 @@ import {Timestamp} from "./Timestamp";
 import {
     ExtractorHandle,
     ProcessRequest,
-    Protocol,
     ListResponse,
     LoadResponse,
     ConfigurationResponse,
@@ -14,9 +13,10 @@ import {
     LoadRequest,
     ConfigurationRequest,
     FinishRequest,
-    Transport,
     FinishResponse,
-    ListRequest, TransportData, RpcResponse
+    ListRequest,
+    Filter,
+    ServiceFunc
 } from "./Piper";
 import {
     Feature,
@@ -33,6 +33,140 @@ import {
     Configuration, StaticData, ProcessInput
 } from "./FeatureExtractor";
 
+export const serialiseJsonListRequest
+    : Filter<ListRequest, string, string, string>
+    = (request: ListRequest, next: ServiceFunc<string, string>)
+    : Promise<string> => next(serialiseListRequest(request));
+
+export const serialiseJsonLoadRequest
+    : Filter<LoadRequest, string, string, string>
+    = (request: LoadRequest, next: ServiceFunc<string, string>)
+    : Promise<string> => next(serialiseLoadRequest(request));
+
+export const serialiseJsonConfigurationRequest
+    : Filter<ConfigurationRequest, string, string, string>
+    = (request: ConfigurationRequest, next: ServiceFunc<string, string>)
+    : Promise<string> => next(serialiseConfigurationRequest(request));
+
+export const serialiseJsonProcessRequest
+    : Filter<ProcessRequest, string, string, string>
+    = (request: ProcessRequest, next: ServiceFunc<string, string>)
+    : Promise<string> => next(serialiseProcessRequest(request));
+
+export const serialiseJsonFinishRequest
+    : Filter<FinishRequest, string, string, string>
+    = (request: FinishRequest, next: ServiceFunc<string, string>)
+    : Promise<string> => next(serialiseFinishRequest(request));
+
+export const deserialiseJsonListResponse
+    : Filter<ListRequest, ListResponse, ListRequest, string>
+    = (request: ListRequest, service: ServiceFunc<ListRequest, string>)
+    : Promise<ListResponse> =>
+    service(request).then(deserialiseListResponse);
+
+export const deserialiseJsonLoadResponse
+    : Filter<LoadRequest, LoadResponse, LoadRequest, string>
+    = (request: LoadRequest, service: ServiceFunc<LoadRequest, string>)
+    : Promise<LoadResponse> =>
+    service(request).then(deserialiseLoadResponse);
+
+export const deserialiseJsonConfigurationResponse
+    : Filter<ConfigurationRequest, ConfigurationResponse, ConfigurationRequest, string>
+    = (request: ConfigurationRequest, service: ServiceFunc<ConfigurationRequest, string>)
+    : Promise<ConfigurationResponse> =>
+    service(request).then(deserialiseConfigurationResponse);
+
+export const deserialiseJsonProcessResponse
+    : Filter<ProcessRequest, ProcessResponse, ProcessRequest, string>
+    = (request: ProcessRequest, service: ServiceFunc<ProcessRequest, string>)
+    : Promise<ProcessResponse> =>
+    service(request).then(deserialiseProcessResponse);
+
+export const deserialiseJsonFinishResponse
+    : Filter<FinishRequest, FinishResponse, FinishRequest, string>
+    = (request: FinishRequest, service: ServiceFunc<FinishRequest, string>)
+    : Promise<FinishResponse> =>
+    service(request).then(deserialiseFinishResponse);
+
+function serialiseListRequest(request: ListRequest): string {
+    return toTransport({method: "list", params: request});
+}
+
+function serialiseListResponse(response: ListResponse): string {
+    return toTransport({method: "list", result: toWireListResponse(response)});
+}
+
+function serialiseLoadRequest(request: LoadRequest): string {
+    return toTransport({method: "load", params: toWireLoadRequest(request)});
+}
+
+function serialiseLoadResponse(response: LoadResponse): string {
+    return toTransport({method: "load", result: toWireLoadResponse(response)});
+}
+
+function serialiseConfigurationRequest(request: ConfigurationRequest): string {
+    return toTransport({method: "configure", params: toWireConfigurationRequest(request)});
+}
+
+function serialiseConfigurationResponse(response: ConfigurationResponse): string {
+    return toTransport({method: "configure", result: toWireConfigurationResponse(response)});
+}
+
+function serialiseProcessRequest(request: ProcessRequest): string {
+    return toTransport({method: "process", params: toWireProcessRequest(request)});
+}
+
+function serialiseProcessResponse(response: ProcessResponse): string {
+    return toTransport({method: "process", result: toWireProcessResponse(response)});
+}
+
+function serialiseFinishRequest(request: FinishRequest): string {
+    return toTransport({method: "finish", params: request});
+}
+
+function serialiseFinishResponse(response: FinishResponse): string {
+    return toTransport({method: "finish", result: toWireProcessResponse(response)});
+}
+
+function deserialiseListRequest(request: string): ListRequest {
+    return toTransport({})
+}
+
+function deserialiseListResponse(response: string): ListResponse {
+    return toListResponse(fromTransport(response));
+}
+
+function deserialiseLoadRequest(request: string): LoadRequest {
+    return toLoadRequest(fromTransport(request));
+}
+
+function deserialiseLoadResponse(response: string): LoadResponse {
+    return toLoadResponse(fromTransport(response));
+}
+
+function deserialiseConfigurationRequest(request: string): ConfigurationRequest {
+    return toConfigurationRequest(fromTransport(request));
+}
+
+function deserialiseConfigurationResponse(response: string): ConfigurationResponse {
+    return toConfigurationResponse(fromTransport(response));
+}
+
+function deserialiseProcessRequest(request: string): ProcessRequest {
+    return toProcessRequest(fromTransport(request));
+}
+
+function deserialiseProcessResponse(response: string): ProcessResponse {
+    return toProcessResponse(fromTransport(response));
+}
+
+function deserialiseFinishRequest(request: string): FinishRequest {
+    return fromTransport(request);
+}
+
+function deserialiseFinishResponse(response: string): FinishResponse {
+    return deserialiseProcessResponse(response);
+}
 
 type WireFeatureValues = number[] | string;
 
@@ -132,135 +266,29 @@ interface WireOutputDescriptor {
 
 type WireOutputList = WireOutputDescriptor[];
 
-function toTransport(obj: any): TransportData {
+function toTransport(obj: any): string {
     return JSON.stringify(obj);
 }
 
-function fromTransport(buffer: TransportData): Promise<any> {
+interface ResponseError {
+    code: number;
+    message: string;
+}
+
+interface RpcResponse {
+    method: string;
+    result?: any;
+    error?: ResponseError;
+}
+
+function fromTransport(buffer: string): any {
     const response: RpcResponse = JSON.parse(buffer);
 
     if (response.error) throw new Error(response.error.message);
-    return Promise.resolve(response.result);
+    return response.result;
 }
 
-export class JsonProtocol extends Protocol {
-    private asBase64: boolean;
-
-    constructor(transport: Transport, asBase64: boolean = false) {
-        super(transport);
-        this.asBase64 = asBase64;
-    }
-
-    writeListRequest(): void {
-        this.transport.write(toTransport({method: "list"}));
-    }
-
-    writeListResponse(response: ListResponse): void {
-        // TODO error case
-        this.transport.write(toTransport({
-            method: "list",
-            result: serialiseListResponse(response)
-        }));
-    }
-
-    writeLoadRequest(request: LoadRequest): void {
-        this.transport.write(toTransport({
-            method: "load",
-            params: serialiseLoadRequest(request)
-        }));
-    }
-
-    writeLoadResponse(response: LoadResponse): void {
-        // TODO error case
-        this.transport.write(toTransport({
-            method: "load",
-            result: serialiseLoadResponse(response)
-        }));
-    }
-
-    writeConfigurationRequest(request: ConfigurationRequest): void {
-        this.transport.write(toTransport({
-            method: "configure",
-            params: serialiseConfigurationRequest(request)
-        }));
-    }
-
-    writeConfigurationResponse(response: ConfigurationResponse): void {
-        // TODO error case
-        this.transport.write(toTransport({
-            method: "configure",
-            result: serialiseConfigurationResponse(response)
-        }));
-    }
-
-    writeProcessRequest(request: ProcessRequest): void {
-        this.transport.write(toTransport({
-            method: "process",
-            params: serialiseProcessRequest(request, this.asBase64)
-        }));
-    }
-
-    writeProcessResponse(response: ProcessResponse): void {
-        // TODO error case
-        this.transport.write(toTransport({
-            method: "process",
-            result: serialiseProcessResponse(response)
-        }));
-    }
-
-    writeFinishRequest(request: FinishRequest): void {
-        this.transport.write(toTransport({
-            method: "finish",
-            params: request
-        }));
-    }
-
-    writeFinishResponse(response: FinishResponse): void {
-        this.writeProcessResponse(response);
-    }
-
-
-    // TODO should the read methods expect requests in the form {"type": ..., "content"}? or just content..
-    readListRequest(): Promise<ListRequest> { return Promise.resolve({}); }
-
-    readListResponse(): Promise<ListResponse> {
-        return this.transport.read().then(fromTransport).then(deserialiseListResponse);
-    }
-
-    readLoadRequest(): Promise<LoadRequest> {
-        return this.transport.read().then(fromTransport).then(deserialiseLoadRequest);
-    }
-
-    readLoadResponse(): Promise<LoadResponse> {
-        return this.transport.read().then(fromTransport).then(deserialiseLoadResponse)
-    }
-
-    readConfigurationRequest(): Promise<ConfigurationRequest> {
-        return this.transport.read().then(fromTransport).then(deserialiseConfigurationRequest)
-    }
-
-    readConfigurationResponse(): Promise<ConfigurationResponse> {
-        return this.transport.read().then(fromTransport).then(deserialiseConfigurationResponse)
-    }
-
-    readProcessRequest(): Promise<ProcessRequest> {
-        return this.transport.read().then(fromTransport).then(deserialiseProcessRequest)
-    }
-
-    readProcessResponse(): Promise<ProcessResponse> {
-        return this.transport.read().then(fromTransport).then(deserialiseProcessResponse)
-    }
-
-    readFinishRequest(): Promise<Promise<FinishRequest>> {
-        return this.transport.read().then(fromTransport); // just so happens to be the same wire or not
-    }
-
-    readFinishResponse(): Promise<FinishResponse> {
-        return this.readProcessResponse();
-    }
-}
-
-function serialiseListResponse(response: ListResponse): WireListResponse {
+function toWireListResponse(response: ListResponse): WireListResponse {
     return {
         available: response.available.map(data => Object.assign({}, data, {
             inputDomain: InputDomain[data.inputDomain]
@@ -268,7 +296,7 @@ function serialiseListResponse(response: ListResponse): WireListResponse {
     };
 }
 
-function deserialiseListResponse(response: WireListResponse): ListResponse {
+function toListResponse(response: WireListResponse): ListResponse {
     return {
         available: response.available.map(data => Object.assign({}, data, {
             inputDomain: parseInt(InputDomain[data.inputDomain as any])
@@ -276,11 +304,11 @@ function deserialiseListResponse(response: WireListResponse): ListResponse {
     };
 }
 
-function serialiseLoadRequest(request: LoadRequest): WireLoadRequest {
+function toWireLoadRequest(request: LoadRequest): WireLoadRequest {
     return Object.assign({}, request, {adapterFlags: request.adapterFlags.map(flag => AdapterFlags[flag])});
 }
 
-function deserialiseLoadRequest(request: WireLoadRequest): LoadRequest {
+function toLoadRequest(request: WireLoadRequest): LoadRequest {
     return {
         key: request.key,
         inputSampleRate: request.inputSampleRate,
@@ -288,39 +316,39 @@ function deserialiseLoadRequest(request: WireLoadRequest): LoadRequest {
     };
 }
 
-function serialiseLoadResponse(response: LoadResponse): WireLoadResponse {
+function toWireLoadResponse(response: LoadResponse): WireLoadResponse {
     const staticData: StaticData = response.staticData;
     return {
         handle: response.handle,
         staticData: Object.assign({}, staticData, {inputDomain: InputDomain[staticData.inputDomain]}),
-        defaultConfiguration: serialiseConfiguration(response.defaultConfiguration)
+        defaultConfiguration: toWireConfiguration(response.defaultConfiguration)
     };
 }
 
-function deserialiseLoadResponse(response: WireLoadResponse): LoadResponse {
+function toLoadResponse(response: WireLoadResponse): LoadResponse {
     const staticData: WireStaticData = response.staticData;
     return {
         handle: response.handle,
         staticData: Object.assign({}, staticData, {inputDomain: parseInt(InputDomain[staticData.inputDomain as any])}),
-        defaultConfiguration: deserialiseConfiguration(response.defaultConfiguration)
+        defaultConfiguration: toConfiguration(response.defaultConfiguration)
     };
 }
 
-function serialiseConfigurationRequest(request: ConfigurationRequest): WireConfigurationRequest {
+function toWireConfigurationRequest(request: ConfigurationRequest): WireConfigurationRequest {
     return {
         handle: request.handle,
-        configuration: serialiseConfiguration(request.configuration)
+        configuration: toWireConfiguration(request.configuration)
     }
 }
 
-function deserialiseConfigurationRequest(request: WireConfigurationRequest): ConfigurationRequest {
+function toConfigurationRequest(request: WireConfigurationRequest): ConfigurationRequest {
     return {
         handle: request.handle,
-        configuration: deserialiseConfiguration(request.configuration)
+        configuration: toConfiguration(request.configuration)
     };
 }
 
-function serialiseConfigurationResponse(response: ConfigurationResponse): WireConfigurationResponse {
+function toWireConfigurationResponse(response: ConfigurationResponse): WireConfigurationResponse {
     return Object.assign({}, response, { // TODO is this necessary? i.e. not wanting to mutate response
         outputList: response.outputList.map(output => Object.assign({}, output, {
             configured: Object.assign({}, output.configured, {
@@ -330,8 +358,7 @@ function serialiseConfigurationResponse(response: ConfigurationResponse): WireCo
     });
 }
 
-// TODO dup, all to do with flipping the enum
-function deserialiseConfigurationResponse(response: WireConfigurationResponse): ConfigurationResponse {
+function toConfigurationResponse(response: WireConfigurationResponse): ConfigurationResponse {
     return Object.assign({}, response, {
         outputList: response.outputList.map(output => Object.assign({}, output, {
             configured: Object.assign({}, output.configured, {
@@ -341,7 +368,7 @@ function deserialiseConfigurationResponse(response: WireConfigurationResponse): 
     })
 }
 
-function serialiseConfiguration(config: Configuration): WireConfiguration {
+function toWireConfiguration(config: Configuration): WireConfiguration {
     return config.parameterValues == null
         ? {channelCount: config.channelCount, stepSize: config.stepSize, blockSize: config.blockSize}
         : Object.assign({}, config, {
@@ -350,7 +377,7 @@ function serialiseConfiguration(config: Configuration): WireConfiguration {
         });
 }
 
-function deserialiseConfiguration(config: WireConfiguration): Configuration {
+function toConfiguration(config: WireConfiguration): Configuration {
     return config.parameterValues == null
         ? {channelCount: config.channelCount, stepSize: config.stepSize, blockSize: config.blockSize}
         : Object.assign({}, config, {
@@ -358,7 +385,7 @@ function deserialiseConfiguration(config: WireConfiguration): Configuration {
         });
 }
 
-function serialiseProcessRequest(request: ProcessRequest, asBase64?: boolean): WireProcessRequest {
+function toWireProcessRequest(request: ProcessRequest, asBase64?: boolean): WireProcessRequest {
     return {
         handle: request.handle,
         processInput: {
@@ -370,7 +397,7 @@ function serialiseProcessRequest(request: ProcessRequest, asBase64?: boolean): W
     }
 }
 
-function deserialiseProcessRequest(request: WireProcessRequest): ProcessRequest {
+function toProcessRequest(request: WireProcessRequest): ProcessRequest {
     return {
         handle: request.handle,
         processInput: Object.assign({}, request, {
@@ -381,7 +408,7 @@ function deserialiseProcessRequest(request: WireProcessRequest): ProcessRequest 
     }; //TODO write test
 }
 
-function serialiseProcessResponse(response: ProcessResponse): WireProcessResponse {
+function toWireProcessResponse(response: ProcessResponse): WireProcessResponse {
     // TODO write test
     return {
         handle: response.handle,
@@ -399,7 +426,7 @@ function serialiseProcessResponse(response: ProcessResponse): WireProcessRespons
     };
 }
 
-function deserialiseProcessResponse(response: WireProcessResponse): ProcessResponse {
+function toProcessResponse(response: WireProcessResponse): ProcessResponse {
     const features: FeatureSet = new Map();
     const wireFeatures: WireFeatureSet = response.features;
     Object.keys(wireFeatures).forEach(key => {

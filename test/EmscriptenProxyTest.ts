@@ -18,7 +18,7 @@ import {PiperClient} from "../src/PiperClient";
 chai.should();
 chai.use(chaiAsPromised);
 
-describe("VampProxy", () => {
+describe("EmscriptenProxyTest", () => {
     const client: Service = new PiperClient(new EmscriptenProxy(VampExamplePlugins()));
 
     const loadFixture = (name : string) => {
