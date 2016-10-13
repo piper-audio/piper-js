@@ -16,14 +16,6 @@ import {
     deserialiseJsonFinishResponse, serialiseJsonFinishRequest
 } from "./JsonProtocol";
 
-const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
-    "piperFreeJson",
-    "void",
-    ["number"],
-    [ptr]
-);
-type Pointer = number;
-
 export class EmscriptenProxy implements Service {
     private module: EmscriptenModule;
 
@@ -70,6 +62,15 @@ export class EmscriptenProxy implements Service {
         )(request);
     }
 }
+
+const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
+    "piperFreeJson",
+    "void",
+    ["number"],
+    [ptr]
+);
+
+type Pointer = number;
 
 function emscriptenService(emscripten: EmscriptenModule)
 : ServiceFunc<string, string> {
