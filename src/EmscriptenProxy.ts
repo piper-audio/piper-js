@@ -3,141 +3,136 @@
  */
 import {EmscriptenModule, Allocator} from "./Emscripten";
 import {
-    ListRequest,
-    ListResponse,
-    LoadRequest,
-    LoadResponse,
     ProcessRequest,
-    ProcessResponse,
-    ConfigurationRequest,
-    ConfigurationResponse,
-    FinishRequest,
-    FinishResponse,
-    Transport,
-    TransportData,
-    Protocol, Service
+    ServiceFunc, Service, ListRequest, ListResponse, LoadResponse, LoadRequest,
+    ConfigurationRequest, ConfigurationResponse, ProcessResponse,
+    FinishResponse, FinishRequest, compose
 } from "./Piper";
-import {JsonProtocol} from "./JsonProtocol";
+import {
+    deserialiseJsonListResponse,
+    serialiseJsonListRequest, deserialiseJsonLoadResponse,
+    serialiseJsonLoadRequest, deserialiseJsonConfigurationResponse,
+    serialiseJsonConfigurationRequest, deserialiseJsonProcessResponse,
+    deserialiseJsonFinishResponse, serialiseJsonFinishRequest
+} from "./JsonProtocol";
 
+const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
+    "vampipeFreeJson",
+    "void",
+    ["number"],
+    [ptr]
+);
 type Pointer = number;
 
-class EmscriptenForwardingTransport implements Transport {
-    private emscripten: EmscriptenModule;
-    private inData: Promise<TransportData>;
-    private outData: TransportData;
-    private freeJson: (ptr: number) => void;
-    private doRequest: (ptr: number) => number;
-
-    constructor(emscripten: EmscriptenModule) {
-        this.emscripten = emscripten;
-        this.freeJson = this.emscripten.cwrap("vampipeFreeJson", "void", ["number"]) as (ptr: number) => void;
-        this.doRequest = this.emscripten.cwrap("vampipeRequestJson", "number", ["number"]) as (ptr: number) => number;
-        this.inData = Promise.resolve("");
-        this.outData = "";
-    }
-
-    read(): Promise<TransportData> {
-        return this.inData.then(request => {
-            const requestJson: Pointer = this.emscripten.allocate(
-                this.emscripten.intArrayFromString(request), "i8",
-                Allocator.ALLOC_NORMAL);
-
-            const responseJson: Pointer = this.doRequest(requestJson);
-            this.emscripten._free(requestJson);
-
-            const jsonString: string = this.emscripten.Pointer_stringify(responseJson);
-            this.freeJson(responseJson);
-            return jsonString;
-        });
-    }
-
-    write(data: TransportData): void {
-        this.outData = data;
-    }
-
-    flush(): void {
-        this.inData = Promise.resolve(this.outData);
-    }
-
-}
-
-class JsonRawProcessProtocol extends JsonProtocol {
-    writeProcessRequest(request: ProcessRequest): void {
-        this.transport.write("");
-    }
-}
-
 export class EmscriptenProxy implements Service {
+    private module: EmscriptenModule;
 
-    private emscripten: EmscriptenModule;
-    private doProcess: (handle: number, bufs: number, sec: number, nsec: number) => number;
-    private freeJson: (ptr: number) => void;
-    private protocol: Protocol;
-
-    constructor(pluginModule: EmscriptenModule) {
-        this.emscripten = pluginModule;
-        this.doProcess = this.emscripten.cwrap("vampipeProcessRaw", "number", ["number", "number", "number", "number"]) as (handle: number, bufs: number, sec: number, nsec: number) => number;
-        this.freeJson = this.emscripten.cwrap("vampipeFreeJson", "void", ["number"]) as (ptr: number) => void;
-        this.protocol = new JsonProtocol(new EmscriptenForwardingTransport(pluginModule));
+    constructor(module: EmscriptenModule) {
+        this.module = module;
     }
 
     list(request: ListRequest): Promise<ListResponse> {
-        this.protocol.writeListRequest(request);
-        this.protocol.transport.flush();
-        return this.protocol.readListResponse();
+        return compose(
+            deserialiseJsonListResponse, compose(
+                serialiseJsonListRequest, emscriptenService(this.module)
+            )
+        )(request);
     }
 
     load(request: LoadRequest): Promise<LoadResponse> {
-        this.protocol.writeLoadRequest(request);
-        this.protocol.transport.flush();
-        return this.protocol.readLoadResponse();
+        return compose(
+            deserialiseJsonLoadResponse, compose(
+                serialiseJsonLoadRequest, emscriptenService(this.module)
+            )
+        )(request);
     }
 
     configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        this.protocol.writeConfigurationRequest(request);
-        this.protocol.transport.flush();
-        return this.protocol.readConfigurationResponse();
+        return compose(
+            deserialiseJsonConfigurationResponse, compose(
+                serialiseJsonConfigurationRequest, emscriptenService(this.module)
+            )
+        )(request);
     }
 
     process(request: ProcessRequest): Promise<ProcessResponse> {
-        this.protocol.writeProcessRequest(request);
-        this.protocol.transport.flush();
-        return this.protocol.readProcessResponse();
+        return compose(
+            deserialiseJsonProcessResponse,
+            emscriptenProcess(this.module)
+        )(request);
     }
 
     finish(request: FinishRequest): Promise<FinishResponse> {
-        this.protocol.writeFinishRequest(request);
-        this.protocol.transport.flush();
-        return this.protocol.readFinishResponse();
+        return compose(
+            deserialiseJsonFinishResponse, compose(
+                serialiseJsonFinishRequest, emscriptenService(this.module)
+            )
+        )(request);
     }
+}
 
-    private handleRawProcess(request: ProcessRequest): Pointer {
+function emscriptenService(emscripten: EmscriptenModule)
+: ServiceFunc<string, string> {
+    return (request: string): Promise<string> => {
+
+        const doRequest = emscripten.cwrap(
+            "vampipeRequestJson",
+            "number",
+            ["number"]
+        ) as (ptr: number) => number;
+
+        const requestJson: Pointer = emscripten.allocate(
+            emscripten.intArrayFromString(request), "i8",
+            Allocator.ALLOC_NORMAL);
+
+        const responseJson: Pointer = doRequest(requestJson);
+        emscripten._free(requestJson);
+
+        const jsonString: string = emscripten.Pointer_stringify(responseJson);
+        freeJson(emscripten, responseJson);
+        return Promise.resolve(jsonString);
+    }
+}
+
+const emscriptenProcess
+    : (emscripten: EmscriptenModule) => ServiceFunc<ProcessRequest, string>
+    = (emscripten: EmscriptenModule) =>
+    (request: ProcessRequest): Promise<string> => {
+
+        const doProcess = emscripten.cwrap(
+            "vampipeProcessRaw",
+            "number",
+            ["number", "number", "number", "number"]
+        ) as (handle: number, bufs: number, sec: number, nsec: number) => number;
+
         const nChannels: number = request.processInput.inputBuffers.length;
         const nFrames: number = request.processInput.inputBuffers[0].length;
-
-        const buffersPtr: Pointer = this.emscripten._malloc(nChannels * 4);
+        const buffersPtr: Pointer = emscripten._malloc(nChannels * 4);
         const buffers: Uint32Array = new Uint32Array(
-            this.emscripten.HEAPU8.buffer, buffersPtr, nChannels);
+            emscripten.HEAPU8.buffer, buffersPtr, nChannels);
 
         for (let i = 0; i < nChannels; ++i) {
-            const framesPtr: Pointer = this.emscripten._malloc(nFrames * 4);
+            const framesPtr: Pointer = emscripten._malloc(nFrames * 4);
             const frames: Float32Array = new Float32Array(
-                this.emscripten.HEAPU8.buffer, framesPtr, nFrames);
+                emscripten.HEAPU8.buffer, framesPtr, nFrames);
             frames.set(request.processInput.inputBuffers[i]);
             buffers[i] = framesPtr;
         }
 
-        const responseJson: Pointer = this.doProcess(
+        const responseJson: Pointer = doProcess(
             request.handle,
             buffersPtr,
             request.processInput.timestamp.s,
-            request.processInput.timestamp.n);
+            request.processInput.timestamp.n
+        );
 
         for (let i = 0; i < nChannels; ++i) {
-            this.emscripten._free(buffers[i]);
+            emscripten._free(buffers[i]);
         }
-        this.emscripten._free(buffersPtr);
 
-        return responseJson;
-    }
-}
+        emscripten._free(buffersPtr);
+
+        const jsonString: string = emscripten.Pointer_stringify(responseJson);
+        freeJson(emscripten, responseJson);
+        return Promise.resolve(jsonString);
+    };
