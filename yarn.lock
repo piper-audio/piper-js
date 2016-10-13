@@ -614,8 +614,8 @@ babelify@^7.3.0:
     object-assign "^4.0.0"
 
 babylon@^6.11.0:
-  version "6.11.4"
-  resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.11.4.tgz#75e1f52187efa0cde5a541a7f7fdda38f6eb5bd2"
+  version "6.11.6"
+  resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.11.6.tgz#56dc52e624882841c7fe095257fbcb4a5bb61ae1"
 
 balanced-match@^0.4.1:
   version "0.4.2"
@@ -1271,8 +1271,8 @@ fancy-log@^1.1.0:
     time-stamp "^1.0.0"
 
 "feats@bitbucket:ltdsp/feats":
-  version "0.0.1"
-  resolved "https://bitbucket.org/ltdsp/feats/get/557b754ae610bedacb2d5ad2153a758393a01ef7.tar.gz"
+  version "0.1.1"
+  resolved "https://bitbucket.org/ltdsp/feats/get/efab95edf303ed5f6fef44effcd593018cf6d1ba.tar.gz"
   dependencies:
     babel-plugin-transform-runtime "^6.15.0"
     babel-preset-es2015 "^6.14.0"
@@ -1315,8 +1315,8 @@ find-versions@^1.0.0:
     semver-regex "^1.0.0"
 
 findup-sync@^0.4.2:
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/findup-sync/-/findup-sync-0.4.2.tgz#a8117d0f73124f5a4546839579fe52d7129fb5e5"
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/findup-sync/-/findup-sync-0.4.3.tgz#40043929e7bc60adf0b7f4827c4c6e75a0deca12"
   dependencies:
     detect-file "^0.1.0"
     is-glob "^2.0.1"
@@ -1752,8 +1752,8 @@ indexof@0.0.1:
   resolved "https://registry.yarnpkg.com/indexof/-/indexof-0.0.1.tgz#82dc336d232b9062179d05ab3293a66059fd435d"
 
 inflight@^1.0.4:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/inflight/-/inflight-1.0.5.tgz#db3204cd5a9de2e6cd890b85c6e2f66bcf4f620a"
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/inflight/-/inflight-1.0.6.tgz#49bd6331d7d02d0c09bc910a1075ba8165b56df9"
   dependencies:
     once "^1.3.0"
     wrappy "1"

@@ -1,8 +1,8 @@
 /**
  * Created by lucast on 30/08/2016.
  */
-import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from "feats/dist/ts/FeatureExtractor";
-import {FeatureSet} from "feats/dist/ts/Feature";
+import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from "feats/FeatureExtractor";
+import {FeatureSet} from "feats/Feature";
 
 // Types used in the application
 

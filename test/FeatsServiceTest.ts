@@ -9,7 +9,7 @@ import {
     ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service
 } from "../src/Piper";
 import {PluginFactory, FeatureExtractorFactory, FeatsService} from "../src/FeatsService";
-import {StaticData, Configuration, AdapterFlags} from "feats/dist/ts/FeatureExtractor";
+import {StaticData, Configuration, AdapterFlags} from "feats/FeatureExtractor";
 import {FeatureExtractorStub, MetaDataStub} from "./fixtures/FeatureExtractorStub";
 chai.should();
 chai.use(chaiAsPromised);

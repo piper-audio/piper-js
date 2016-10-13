@@ -2,7 +2,7 @@
  * Created by lucast on 04/10/2016.
  */
 import * as base64 from "base64-js";
-import {Timestamp} from "feats/dist/ts/Timestamp";
+import {Timestamp} from "feats/Timestamp";
 import {
     ExtractorHandle,
     ProcessRequest,
@@ -22,7 +22,7 @@ import {
     Feature,
     FeatureList,
     FeatureSet
-} from "feats/dist/ts/Feature";
+} from "feats/Feature";
 import {
     AdapterFlags,
     InputDomain,
@@ -31,7 +31,7 @@ import {
     ParameterDescriptor,
     ValueExtents,
     Configuration, StaticData, ProcessInput
-} from "feats/dist/ts/FeatureExtractor";
+} from "feats/FeatureExtractor";
 
 export const serialiseJsonListRequest
     : Filter<ListRequest, string, string, string>
