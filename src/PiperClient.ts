@@ -7,8 +7,8 @@
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
-import {FeatureSet} from "./Feature";
-import {Timestamp} from "./Timestamp";
+import {FeatureSet} from "feats/dist/ts/Feature";
+import {Timestamp} from "feats/dist/ts/Timestamp";
 import {
     ExtractorHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
     LoadResponse, ProcessRequest, FinishRequest, ProcessResponse, FinishResponse, ListRequest, Service

@@ -3,12 +3,12 @@
  */
 import {
     FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData, InputDomain
-} from "./FeatureExtractor";
-import {FeatureSet} from "./Feature";
+} from "feats/dist/ts/FeatureExtractor";
 import {
     Service, LoadRequest, LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest,
     ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle, ListRequest
 } from "./Piper";
+import {FeatureSet} from "feats/dist/ts/Feature";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 

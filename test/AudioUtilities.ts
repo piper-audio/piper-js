@@ -2,9 +2,9 @@
 /**
  * Created by lucas on 02/09/2016.
  */
-import {Timestamp, frame2timestamp} from "../src/Timestamp";
-import {FeatureList, FeatureSet} from "../src/Feature";
-import {ProcessInput} from "../src/FeatureExtractor";
+import {Timestamp, frame2timestamp} from "feats/dist/ts/Timestamp";
+import {FeatureList, FeatureSet} from "feats/dist/ts/Feature";
+import {ProcessInput} from "feats/dist/ts/FeatureExtractor";
 
 export interface AudioBuffer {
     sampleRate: number,

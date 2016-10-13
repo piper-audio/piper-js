@@ -4,7 +4,7 @@ import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 import {EmscriptenProxy} from "../src/EmscriptenProxy";
 import VampTestPlugin = require('../ext/VampTestPlugin');
-import {AdapterFlags} from "../src/FeatureExtractor";
+import {AdapterFlags} from "feats/dist/ts/FeatureExtractor";
 import {LoadResponse, LoadRequest} from "../src/Piper";
 
 chai.should();

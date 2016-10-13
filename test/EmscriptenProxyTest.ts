@@ -5,13 +5,13 @@
 
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
-import {FeatureSet, FeatureList} from "../src/Feature";
-import {Timestamp} from "../src/Timestamp";
+import {FeatureSet, FeatureList} from "feats/dist/ts/Feature";
+import {Timestamp} from "feats/dist/ts/Timestamp";
 import {batchProcess} from "./AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenProxy} from "../src/EmscriptenProxy";
 import fs = require("fs");
-import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "../src/FeatureExtractor";
+import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "feats/dist/ts/FeatureExtractor";
 import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
 import {PiperClient} from "../src/PiperClient";
 
