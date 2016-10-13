@@ -17,7 +17,7 @@ import {
 } from "./JsonProtocol";
 
 const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
-    "vampipeFreeJson",
+    "piperFreeJson",
     "void",
     ["number"],
     [ptr]
@@ -76,7 +76,7 @@ function emscriptenService(emscripten: EmscriptenModule)
     return (request: string): Promise<string> => {
 
         const doRequest = emscripten.cwrap(
-            "vampipeRequestJson",
+            "piperRequestJson",
             "number",
             ["number"]
         ) as (ptr: number) => number;
@@ -100,7 +100,7 @@ const emscriptenProcess
     (request: ProcessRequest): Promise<string> => {
 
         const doProcess = emscripten.cwrap(
-            "vampipeProcessRaw",
+            "piperProcessRaw",
             "number",
             ["number", "number", "number", "number"]
         ) as (handle: number, bufs: number, sec: number, nsec: number) => number;
