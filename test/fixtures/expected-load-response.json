@@ -5,7 +5,7 @@
     "parameterValues": {},
     "stepSize": 0
   },
-  "pluginHandle": 1,
+  "handle": 1,
   "staticData": {
     "basic": {
       "description": "Detect and count zero crossing points",
@@ -31,8 +31,8 @@
     "maxChannelCount": 1,
     "minChannelCount": 1,
     "parameters": [],
-    "pluginKey": "vamp-example-plugins:zerocrossing",
-    "pluginVersion": 2,
+    "key": "vamp-example-plugins:zerocrossing",
+    "version": 2,
     "programs": []
   }
 }

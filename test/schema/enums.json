@@ -1,0 +1,20 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/enums#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for common feature extractor enum types",
+    "definitions": {
+	"input_domain": {
+	    "type": "string",
+	    "enum": [ "TimeDomain", "FrequencyDomain" ]
+	},
+	"sample_type": {
+	    "type": "string",
+	    "enum": [ "OneSamplePerStep", "FixedSampleRate", "VariableSampleRate" ]
+	},
+	"adapter_flags": {
+	    "type": "string",
+	    "enum": [ "AdaptNone", "AdaptInputDomain", "AdaptChannelCount",
+		      "AdaptBufferSize", "AdaptAllSafe", "AdaptAll" ]
+	}
+    }
+}

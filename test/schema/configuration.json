@@ -1,0 +1,32 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/pluginconfiguration#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a bundle of configuration data capturing the setup of a feature extractor",
+    "type": "object",
+    "properties": {
+	"parameterValues": {
+	    "type": "object",
+	    "patternProperties": {
+		"^[a-zA-Z0-9_-]+$": {
+		    "type": "number"
+		}
+	    },
+	    "additionalProperties": false
+	},
+	"currentProgram": {
+	    "type": "string"
+	},
+	"channelCount": {
+	    "type": "integer"
+	},
+	"stepSize": {
+	    "type": "integer"
+	},
+	"blockSize": {
+	    "type": "integer"
+	}
+    },
+    "required": [ "channelCount", "stepSize", "blockSize" ],
+    "additionalProperties": false
+}
+

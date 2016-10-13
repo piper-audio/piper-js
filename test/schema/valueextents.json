@@ -1,0 +1,13 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/valueextents#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a structure giving the extents of a value range",
+    "type": "object",
+    "properties": {
+	"min": { "type": "number" },
+	"max": { "type": "number" }
+    },
+    "required": [ "min", "max" ],
+    "additionalProperties": false
+}
+

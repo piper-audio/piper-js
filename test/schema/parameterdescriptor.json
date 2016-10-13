@@ -1,0 +1,30 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/parameterdescriptor#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a metadata about an adjustable parameter of a feature extractor",
+    "type": "object",
+    "properties": {
+	"basic": {
+	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
+	},
+	"unit": {
+	    "type": "string"
+	},
+	"extents": {
+	    "$ref": "http://vamp-plugins.org/json/schema/valueextents#"
+	},
+	"defaultValue": {
+	    "type": "number"
+	},
+	"quantizeStep": {
+	    "type": "number"
+	},
+	"valueNames": {
+	    "type": "array",
+	    "items": { "type": "string" }
+	}
+    },
+    "required": [ "basic", "extents", "defaultValue" ],
+    "additionalProperties": false
+}
+

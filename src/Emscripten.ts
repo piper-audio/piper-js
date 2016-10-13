@@ -3,6 +3,7 @@
  */
 export interface EmscriptenModule {
     cwrap(ident: string, returnType: string, argTypes: string[]): Function;
+    ccall(ident: string, returnType: string, argTypes: string[], args: any[]): any;
     intArrayFromString(stringy: string): number[];
     _malloc(sz: number): number;
     _free(ptr: number): void;

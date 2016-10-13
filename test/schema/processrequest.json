@@ -1,0 +1,17 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/processrequest#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for a request to process a chunk of data using a feature extractor; may be served in the params field of a process-method rpcrequest",
+    "type": "object",
+    "properties": {
+	"handle": {
+	    "type": "number"
+	},
+	"processInput": {
+	    "$ref": "http://vamp-plugins.org/json/schema/processinput#"
+	}
+    },
+    "required": [ "handle", "processInput" ],
+    "additionalProperties": false
+}
+

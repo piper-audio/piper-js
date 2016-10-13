@@ -1,0 +1,33 @@
+{
+  "handle": 1,
+  "outputList": [
+    {
+      "basic": {
+        "description": "The sum of the samples in the input block",
+        "identifier": "sum",
+        "name": "Sum"
+      },
+      "configured": {
+        "binCount": 1,
+        "binNames": [],
+        "hasDuration": false,
+        "sampleRate": 0,
+        "sampleType": 0
+      }
+    },
+    {
+      "basic": {
+        "description": "The cumulative sum over all input blocks",
+        "identifier": "cumsum",
+        "name": "Cumulative Sum"
+      },
+      "configured": {
+        "binCount": 1,
+        "binNames": [],
+        "hasDuration": false,
+        "sampleRate": 0,
+        "sampleType": 0
+      }
+    }
+  ]
+}

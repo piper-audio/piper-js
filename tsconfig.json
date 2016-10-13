@@ -3,12 +3,16 @@
     "target": "es6",
     "sourceMap": true,
     "noImplicitAny": true,
-    "outDir": "dist/ts"
+    "outDir": "dist/ts",
+    "module": "commonjs",
+    "declaration": true
   },
   "exclude": [
     "node_modules",
     "dist",
     "ext",
-    "test"
+    "test",
+    "plugins",
+    "perf"
   ]
 }

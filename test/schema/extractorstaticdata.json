@@ -1,0 +1,53 @@
+{
+    "id": "http://vamp-plugins.org/json/schema/pluginstaticdata#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for the static metadata associated with a feature extractor",
+    "type": "object",
+    "properties": {
+	"key": {
+	    "type": "string"
+	},
+	"basic": {
+	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
+	},
+	"maker": {
+	    "type": "string"
+	},
+	"copyright": {
+	    "type": "string"
+	},
+	"version": {
+	    "type": "integer"
+	},
+	"category": {
+	    "type": "array",
+	    "items": { "type": "string" }
+	},
+	"minChannelCount": {
+	    "type": "integer"
+	},
+	"maxChannelCount": {
+	    "type": "integer"
+	},
+	"parameters": {
+	    "type": "array",
+	    "items": { "$ref": "http://vamp-plugins.org/json/schema/parameterdescriptor#" }
+	},
+	"programs": {
+	    "type": "array",
+	    "items": { "type": "string" }
+	},
+	"inputDomain": {
+	    "$ref": "http://vamp-plugins.org/json/schema/enums#/definitions/input_domain"
+	},
+	"basicOutputInfo": {
+	    "type": "array",
+	    "items": { "$ref": "http://vamp-plugins.org/json/schema/basic#" }
+	}
+    },
+    "required": [ "key", "basic", "version",
+		  "minChannelCount", "maxChannelCount",
+		  "inputDomain", "basicOutputInfo" ],
+    "additionalProperties": false
+}
+
