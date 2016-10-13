@@ -358,7 +358,6 @@ function toWireConfigurationResponse(response: ConfigurationResponse): WireConfi
     });
 }
 
-// TODO dup, all to do with flipping the enum
 function toConfigurationResponse(response: WireConfigurationResponse): ConfigurationResponse {
     return Object.assign({}, response, {
         outputList: response.outputList.map(output => Object.assign({}, output, {
