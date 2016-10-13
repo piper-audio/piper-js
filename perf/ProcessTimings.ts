@@ -1,34 +1,20 @@
 /* -*- indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
-
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-
-import {FeatsModuleClient} from "PiperClient.ts";
-
-import {
-    LoadRequest, LoadResponse,
-    ConfigurationRequest, ConfigurationResponse,
-    ProcessRequest
-} from "Piper.ts";
-
-import {
-    AdapterFlags, StaticData, Configuration, ProcessInput
-} from "../src/FeatureExtractor";
-
-import {Feature} from "../src/Feature";
-import {Timestamp,frame2timestamp} from "../src/Timestamp";
+import {AdapterFlags, ProcessInput} from "feats/FeatureExtractor";
+import {frame2timestamp} from "feats/Timestamp";
 import {batchProcess} from "../test/AudioUtilities";
-
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
-import {EmscriptenModuleRequestHandler} from "EmscriptenProxy.ts";
+import {EmscriptenProxy} from "../src/EmscriptenProxy";
+import {PiperClient} from "../src/PiperClient";
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe('ProcessTimings', () => {
 
-    const server = new FeatsModuleClient(
-        new EmscriptenModuleRequestHandler(VampExamplePlugins()));
+    const server = new PiperClient(
+        new EmscriptenProxy(VampExamplePlugins()));
 
     const iterations = 1000;
     
@@ -76,10 +62,10 @@ describe('ProcessTimings', () => {
                     b => server.process({
                         handle : phandle,
                         processInput : b
-                    }),
+                    }).then(response => response.features),
                     () => server.finish({
                         handle : phandle
-                    }));
+                    }).then(response => response.features));
                 results.then(features => {
                     let sum = features.get(outputId).reduce(
                         (acc, f) => {
