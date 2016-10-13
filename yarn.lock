@@ -1270,9 +1270,9 @@ fancy-log@^1.1.0:
     chalk "^1.1.1"
     time-stamp "^1.0.0"
 
-"feats@bitbucket:ltdsp/feats#dev-remove-piper":
+"feats@bitbucket:ltdsp/feats":
   version "0.0.1"
-  resolved "https://bitbucket.org/ltdsp/feats/get/3934ce5003c34cfa40ef4d725c4a661d5754e387.tar.gz"
+  resolved "https://bitbucket.org/ltdsp/feats/get/557b754ae610bedacb2d5ad2153a758393a01ef7.tar.gz"
   dependencies:
     babel-plugin-transform-runtime "^6.15.0"
     babel-preset-es2015 "^6.14.0"
