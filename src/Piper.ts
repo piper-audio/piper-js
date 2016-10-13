@@ -4,22 +4,6 @@
 import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
-export interface RpcRequest {
-    method: string;
-    params?: any; // TODO create a more meaningful type for this
-}
-
-export interface ResponseError {
-    code: number;
-    message: string;
-}
-
-export interface RpcResponse {
-    method: string;
-    result?: any; // TODO create a more meaningful type for this
-    error?: ResponseError;
-}
-
 // Types used in the application
 
 export type ExtractorHandle = number;

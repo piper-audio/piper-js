@@ -15,7 +15,8 @@ import {
     FinishRequest,
     FinishResponse,
     ListRequest,
-    RpcResponse, Filter, ServiceFunc
+    Filter,
+    ServiceFunc
 } from "./Piper";
 import {
     Feature,
@@ -267,6 +268,17 @@ type WireOutputList = WireOutputDescriptor[];
 
 function toTransport(obj: any): string {
     return JSON.stringify(obj);
+}
+
+interface ResponseError {
+    code: number;
+    message: string;
+}
+
+interface RpcResponse {
+    method: string;
+    result?: any;
+    error?: ResponseError;
 }
 
 function fromTransport(buffer: string): any {
