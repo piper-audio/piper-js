@@ -7,9 +7,8 @@ chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
 import {ProcessInput} from "../src/FeatureExtractor";
-import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment} from "../src/AudioUtilities";
+import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment, AudioBufferStub} from "./AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
-import {FeatsAudioBuffer} from "../src/AudioBuffer";
 import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
 
 describe("BatchBlockProcess", () => {
@@ -74,7 +73,7 @@ describe("BatchBlockProcess", () => {
     });
 
     it("can consume blocks from a generator", () => {
-        const audioData: AudioBuffer = FeatsAudioBuffer.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
+        const audioData: AudioBuffer = AudioBufferStub.fromExistingFloat32Arrays([generateSineWave(440.0, 10.0, 8000.0, 0.5)], 8000.0);
         const frames: IterableIterator<ProcessInput> = segmentAudioBuffer(256, 64, audioData);
         const extractor: FeatureExtractor = new FeatureExtractorStub();
         const featureSet: Promise<FeatureSet> = batchProcess(

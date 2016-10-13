@@ -17,7 +17,7 @@ import {
 
 import {Feature} from "../src/Feature";
 import {Timestamp,frame2timestamp} from "../src/Timestamp";
-import {batchProcess} from "../src/AudioUtilities";
+import {batchProcess} from "../test/AudioUtilities";
 
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenModuleRequestHandler} from "EmscriptenProxy.ts";

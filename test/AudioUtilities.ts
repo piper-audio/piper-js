@@ -2,9 +2,53 @@
 /**
  * Created by lucas on 02/09/2016.
  */
-import {Timestamp, frame2timestamp} from "./Timestamp";
-import {FeatureList, FeatureSet} from "./Feature";
-import {ProcessInput} from "./FeatureExtractor";
+import {Timestamp, frame2timestamp} from "../src/Timestamp";
+import {FeatureList, FeatureSet} from "../src/Feature";
+import {ProcessInput} from "../src/FeatureExtractor";
+
+export interface AudioBuffer {
+    sampleRate: number,
+    length: number,
+    duration: number,
+    numberOfChannels: number,
+    getChannelData(channel: number): Float32Array,
+    copyFromChannel(destination: Float32Array, channelNumber: number, startInChannel?: number): void;
+    copyToChannel(source:Float32Array, channelNumber: number, startInChannel?: number): void;
+}
+
+export class AudioBufferStub implements AudioBuffer {
+    sampleRate: number;
+    length: number;
+    duration: number;
+    numberOfChannels: number;
+
+    private channelData: Float32Array[];
+
+    constructor(numOfChannels: number, length: number, sampleRate: number) {
+        this.numberOfChannels = numOfChannels;
+        this.length = length;
+        this.sampleRate = sampleRate;
+        this.duration = sampleRate * this.length;
+    }
+
+    static fromExistingFloat32Arrays(channelData: Float32Array[], sampleRate: number) {
+        const buffer = new AudioBufferStub(channelData.length, channelData[0].length, sampleRate);
+        buffer.channelData = channelData;
+        return buffer;
+    }
+
+    getChannelData(channel: number): Float32Array {
+        return this.channelData[channel]; // TODO bound checking
+    }
+
+    copyFromChannel(destination: Float32Array, channelNumber: number, startInChannel?: number): void {
+        destination.set(this.channelData[channelNumber]); // TODO startInChannel offset and bound checking (channel and length)
+    }
+
+    copyToChannel(source: Float32Array, channelNumber: number, startInChannel?: number): void {
+        this.channelData[channelNumber].set(source); // TODO startInChannel offset and bound checking (channel and length)
+    }
+}
 
 export function batchProcess(blocks: Iterable<ProcessInput>,
                              process: (block: ProcessInput) => Promise<FeatureSet>,
