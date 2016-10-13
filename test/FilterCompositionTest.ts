@@ -14,17 +14,9 @@ import {EmscriptenProxy} from "../src/EmscriptenProxy";
 import VampTestPluginModule = require("../ext/VampTestPlugin");
 import {EmscriptenModule} from "../src/Emscripten";
 import {AdapterFlags} from "../src/FeatureExtractor";
-
-type EmscriptenRawCall = (handle: number, bufs: number, sec: number, nsec: number) => number;
-
-interface EmscriptenRawRequest {
-    handle: number;
-    bufs: number;
-    sec: number;
-    nsec: number;
-}
-
-type EmscriptenRawResponse = string;
+import {
+    deserialiseProcessResponse
+} from "../src/JsonProtocol";
 
 export type ServiceFunc<Request, Response> = (req: Request) => Promise<Response>;
 export type ListService = ServiceFunc<ListRequest, ListResponse>;
@@ -38,7 +30,7 @@ export type Filter<ReqIn, RepOut, ReqOut, RepIn>
 
 export type SimpleFilter<Req, Res> = Filter<Req, Res, Req, Res>;
 
-function TimeoutFilter<Req, Res>(timeout: number): SimpleFilter<Req, Res> {
+function timeout<Req, Res>(timeout: number): SimpleFilter<Req, Res> {
     return (request: Req, service: ServiceFunc<Req, Res>): Promise<Res> => {
         return Promise.race([
             new Promise((resolve, reject) => { setTimeout(reject, timeout, "Timed out") }),
@@ -47,38 +39,33 @@ function TimeoutFilter<Req, Res>(timeout: number): SimpleFilter<Req, Res> {
     }
 }
 
-function DelayFilter<Req, Res>(delayMs: number): SimpleFilter<Req, Res> {
+function delay<Req, Res>(delayMs: number): SimpleFilter<Req, Res> {
     return (request: Req, service: ServiceFunc<Req, Res>): Promise<Res> => {
         return new Promise<Res>(resolve => setTimeout(resolve, delayMs, service(request)));
     }
 }
 
-// RawProcessFilter maps a Service[ProcessRequest, Process Response] to a Service[EmscriptenRawRequest, EmscriptenRawResponse]
-const RawProcessFilter: Filter<EmscriptenRawRequest, EmscriptenRawResponse, ProcessRequest, ProcessResponse>
-    = (request: EmscriptenRawRequest, service: ServiceFunc<ProcessRequest, ProcessResponse>): Promise<EmscriptenRawResponse> => {
-
-    return Promise.resolve(1);
-};
-
-// maps a Service[ProcessRequest, EmscriptenRawResponse] to a Service[ProcessRequest, Process Response]
-const EmscriptenProcessFilter: Filter<ProcessRequest, ProcessResponse, ProcessRequest, EmscriptenRawResponse>
-    = (request: ProcessRequest, service: ServiceFunc<ProcessRequest, EmscriptenRawResponse>): Promise<ProcessResponse> => {
-    return service(request).then((response: EmscriptenRawResponse) => {
-        return JSON.parse(response);
-    });
+const deserialiseJsonProcessResponse: Filter<ProcessRequest, ProcessResponse, ProcessRequest, string>
+    = (request: ProcessRequest, service: ServiceFunc<ProcessRequest, string>): Promise<ProcessResponse> => {
+    return service(request).then(deserialiseProcessResponse);
 };
 
 type Pointer = number;
 
-const EmscriptenProcessService: (emscripten: EmscriptenModule) => ServiceFunc<ProcessRequest, string>
+const emscriptenProcess: (emscripten: EmscriptenModule) => ServiceFunc<ProcessRequest, string>
     = (emscripten: EmscriptenModule) => (request: ProcessRequest): Promise<string> => {
 
-    const doProcess: EmscriptenRawCall = emscripten.cwrap(
+    const doProcess = emscripten.cwrap(
         "vampipeProcessRaw",
         "number",
         ["number", "number", "number", "number"]
-    ) as EmscriptenRawCall;
-    const freeJson = emscripten.cwrap("vampipeFreeJson", "void", ["number"]) as (ptr: number) => void;
+    ) as (handle: number, bufs: number, sec: number, nsec: number) => number;
+
+    const freeJson = emscripten.cwrap(
+        "vampipeFreeJson",
+        "void",
+        ["number"]
+    ) as (ptr: number) => void;
 
     const nChannels: number = request.processInput.inputBuffers.length;
     const nFrames: number = request.processInput.inputBuffers[0].length;
@@ -113,11 +100,11 @@ const EmscriptenProcessService: (emscripten: EmscriptenModule) => ServiceFunc<Pr
     return Promise.resolve(jsonString);
 };
 
-function FilteredSimpleService<Req, Rep>(filter: SimpleFilter<Req, Rep>, service: ServiceFunc<Req, Rep>): ServiceFunc<Req, Rep> {
+function composeSimple<Req, Rep>(filter: SimpleFilter<Req, Rep>, service: ServiceFunc<Req, Rep>): ServiceFunc<Req, Rep> {
     return (request: Req) => filter(request, service);
 }
 
-function FilteredService<ReqIn, RepOut, ReqOut, RepIn>(filter: Filter<ReqIn, RepOut, ReqOut, RepIn>, service: ServiceFunc<ReqOut, RepIn>)
+function compose<ReqIn, RepOut, ReqOut, RepIn>(filter: Filter<ReqIn, RepOut, ReqOut, RepIn>, service: ServiceFunc<ReqOut, RepIn>)
 : ServiceFunc<ReqIn, RepOut> {
     return (request: ReqIn) => filter(request, service);
 }
@@ -129,10 +116,10 @@ describe("Filter", () => {
         const list: ListService = (request) => client.list(request);
         const load: LoadService = (request) => client.load(request);
         const configure: ConfigurationService = (request) => client.configure(request);
-        const process: ProcessService = FilteredService(EmscriptenProcessFilter, EmscriptenProcessService(plugins));
+        const process: ProcessService = compose(deserialiseJsonProcessResponse, emscriptenProcess(plugins));
 
-        const longService: ListService = FilteredSimpleService(DelayFilter(10), list);
-        const timedOutService: ListService = FilteredSimpleService(TimeoutFilter(30), longService);
+        const longService: ListService = composeSimple(delay(10), list);
+        const timedOutService: ListService = composeSimple(timeout(30), longService);
 
         return list({})
             .then(available => {
