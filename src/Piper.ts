@@ -87,3 +87,8 @@ export function composeSimple<Req, Rep>
     return (request: Req) => filter(request, service);
 }
 
+// exports for library consumption
+export {EmscriptenProxy} from "./EmscriptenProxy";
+export * from "./JsonProtocol";
+export {FeatsService} from "./FeatsService";
+export {PiperClient} from "./PiperClient";
