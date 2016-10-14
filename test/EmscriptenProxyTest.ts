@@ -5,13 +5,13 @@
 
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
-import {FeatureSet, FeatureList} from "feats/dist/ts/Feature";
-import {Timestamp} from "feats/dist/ts/Timestamp";
+import {FeatureSet, FeatureList} from "feats/Feature";
+import {Timestamp} from "feats/Timestamp";
 import {batchProcess} from "./AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenProxy} from "../src/EmscriptenProxy";
 import fs = require("fs");
-import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "feats/dist/ts/FeatureExtractor";
+import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "feats/FeatureExtractor";
 import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
 import {PiperClient} from "../src/PiperClient";
 
@@ -22,11 +22,11 @@ describe("EmscriptenProxyTest", () => {
     const client: Service = new PiperClient(new EmscriptenProxy(VampExamplePlugins()));
 
     const loadFixture = (name : string) => {
-	// avoid sharing things through use of require
-	return JSON.parse( 
-	    fs.readFileSync(
-		__dirname + "/fixtures/" + name + ".json",
-		"utf8"));
+        // avoid sharing things through use of require
+        return JSON.parse(
+            fs.readFileSync(
+                __dirname + "/fixtures/" + name + ".json",
+                "utf8"));
     };
 
     it("Can list available plugins in the module", () => {
@@ -67,8 +67,8 @@ describe("EmscriptenProxyTest", () => {
     };
 
     it("Can configure a loaded plugin", () => {
-    const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
-	let expectedResponse = loadFixture("expected-configuration-response");
+        const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
+        let expectedResponse = loadFixture("expected-configuration-response");
         expectedResponse.outputList.forEach((output: any) => output.configured.sampleType = SampleType[output.configured.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });

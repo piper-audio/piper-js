@@ -2,9 +2,9 @@
  * Created by lucast on 08/09/2016.
  */
 import chai = require("chai");
-import {OutputDescriptor, SampleType} from "feats/dist/ts/FeatureExtractor";
-import {Timestamp} from "feats/dist/ts/Timestamp";
-import {Feature} from "feats/dist/ts/Feature";
+import {OutputDescriptor, SampleType} from "feats/FeatureExtractor";
+import {Timestamp} from "feats/Timestamp";
+import {Feature} from "feats/Feature";
 import {
     FeatureTimeAdjuster, VariableSampleRateFeatureTimeAdjuster,
     FixedSampleRateFeatureTimeAdjuster, OneSamplePerStepFeatureTimeAdjuster
