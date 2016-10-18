@@ -11,6 +11,11 @@ import {
 import {PluginFactory, FeatureExtractorFactory, FeatsService} from "../src/FeatsService";
 import {StaticData, Configuration, AdapterFlags} from "feats/FeatureExtractor";
 import {FeatureExtractorStub, MetaDataStub} from "./fixtures/FeatureExtractorStub";
+import {
+    FrequencyDomainExtractorStub,
+    FrequencyMetaDataStub
+} from "./fixtures/FrequencyDomainExtractorStub";
+import {FeatureSet} from "feats/Feature";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -19,12 +24,16 @@ describe("FeatsService", () => {
     const factory: FeatureExtractorFactory = sr => new FeatureExtractorStub();
     const plugins: PluginFactory[] = [];
     plugins.push({extractor: factory, metadata: metadata});
+    plugins.push({
+        extractor: sr => new FrequencyDomainExtractorStub(),
+            metadata: FrequencyMetaDataStub
+    });
 
     describe("List request handling", () => {
         it("Resolves to a response whose content body is {available: StaticData[]}", () => {
             const service: FeatsService = new FeatsService(...plugins);
             return service.list({}).then(response => {
-                response.should.eql({available: [metadata]});
+                response.should.eql({available: [metadata, FrequencyMetaDataStub]});
             });
         });
     });
@@ -94,19 +103,21 @@ describe("FeatsService", () => {
 
     describe("Process and Finish request handling", () => {
         const service: FeatsService = new FeatsService(...plugins);
-        const configResponse: Promise<ConfigurationResponse> = service.load({
-            key: "stub:sum",
-            inputSampleRate: 16,
-            adapterFlags: [AdapterFlags.AdaptAllSafe]
-        }).then(loadResponse => {
-            return service.configure({
+        const config: (key: string) => Promise<ConfigurationResponse> = (key) => {
+            return service.load({
+                key: key,
+                inputSampleRate: 16,
+                adapterFlags: [AdapterFlags.AdaptAllSafe]
+            }).then(loadResponse => {
+                return service.configure({
                     handle: loadResponse.handle,
                     configuration: {blockSize: 8, channelCount: 1, stepSize: 8}
                 })
-        });
+            });
+        };
 
         it("Rejects when the wrong number of channels are supplied", () => {
-            return configResponse.then(response => {
+            return config("stub:sum").then(response => {
                 const request: ProcessRequest = {
                     handle: response.handle,
                     processInput: {
@@ -131,32 +142,39 @@ describe("FeatsService", () => {
 
 
         it("Resolves to a response whose content body contains the extracted features", () => {
-            const expected: ProcessResponse = {
-                handle: 1,
-                features: new Map([
+            const expected: Map<string, FeatureSet> = new Map([
+                ["stub:sum", new Map([
                     ["sum", [{featureValues: new Float32Array([8])}]],
                     ["cumsum", [{featureValues: new Float32Array([8])}]]
-                ])
-            };
-            const processResponse: Promise<ProcessResponse> = configResponse.then(response => {
-                return service.process({
-                    handle: response.handle,
-                    processInput: {
-                        timestamp: {s:0, n: 0},
-                        inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
-                    }
+                ])],
+                ["stub-freq:spectrum", new Map([
+                    ["spectrum", [{featureValues: new Float32Array([64, 0, 0, 0, 0])}]]
+                ])]
+            ]);
+
+            const responses: Promise<ProcessResponse>[] = [...expected.keys()].map(key =>
+                config(key).then(response => {
+                    return service.process({
+                        handle: response.handle,
+                        processInput: {
+                            timestamp: {s:0, n: 0},
+                            inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
+                        }
+                    });
+                }));
+
+            return Promise.all(responses).then(responses => {
+                const expected: any = [...expected.values()];
+                responses.forEach((response, i) => {
+                    [...response.features.keys()].should.eql([...expected[i].keys()]);
+                    [...response.features.values()].should.eql([...expected[i].values()]);
                 });
-            });
-            return processResponse.then(response => {
-                response.handle.should.eql(expected.handle);
-                [...response.features.keys()].should.eql([...expected.features.keys()]);
-                [...response.features.values()].should.eql([...expected.features.values()]);
             });
         });
 
         it("Finish - Returns the remaining features and clears up the plugin", () => {
             const expected: any = {features: {}, handle: 1};
-            return configResponse
+            return config("stub:sum")
                 .then(response => service.finish({handle: response.handle}))
                 .then(response => {
                     if (!response.should.eql(expected)) {

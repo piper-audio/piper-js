@@ -9,6 +9,8 @@ import {
     ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle, ListRequest
 } from "./Piper";
 import {FeatureSet} from "feats/Feature";
+import {RealFft, KissRealFft} from "../ext/fft/FFT";
+import {ProcessInput} from "feats";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 
@@ -20,6 +22,34 @@ export interface PluginFactory { // TODO rename, this is part of our identity cr
 export interface Plugin {
     extractor: FeatureExtractor;
     metadata: StaticData;
+}
+
+class FrequencyDomainAdapter implements FeatureExtractor {
+    private wrapped: FeatureExtractor;
+    private fft: RealFft;
+
+    constructor(extractor: FeatureExtractor, ) {
+        this.wrapped = extractor;
+    }
+
+    configure(configuration: Configuration): ConfiguredOutputs {
+        this.fft = new KissRealFft(configuration.blockSize); // TODO verify power of 2? And use a factory
+        return this.wrapped.configure(configuration);
+    }
+
+    getDefaultConfiguration(): Configuration {
+        return this.wrapped.getDefaultConfiguration();
+    }
+
+    process(block: ProcessInput): FeatureSet {
+        block.inputBuffers = [this.fft.forward(block.inputBuffers[0])]; // TODO channels need to be adapted somewhere
+        return this.wrapped.process(block);
+    }
+
+    finish(): FeatureSet {
+        (this.fft as KissRealFft).dispose(); // TODO this is too implementation specific, but does dispose make sense as part of the interface?
+        return this.wrapped.finish();
+    }
 }
 
 export class FeatsService implements Service {
@@ -48,8 +78,11 @@ export class FeatsService implements Service {
         if (!this.factories.has(request.key)) return Promise.reject("Invalid plugin key.");
 
         const factory: PluginFactory = this.factories.get(request.key);
-        const extractor: FeatureExtractor = factory.extractor(request.inputSampleRate);
         const metadata: StaticData = factory.metadata;
+        const extractor: FeatureExtractor =
+            metadata.inputDomain === InputDomain.FrequencyDomain
+                ? new FrequencyDomainAdapter(factory.extractor(request.inputSampleRate))
+                : factory.extractor(request.inputSampleRate);
         this.loaded.set(++this.countingHandle, {extractor: extractor, metadata: metadata}); // TODO should the first assigned handle be 1 or 0? currently 1
 
         const defaultConfiguration: Configuration = extractor.getDefaultConfiguration();

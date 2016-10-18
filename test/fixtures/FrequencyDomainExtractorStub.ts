@@ -5,7 +5,7 @@ import {
 import {FeatureSet} from "feats/Feature";
 
 export class FrequencyDomainExtractorStub implements FeatureExtractor {
-    private binCount;
+    private binCount: number;
 
     constructor() {
         this.binCount = 0;
@@ -34,7 +34,7 @@ export class FrequencyDomainExtractorStub implements FeatureExtractor {
         for (let i = 0; i < this.binCount; ++i) {
             const real: number = complex[i * 2];
             const imaginary: number = complex[i * 2 + 1];
-            magnitude.set(i, real * real + imaginary * imaginary);
+            magnitude[i] = real * real + imaginary * imaginary;
         }
         return new Map([
             ["spectrum", [{featureValues: magnitude}]]
@@ -46,7 +46,7 @@ export class FrequencyDomainExtractorStub implements FeatureExtractor {
     }
 }
 
-export const MetaDataStub: StaticData = {
+export const FrequencyMetaDataStub: StaticData = {
     basic: {
         description: "A stub, return power spectrum.",
         identifier: "stub-freq",
