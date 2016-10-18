@@ -1,6 +1,6 @@
 {
   "name": "piper",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Piper is a protocol for driving audio feature extractors. This library provides ways of implementing clients and servers in JavaScript for the Piper protocol.",
   "main": "dist/ts/Piper.js",
   "typings": "dist/ts/Piper.d.ts",
@@ -8,7 +8,7 @@
     "test": "mocha test/*Test.ts --require ts-node/register",
     "timings": "mocha perf/*.ts --require ts-node/register",
     "profile": "npm run timings && node --prof-process $(ls -1tr isolate*.log | tail -1) > profile.txt",
-    "build-browser": "tsc && browserify dist/ts/piper.js  -t babelify --standalone Piper -o ./dist/piper.js",
+    "build-browser": "tsc && browserify dist/ts/Piper.js  -t babelify --standalone Piper -o ./dist/piper.js",
     "build": "tsc",
     "prepublish": "npm run build-browser",
     "postinstall": "npm run build-browser"
@@ -37,13 +37,13 @@
     "babelify": "^7.3.0",
     "base64-js": "^1.2.0",
     "browserify": "^13.1.0",
+    "feats": "bitbucket:ltdsp/feats",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
     "gulp-insert": "^0.5.0",
     "typescript": "^2.0.3",
     "vinyl-source-stream": "^1.1.0",
-    "yargs": "^5.0.0",
-    "feats": "bitbucket:ltdsp/feats"
+    "yargs": "^5.0.0"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
