@@ -173,13 +173,14 @@ describe("FeatsService", () => {
         });
 
         it("Finish - Returns the remaining features and clears up the plugin", () => {
-            const expected: any = {features: {}, handle: 1};
             return config("stub:sum")
                 .then(response => service.finish({handle: response.handle}))
                 .then(response => {
-                    if (!response.should.eql(expected)) {
+                    // feature set should be empty
+                    if (!response.features.size.should.eql(0)) {
                         return Promise.reject("Finish did not return expected FeatureSet."); // did not pass
                     }
+                    // assert that finish can't be called again, i.e. cleared up
                     return service.finish({handle: response.handle}).should.eventually.be.rejected;
                 });
         });
