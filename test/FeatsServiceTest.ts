@@ -164,10 +164,10 @@ describe("FeatsService", () => {
                 }));
 
             return Promise.all(responses).then(responses => {
-                const expected: any = [...expected.values()];
-                responses.forEach((response, i) => {
-                    [...response.features.keys()].should.eql([...expected[i].keys()]);
-                    [...response.features.values()].should.eql([...expected[i].values()]);
+                const expectedValues: FeatureSet[] = [...expected.values()];
+                responses.forEach((response: ProcessResponse, i: number) => {
+                    [...response.features.keys()].should.eql([...expectedValues[i].keys()]);
+                    [...response.features.values()].should.eql([...expectedValues[i].values()]);
                 });
             });
         });
