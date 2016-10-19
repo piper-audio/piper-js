@@ -47,7 +47,7 @@ class FrequencyDomainAdapter implements FeatureExtractor {
     }
 
     finish(): FeatureSet {
-        (this.fft as KissRealFft).dispose(); // TODO this is too implementation specific, but does dispose make sense as part of the interface?
+        this.fft.dispose();
         return this.wrapped.finish();
     }
 }

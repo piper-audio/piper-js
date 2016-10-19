@@ -7,6 +7,9 @@ import {EmscriptenModule} from "../../src/Emscripten";
 export interface RealFft {
     forward(real: Float32Array): Float32Array;
     inverse(complex: Float32Array): Float32Array;
+    // it is quite likely implementations will be backed by native code
+    // therefore manual resource freeing / de-allocation will be required
+    dispose(): void;
 }
 
 export class KissRealFft implements RealFft {
@@ -68,7 +71,7 @@ export class KissRealFft implements RealFft {
             this.realPtr, this.size);
     }
 
-    dispose() {
+    dispose(): void {
         this.kissFFTModule._free(this.realPtr);
         this.kissFFTModule._free(this.complexPtr);
         this.kiss_fftr_free(this.forwardConfig);
