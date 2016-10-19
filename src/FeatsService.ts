@@ -42,8 +42,12 @@ class FrequencyDomainAdapter implements FeatureExtractor {
     }
 
     process(block: ProcessInput): FeatureSet {
-        block.inputBuffers = [this.fft.forward(block.inputBuffers[0])]; // TODO channels need to be adapted somewhere
-        return this.wrapped.process(block);
+        const forwardFft: (channel: Float32Array) => Float32Array =
+            (channel) => this.fft.forward(channel);
+        return this.wrapped.process({
+            timestamp: block.timestamp, // TODO adjust to block centre?
+            inputBuffers: block.inputBuffers.map(forwardFft)
+        });
     }
 
     finish(): FeatureSet {
