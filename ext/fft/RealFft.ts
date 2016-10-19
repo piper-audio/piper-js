@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 18/10/16.
  */
-import KissFFT = require("./KissFFT");
+import KissFFT = require("./KissFft");
 import {EmscriptenModule} from "../../src/Emscripten";
 
 export interface RealFft {

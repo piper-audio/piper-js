@@ -9,7 +9,7 @@ import {
     ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle, ListRequest
 } from "./Piper";
 import {FeatureSet} from "feats/Feature";
-import {RealFft, KissRealFft} from "../ext/fft/FFT";
+import {RealFft, KissRealFft} from "../ext/fft/RealFft";
 import {ProcessInput} from "feats";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
