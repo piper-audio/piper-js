@@ -11,6 +11,7 @@ import {
 import {FeatureSet} from "feats/Feature";
 import {RealFft, KissRealFft} from "../ext/fft/RealFft";
 import {ProcessInput} from "feats";
+import {cyclicShiftInPlace, applyHannWindowTo} from "./FftUtilities";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 
@@ -43,10 +44,10 @@ class FrequencyDomainAdapter implements FeatureExtractor {
 
     process(block: ProcessInput): FeatureSet {
         const forwardFft: (channel: Float32Array) => Float32Array =
-            (channel) => this.fft.forward(channel);
+            (channel) => this.fft.forward(cyclicShiftInPlace(applyHannWindowTo(channel)));
         return this.wrapped.process({
             timestamp: block.timestamp, // TODO adjust to block centre?
-            inputBuffers: block.inputBuffers.map(forwardFft)
+            inputBuffers: block.inputBuffers.map(forwardFft) // TODO sharing fft's buffer, almost definitely problematic
         });
     }
 
