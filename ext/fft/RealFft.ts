@@ -60,16 +60,16 @@ export class KissRealFft implements RealFft {
     forward(real: Float32Array): Float32Array {
         this.realIn.set(real);
         this.kiss_fftr(this.forwardConfig, this.realPtr, this.complexPtr);
-        return new Float32Array(this.kissFFTModule.HEAPU8.buffer,
-            this.complexPtr, this.size + 2);
+        return Float32Array.from(new Float32Array(this.kissFFTModule.HEAPU8.buffer,
+            this.complexPtr, this.size + 2));
     }
 
     inverse(complex: Float32Array): Float32Array {
         this.complexIn.set(complex);
         this.kiss_fftri(this.inverseConfig, this.complexPtr, this.realPtr);
         // TODO scaling?
-        return new Float32Array(this.kissFFTModule.HEAPU8.buffer,
-            this.realPtr, this.size);
+        return Float32Array.from(new Float32Array(this.kissFFTModule.HEAPU8.buffer,
+            this.realPtr, this.size));
     }
 
     dispose(): void {
