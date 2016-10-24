@@ -9,6 +9,7 @@ import {
     ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle, ListRequest
 } from "./Piper";
 import {FeatureSet} from "feats/Feature";
+import {FrequencyDomainAdapter} from "./FrequencyDomainAdapter";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 
@@ -48,8 +49,11 @@ export class FeatsService implements Service {
         if (!this.factories.has(request.key)) return Promise.reject("Invalid plugin key.");
 
         const factory: PluginFactory = this.factories.get(request.key);
-        const extractor: FeatureExtractor = factory.extractor(request.inputSampleRate);
         const metadata: StaticData = factory.metadata;
+        const extractor: FeatureExtractor =
+            metadata.inputDomain === InputDomain.FrequencyDomain
+                ? new FrequencyDomainAdapter(factory.extractor(request.inputSampleRate))
+                : factory.extractor(request.inputSampleRate);
         this.loaded.set(++this.countingHandle, {extractor: extractor, metadata: metadata}); // TODO should the first assigned handle be 1 or 0? currently 1
 
         const defaultConfiguration: Configuration = extractor.getDefaultConfiguration();
