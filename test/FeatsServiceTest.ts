@@ -8,13 +8,16 @@ import {
     LoadResponse, ConfigurationResponse,
     ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service
 } from "../src/Piper";
-import {PluginFactory, FeatureExtractorFactory, FeatsService} from "../src/FeatsService";
-import {StaticData, Configuration, AdapterFlags} from "feats/FeatureExtractor";
-import {FeatureExtractorStub, MetaDataStub} from "./fixtures/FeatureExtractorStub";
 import {
-    FrequencyDomainExtractorStub,
-    FrequencyMetaDataStub
-} from "./fixtures/FrequencyDomainExtractorStub";
+    PluginFactory,
+    FeatureExtractorFactory,
+    FeatsService
+} from "../src/FeatsService";
+import {StaticData, Configuration, AdapterFlags} from "feats/FeatureExtractor";
+import {
+    FeatureExtractorStub,
+    MetaDataStub
+} from "./fixtures/FeatureExtractorStub";
 import {FeatureSet} from "feats/Feature";
 chai.should();
 chai.use(chaiAsPromised);
@@ -24,16 +27,12 @@ describe("FeatsService", () => {
     const factory: FeatureExtractorFactory = sr => new FeatureExtractorStub();
     const plugins: PluginFactory[] = [];
     plugins.push({extractor: factory, metadata: metadata});
-    plugins.push({
-        extractor: sr => new FrequencyDomainExtractorStub(),
-            metadata: FrequencyMetaDataStub
-    });
 
     describe("List request handling", () => {
         it("Resolves to a response whose content body is {available: StaticData[]}", () => {
             const service: FeatsService = new FeatsService(...plugins);
             return service.list({}).then(response => {
-                response.should.eql({available: [metadata, FrequencyMetaDataStub]});
+                response.should.eql({available: [metadata]});
             });
         });
     });
@@ -63,8 +62,15 @@ describe("FeatsService", () => {
     });
 
     describe("Configure request handling", () => {
-        const config: Configuration = {blockSize: 8, channelCount: 1, stepSize: 8};
-        const configRequest: ConfigurationRequest = {handle: 1, configuration: config};
+        const config: Configuration = {
+            blockSize: 8,
+            channelCount: 1,
+            stepSize: 8
+        };
+        const configRequest: ConfigurationRequest = {
+            handle: 1,
+            configuration: config
+        };
         const loadRequest: LoadRequest = {
             key: "stub:sum",
             inputSampleRate: 16,
@@ -146,9 +152,6 @@ describe("FeatsService", () => {
                 ["stub:sum", new Map([
                     ["sum", [{featureValues: new Float32Array([8])}]],
                     ["cumsum", [{featureValues: new Float32Array([8])}]]
-                ])],
-                ["stub-freq:spectrum", new Map([
-                    ["spectrum", [{featureValues: new Float32Array([64, 0, 0, 0, 0])}]]
                 ])]
             ]);
 
@@ -157,7 +160,7 @@ describe("FeatsService", () => {
                     return service.process({
                         handle: response.handle,
                         processInput: {
-                            timestamp: {s:0, n: 0},
+                            timestamp: {s: 0, n: 0},
                             inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
                         }
                     });
