@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 20/10/2016.
  */
-import {ProcessInput} from "feats";
+import {ProcessInput, Configuration} from "feats";
 
 export interface ProcessInputAdjuster {
     adjust(input: ProcessInput): ProcessInput;
@@ -13,12 +13,12 @@ export class ProcessInputBuffersAdjuster implements ProcessInputAdjuster {
     private blockSize: number;
     private stepSize: number;
 
-    constructor(blockSize: number, stepSize: number, channelCount: number) {
-        this.blockSize = blockSize;
-        this.stepSize = stepSize;
-        this.offset = Math.floor(0.5 * blockSize);
-        this.buffers = [...Array(channelCount)].map(
-            () => new Float32Array(blockSize + this.offset)
+    constructor(config: Configuration) {
+        this.blockSize = config.blockSize;
+        this.stepSize = config.stepSize;
+        this.offset = Math.floor(0.5 * this.blockSize);
+        this.buffers = [...Array(config.channelCount)].map(
+            () => new Float32Array(this.blockSize + this.offset)
         );
     }
 

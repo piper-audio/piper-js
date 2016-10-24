@@ -2,7 +2,7 @@
  * Created by lucast on 20/10/2016.
  */
 import * as chai from "chai";
-import {makeTimestamp} from "feats";
+import {makeTimestamp, Configuration} from "feats";
 import {
     ProcessInputBuffersAdjuster,
     ProcessInputAdjuster
@@ -11,9 +11,11 @@ chai.should();
 
 describe("ProcessInputBuffersAdjuster", () => {
     const sampleRate: number = 16;
-    const blockSize: number = 4;
-    const stepSize: number = 2;
-    const channelCount: number = 2;
+    const config: Configuration = {
+        channelCount: 2,
+        blockSize: 4,
+        stepSize: 2
+    };
 
     describe("returns a new, shifted, ProcessInput", () => {
         // Stereo audio with increasing integers every blockSize,
@@ -32,7 +34,7 @@ describe("ProcessInputBuffersAdjuster", () => {
         // ];
 
         it("zero pads the first block passed in, shifting half the block back", () => {
-            new ProcessInputBuffersAdjuster(blockSize, stepSize, channelCount).adjust({
+            new ProcessInputBuffersAdjuster(config).adjust({
                 timestamp: {s: 0, n: 0},
                 inputBuffers: [
                     new Float32Array([1, 1, 1, 1]),
@@ -48,8 +50,8 @@ describe("ProcessInputBuffersAdjuster", () => {
         });
 
         it("Shifts remaining buffers back by half", () => {
-            const adjuster: ProcessInputAdjuster = new ProcessInputBuffersAdjuster(blockSize, stepSize, channelCount);
-            const stepSizeSeconds: number = stepSize / sampleRate;
+            const adjuster: ProcessInputAdjuster = new ProcessInputBuffersAdjuster(config);
+            const stepSizeSeconds: number = config.stepSize / sampleRate;
             // write all blocks out manually
             adjuster.adjust({
                 timestamp: {s: 0, n: 0},
