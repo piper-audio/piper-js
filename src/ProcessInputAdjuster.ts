@@ -29,10 +29,7 @@ export class ProcessInputBuffersAdjuster implements ProcessInputAdjuster {
             inputBuffers: input.inputBuffers.map(buffer => {
                 const c: number = channel++;
                 this.buffers[c].copyWithin(0, this.stepSize, this.blockSize + this.offset);
-                this.buffers[c].set(buffer.slice(0, this.blockSize), this.offset);
-                // return here exposes internal arraybuffer,
-                // but avoids allocating a new buffer
-                // - also doesn't mutate input buffer which is desirable?
+                this.buffers[c].set(buffer.subarray(0, this.blockSize), this.offset);
                 return this.buffers[c].slice(0, this.blockSize);
             })
         };
