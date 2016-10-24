@@ -9,9 +9,7 @@ import {
     ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle, ListRequest
 } from "./Piper";
 import {FeatureSet} from "feats/Feature";
-import {RealFft, KissRealFft} from "../ext/fft/RealFft";
-import {ProcessInput} from "feats";
-import {cyclicShiftInPlace, applyHannWindowTo} from "./FftUtilities";
+import {FrequencyDomainAdapter} from "./FrequencyDomainAdapter";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 
@@ -23,38 +21,6 @@ export interface PluginFactory { // TODO rename, this is part of our identity cr
 export interface Plugin {
     extractor: FeatureExtractor;
     metadata: StaticData;
-}
-
-class FrequencyDomainAdapter implements FeatureExtractor {
-    private wrapped: FeatureExtractor;
-    private fft: RealFft;
-
-    constructor(extractor: FeatureExtractor, ) {
-        this.wrapped = extractor;
-    }
-
-    configure(configuration: Configuration): ConfiguredOutputs {
-        this.fft = new KissRealFft(configuration.blockSize); // TODO verify power of 2? And use a factory
-        return this.wrapped.configure(configuration);
-    }
-
-    getDefaultConfiguration(): Configuration {
-        return this.wrapped.getDefaultConfiguration();
-    }
-
-    process(block: ProcessInput): FeatureSet {
-        const forwardFft: (channel: Float32Array) => Float32Array =
-            (channel) => this.fft.forward(cyclicShiftInPlace(applyHannWindowTo(channel)));
-        return this.wrapped.process({
-            timestamp: block.timestamp, // TODO adjust to block centre?
-            inputBuffers: block.inputBuffers.map(forwardFft) // TODO sharing fft's buffer, almost definitely problematic
-        });
-    }
-
-    finish(): FeatureSet {
-        this.fft.dispose();
-        return this.wrapped.finish();
-    }
 }
 
 export class FeatsService implements Service {
