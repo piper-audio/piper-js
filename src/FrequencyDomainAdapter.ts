@@ -35,7 +35,7 @@ export class FrequencyDomainAdapter implements FeatureExtractor {
         const timeAdjustedBlock: ProcessInput = this.adjuster.adjust(block);
         return this.wrapped.process({
             timestamp: timeAdjustedBlock.timestamp,
-            inputBuffers: timeAdjustedBlock.inputBuffers.map(forwardFft) // TODO sharing fft's buffer, almost definitely problematic
+            inputBuffers: timeAdjustedBlock.inputBuffers.map(forwardFft)
         });
     }
 
