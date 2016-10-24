@@ -2,7 +2,7 @@ import {
     Configuration, ConfiguredOutputs, FeatureExtractor, ProcessInput, StaticData, InputDomain, OutputIdentifier,
     ConfiguredOutputDescriptor, SampleType
 } from "feats/FeatureExtractor";
-import {FeatureSet} from "feats/Feature";
+import {FeatureSet, FeatureList} from "feats/Feature";
 
 export class FrequencyDomainExtractorStub implements FeatureExtractor {
     private binCount: number;
@@ -65,3 +65,55 @@ export const FrequencyMetaDataStub: StaticData = {
     key: "stub-freq:spectrum",
     version: 1
 };
+
+export class PassThroughExtractor implements FeatureExtractor {
+
+    public static getMetaData(): StaticData {
+        return {
+            basic: {
+                description: "A stub, returns the input to process",
+                identifier: "stub",
+                name: "PassThrough Stub"
+            },
+            basicOutputInfo: [
+                {
+                    description: "The input buffer",
+                    identifier: "passthrough",
+                    name: "Pass-through"
+                }
+            ],
+            inputDomain: InputDomain.FrequencyDomain,
+            maxChannelCount: 1,
+            minChannelCount: 1,
+            key: "stub:passthrough",
+            version: 1
+        };
+    }
+
+    configure(configuration: Configuration): ConfiguredOutputs {
+        return new Map<string, ConfiguredOutputDescriptor>([
+            ["passthrough", {
+                binCount: configuration.blockSize + 2,
+                sampleType: SampleType.OneSamplePerStep,
+                hasDuration: false
+            }]
+        ]);
+    }
+
+    getDefaultConfiguration(): Configuration {
+        return {channelCount: 1, blockSize: 4, stepSize: 2};
+    }
+
+    process(block: ProcessInput): FeatureSet {
+        return new Map<string, FeatureList>([
+            ["passthrough", [{
+                timestamp: block.timestamp,
+                featureValues: block.inputBuffers[0]
+            }]]
+        ]);
+    }
+
+    finish(): FeatureSet {
+        return new Map();
+    }
+}
