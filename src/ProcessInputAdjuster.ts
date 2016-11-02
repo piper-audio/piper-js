@@ -23,14 +23,12 @@ export class ProcessInputBuffersAdjuster implements ProcessInputAdjuster {
     }
 
     adjust(input: ProcessInput): ProcessInput {
-        let channel: number = 0;
         return {
             timestamp: input.timestamp,
-            inputBuffers: input.inputBuffers.map(buffer => {
-                const c: number = channel++;
-                this.buffers[c].copyWithin(0, this.stepSize, this.blockSize + this.offset);
-                this.buffers[c].set(buffer.subarray(0, this.blockSize), this.offset);
-                return this.buffers[c].slice(0, this.blockSize);
+            inputBuffers: input.inputBuffers.map((buffer, i) => {
+                this.buffers[i].copyWithin(0, this.stepSize, this.blockSize + this.offset);
+                this.buffers[i].set(buffer.subarray(0, this.blockSize), this.offset);
+                return this.buffers[i].slice(0, this.blockSize);
             })
         };
     }
