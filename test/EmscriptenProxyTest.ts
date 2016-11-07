@@ -9,11 +9,17 @@ import {FeatureSet, FeatureList} from "feats/Feature";
 import {Timestamp} from "feats/Timestamp";
 import {batchProcess} from "./AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
-import {EmscriptenProxy} from "../src/EmscriptenProxy";
+import {
+    EmscriptenProxy,
+    EmscriptenFeatureExtractor
+} from "../src/EmscriptenProxy";
 import fs = require("fs");
 import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "feats/FeatureExtractor";
 import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
 import {PiperClient} from "../src/PiperClient";
+import {FeatureExtractor} from "feats";
+import {EmscriptenModule} from "../src/Emscripten";
+import VampTestPluginModule = require("../ext/VampTestPlugin");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -132,4 +138,59 @@ describe("EmscriptenProxyTest", () => {
             getTimestamps(features.get("zerocrossings")).should.deep.equal(getTimestamps(expectedFeatures.merged.get("zerocrossings")));
         });
     });
+});
+
+describe("EmscriptenFeatureExtractor", () => {
+    it("Can construct a plugin with a valid key", () => {
+        const module: EmscriptenModule = VampTestPluginModule();
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+            module, "vamp-test-plugin:vamp-test-plugin", 16
+        );
+        return extractor.should.exist;
+    });
+
+    it("Throws on construction with invalid key", () => {
+        chai.expect(() => new EmscriptenFeatureExtractor(
+            VampTestPluginModule(), "", 16
+        )).to.throw(Error);
+    });
+
+    it("Should provide a default configuration", () => {
+        const config = new EmscriptenFeatureExtractor(
+            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+        ).getDefaultConfiguration();
+        return (config.hasOwnProperty("blockSize")
+            && config.hasOwnProperty("channelCount")
+            && config.hasOwnProperty("stepSize")).should.be.true;
+    });
+
+    it("Should be configurable", () => {
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+        );
+        return (extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4})
+            instanceof Map).should.be.true;
+    });
+
+    it("Should process a block", () => {
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+        );
+        extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
+        return extractor.process({
+            timestamp: {n: 0, s: 0},
+            inputBuffers: [new Float32Array([1, 1, 1, 1])]
+        }).has("curve-fsr").should.be.true;
+    });
+
+    it("should return remaining features and clear up", () => {
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+        );
+        extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
+        extractor.finish().has("curve-fsr").should.be.true;
+        // calling finish again should throw as the internal handle is now invalid
+        chai.expect(() => extractor.finish()).to.throw(Error);
+    });
+
 });

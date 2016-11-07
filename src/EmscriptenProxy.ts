@@ -6,11 +6,67 @@ import {
     ProcessRequest,
     ServiceFunc, Service, ListRequest, ListResponse, LoadResponse, LoadRequest,
     ConfigurationRequest, ConfigurationResponse, ProcessResponse,
-    FinishResponse, FinishRequest, compose
+    FinishResponse, FinishRequest, compose, ExtractorHandle
 } from "./Piper";
 import {
-    Filters
+    Filters, Serialise, Deserialise
 } from "./JsonProtocol";
+import {
+    ConfiguredOutputs, Configuration, ProcessInput, FeatureExtractor, AdapterFlags
+} from "feats";
+import {FeatureSet} from "feats/Feature";
+
+export class EmscriptenFeatureExtractor implements FeatureExtractor {
+    private module: EmscriptenModule;
+    private handle: ExtractorHandle;
+    private defaultConfig: Configuration;
+
+    constructor(module: EmscriptenModule, pluginKey: string, sampleRate: number) {
+        this.module = module;
+        const response: LoadResponse = Deserialise.LoadResponse(
+            jsonRequest(module, Serialise.LoadRequest({
+                key: pluginKey,
+                inputSampleRate: sampleRate,
+                adapterFlags: [AdapterFlags.AdaptAllSafe]
+            }))
+        );
+        this.defaultConfig = response.defaultConfiguration;
+        this.handle = response.handle;
+    }
+
+    configure(configuration: Configuration): ConfiguredOutputs {
+        const response: ConfigurationResponse = Deserialise.ConfigurationResponse(
+            jsonRequest(this.module, Serialise.ConfigurationRequest({
+                handle: this.handle,
+                configuration: configuration
+            }))
+        );
+        return new Map(
+            response.outputList
+                .map(output => [output.basic.identifier, output.configured]) as any
+        ) as ConfiguredOutputs;
+    }
+
+    getDefaultConfiguration(): Configuration {
+        return this.defaultConfig;
+    }
+
+    process(block: ProcessInput): FeatureSet {
+        return Deserialise.ProcessResponse(
+            rawProcess(this.module, {
+                handle: this.handle,
+                processInput: block
+            })
+        ).features;
+    }
+
+    finish(): FeatureSet {
+        const response: FinishResponse = Deserialise.FinishResponse(
+            jsonRequest(this.module, Serialise.FinishRequest({handle: this.handle}))
+        );
+        return response.features;
+    }
+}
 
 export class EmscriptenProxy implements Service {
     private module: EmscriptenModule;
