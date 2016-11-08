@@ -42,7 +42,7 @@ export class PiperClient implements Service {
             .then(response => {
                 for (let output of response.outputList) {
                     this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                        output, request.configuration.stepSize / this.handleToSampleRate.get(request.handle))
+                        output.configured, request.configuration.stepSize / this.handleToSampleRate.get(request.handle))
                     );
                 }
                 return response;
