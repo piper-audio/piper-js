@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 24/10/2016.
  */
-import {RealFft, KissRealFft} from "../ext/fft/RealFft";
+import {RealFft, KissRealFft} from "./fft/RealFft";
 import {
     ProcessInput, FeatureExtractor, Configuration,
     ConfiguredOutputs

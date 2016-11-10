@@ -2,7 +2,7 @@
  * Created by lucast on 18/10/16.
  */
 import KissFFT = require("./KissFft");
-import {EmscriptenModule} from "../../src/Emscripten";
+import {EmscriptenModule} from "../EmscriptenProxy";
 
 export interface RealFft {
     forward(real: Float32Array): Float32Array;
