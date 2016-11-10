@@ -1,7 +1,6 @@
 /**
  * Created by lucast on 16/09/2016.
  */
-import {EmscriptenModule, Allocator} from "./Emscripten";
 import {
     ProcessRequest,
     ServiceFunc, Service, ListRequest, ListResponse, LoadResponse, LoadRequest,
@@ -15,6 +14,25 @@ import {
     ConfiguredOutputs, Configuration, ProcessInput, FeatureExtractor, AdapterFlags
 } from "feats";
 import {FeatureSet} from "feats/Feature";
+
+export interface EmscriptenModule {
+    cwrap(ident: string, returnType: string, argTypes: string[]): Function;
+    ccall(ident: string, returnType: string, argTypes: string[], args: any[]): any;
+    intArrayFromString(stringy: string): number[];
+    _malloc(sz: number): number;
+    _free(ptr: number): void;
+    HEAPU8: Uint8Array;
+    allocate(slab: number[], type: string, allocator: Allocator): number;
+    Pointer_stringify(ptr: number): string;
+}
+
+export enum Allocator {
+    ALLOC_NORMAL,
+    ALLOC_STACK,
+    ALLOC_STATIC,
+    ALLOC_DYNAMIC,
+    ALLOC_NONE
+}
 
 export class EmscriptenFeatureExtractor implements FeatureExtractor {
     private module: EmscriptenModule;
