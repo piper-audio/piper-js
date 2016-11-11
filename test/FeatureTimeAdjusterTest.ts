@@ -58,7 +58,7 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
 
     describe("Feature has a duration", () => {
         const descriptor: OutputDescriptor = createOutputDescriptor(true, 0.0, SampleType.VariableSampleRate);
-        const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
+        const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor.configured);
         it("Uses the timestamp as-is when the Feature conforms to the OutputDescriptor", () => {
             const expectedTimestamp: Timestamp = {s: 2, n: 0};
             const feature: Feature = {
@@ -82,7 +82,7 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
     describe("Feature has no duration / Minimal duration spec", ()  => {
         it("Assigns 1 / sampleRate as the duration when the OutputDescriptor defines a sample rate", () => {
             const descriptor: OutputDescriptor = createOutputDescriptor(false, 100.0, SampleType.VariableSampleRate);
-            const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
+            const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor.configured);
             const expectedDuration: Timestamp = {s: 0, n: 10000000};
             const feature: Feature = {
                 timestamp: {s: 1, n: 0}
@@ -104,7 +104,7 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
                         sampleType: SampleType.VariableSampleRate,
                     }
                 };
-                const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
+                const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor.configured);
                 const expectedDuration: Timestamp = {s: 0, n: 0};
                 const feature: Feature = {
                     timestamp: {s: 1, n: 0}
@@ -126,7 +126,7 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
                         sampleRate: 0
                     }
                 };
-                const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
+                const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor.configured);
                 const expectedDuration: Timestamp = {s: 0, n: 0};
                 const feature: Feature = {
                     timestamp: {s: 1, n: 0}
@@ -139,7 +139,7 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
 
     describe("Indicates invalid Features", () => {
         const descriptor: OutputDescriptor = createOutputDescriptor(true, 0.0, SampleType.VariableSampleRate);
-        const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor);
+        const adjuster: FeatureTimeAdjuster = new VariableSampleRateFeatureTimeAdjuster(descriptor.configured);
         it("Throws when no Timestamp present", () => {
             chai.expect(() => adjuster.adjust({})).to.throw(Error);
         });
@@ -150,7 +150,7 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
     const descriptor: OutputDescriptor = createOutputDescriptor(true, 10.0, SampleType.FixedSampleRate);
     describe("Feature has a timestamp", () => {
         it("Rounds the timestamp to the nearest 1 / sampleRate", () => {
-            const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor);
+            const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor.configured);
             const feature: Feature = {
                 timestamp: {s: 1, n: 550000000.0}
             };
@@ -161,7 +161,7 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
 
     describe("Feature has no timestamp", () => {
         it("Calculates the timestamp from the previous timestamp + 1 / sampleRate", () => {
-            const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor);
+            const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor.configured);
             const features: Feature[] = [];
             features.push({timestamp: {s: 1, n: 550000000.0}});
             features.push({});
@@ -171,7 +171,7 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
         });
 
         it("Sets the first timestamp to zero if not provided by the Feature", () => {
-            const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor);
+            const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor.configured);
             const feature: Feature = {};
             adjuster.adjust(feature);
             feature.timestamp.should.deep.equal({s: 0, n: 0});
@@ -179,7 +179,7 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
     });
 
     describe("Feature has a duration", () => {
-        const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor);
+        const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor.configured);
         it("Rounds the duration to the nearest 1 / sampleRate", () => {
             const feature: Feature = {
                 duration: {s: 1, n: 550000000.0}
@@ -197,7 +197,7 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
 
     describe("Feature has no duration", () => {
         const descriptor: OutputDescriptor = createOutputDescriptor(false, 10.0, SampleType.FixedSampleRate);
-        const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor);
+        const adjuster: FeatureTimeAdjuster = new FixedSampleRateFeatureTimeAdjuster(descriptor.configured);
         it("Sets the duration to 0", () => {
             const feature: Feature = {};
             adjuster.adjust(feature);
@@ -208,7 +208,7 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
     describe("It indicates invalid OutputDescriptor / Features", () => {
         it("Throws on construction if the OutputDescriptor has a zero sampleRate", () => {
             const descriptor: OutputDescriptor = createOutputDescriptor(false, 0.0, SampleType.FixedSampleRate);
-            chai.expect(() => new FixedSampleRateFeatureTimeAdjuster(descriptor)).to.throw(Error);
+            chai.expect(() => new FixedSampleRateFeatureTimeAdjuster(descriptor.configured)).to.throw(Error);
         });
         it("Throws on construction if the OutputDescriptor has no sampleRate", () => {
             const descriptor: OutputDescriptor = {
@@ -222,7 +222,7 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
                     sampleType: SampleType.FixedSampleRate
                 }
             };
-            chai.expect(() => new FixedSampleRateFeatureTimeAdjuster(descriptor)).to.throw(Error);
+            chai.expect(() => new FixedSampleRateFeatureTimeAdjuster(descriptor.configured)).to.throw(Error);
         });
     });
 });

@@ -9,6 +9,7 @@ import {FeatureSet} from "feats/Feature";
 export type ExtractorHandle = number;
 
 export interface ListRequest {
+    from?: string[];
 }
 
 export interface ListResponse {
@@ -63,6 +64,14 @@ export interface Service {
     finish(request: FinishRequest): Promise<FinishResponse>;
 }
 
+export interface SynchronousService {
+    list(request: ListRequest): ListResponse;
+    load(request: LoadRequest) : LoadResponse;
+    configure(request: ConfigurationRequest): ConfigurationResponse;
+    process(request: ProcessRequest): ProcessResponse;
+    finish(request: FinishRequest): FinishResponse;
+}
+
 export type ServiceFunc<Request, Response> = (req: Request) => Promise<Response>;
 export type ListService = ServiceFunc<ListRequest, ListResponse>;
 export type LoadService = ServiceFunc<LoadRequest, LoadResponse>;
@@ -92,3 +101,4 @@ export {EmscriptenProxy} from "./EmscriptenProxy";
 export * from "./JsonProtocol";
 export {FeatsService} from "./FeatsService";
 export {PiperClient} from "./PiperClient";
+export {segment, process, collect} from "./HigherLevelUtilities";

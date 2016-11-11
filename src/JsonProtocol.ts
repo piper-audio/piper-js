@@ -33,139 +33,145 @@ import {
     Configuration, StaticData, ProcessInput
 } from "feats/FeatureExtractor";
 
-export const serialiseJsonListRequest
-    : Filter<ListRequest, string, string, string>
-    = (request: ListRequest, next: ServiceFunc<string, string>)
-    : Promise<string> => next(serialiseListRequest(request));
+export namespace Filters {
+    export const serialiseJsonListRequest
+        : Filter<ListRequest, string, string, string>
+        = (request: ListRequest, next: ServiceFunc<string, string>)
+        : Promise<string> => next(Serialise.ListRequest(request));
 
-export const serialiseJsonLoadRequest
-    : Filter<LoadRequest, string, string, string>
-    = (request: LoadRequest, next: ServiceFunc<string, string>)
-    : Promise<string> => next(serialiseLoadRequest(request));
+    export const serialiseJsonLoadRequest
+        : Filter<LoadRequest, string, string, string>
+        = (request: LoadRequest, next: ServiceFunc<string, string>)
+        : Promise<string> => next(Serialise.LoadRequest(request));
 
-export const serialiseJsonConfigurationRequest
-    : Filter<ConfigurationRequest, string, string, string>
-    = (request: ConfigurationRequest, next: ServiceFunc<string, string>)
-    : Promise<string> => next(serialiseConfigurationRequest(request));
+    export const serialiseJsonConfigurationRequest
+        : Filter<ConfigurationRequest, string, string, string>
+        = (request: ConfigurationRequest, next: ServiceFunc<string, string>)
+        : Promise<string> => next(Serialise.ConfigurationRequest(request));
 
-export const serialiseJsonProcessRequest
-    : Filter<ProcessRequest, string, string, string>
-    = (request: ProcessRequest, next: ServiceFunc<string, string>)
-    : Promise<string> => next(serialiseProcessRequest(request));
+    export const serialiseJsonProcessRequest
+        : Filter<ProcessRequest, string, string, string>
+        = (request: ProcessRequest, next: ServiceFunc<string, string>)
+        : Promise<string> => next(Serialise.ProcessRequest(request));
 
-export const serialiseJsonFinishRequest
-    : Filter<FinishRequest, string, string, string>
-    = (request: FinishRequest, next: ServiceFunc<string, string>)
-    : Promise<string> => next(serialiseFinishRequest(request));
+    export const serialiseJsonFinishRequest
+        : Filter<FinishRequest, string, string, string>
+        = (request: FinishRequest, next: ServiceFunc<string, string>)
+        : Promise<string> => next(Serialise.FinishRequest(request));
 
-export const deserialiseJsonListResponse
-    : Filter<ListRequest, ListResponse, ListRequest, string>
-    = (request: ListRequest, service: ServiceFunc<ListRequest, string>)
-    : Promise<ListResponse> =>
-    service(request).then(deserialiseListResponse);
+    export const deserialiseJsonListResponse
+        : Filter<ListRequest, ListResponse, ListRequest, string>
+        = (request: ListRequest, service: ServiceFunc<ListRequest, string>)
+        : Promise<ListResponse> =>
+        service(request).then(Deserialise.ListResponse);
 
-export const deserialiseJsonLoadResponse
-    : Filter<LoadRequest, LoadResponse, LoadRequest, string>
-    = (request: LoadRequest, service: ServiceFunc<LoadRequest, string>)
-    : Promise<LoadResponse> =>
-    service(request).then(deserialiseLoadResponse);
+    export const deserialiseJsonLoadResponse
+        : Filter<LoadRequest, LoadResponse, LoadRequest, string>
+        = (request: LoadRequest, service: ServiceFunc<LoadRequest, string>)
+        : Promise<LoadResponse> =>
+        service(request).then(Deserialise.LoadResponse);
 
-export const deserialiseJsonConfigurationResponse
-    : Filter<ConfigurationRequest, ConfigurationResponse, ConfigurationRequest, string>
-    = (request: ConfigurationRequest, service: ServiceFunc<ConfigurationRequest, string>)
-    : Promise<ConfigurationResponse> =>
-    service(request).then(deserialiseConfigurationResponse);
+    export const deserialiseJsonConfigurationResponse
+        : Filter<ConfigurationRequest, ConfigurationResponse, ConfigurationRequest, string>
+        = (request: ConfigurationRequest, service: ServiceFunc<ConfigurationRequest, string>)
+        : Promise<ConfigurationResponse> =>
+        service(request).then(Deserialise.ConfigurationResponse);
 
-export const deserialiseJsonProcessResponse
-    : Filter<ProcessRequest, ProcessResponse, ProcessRequest, string>
-    = (request: ProcessRequest, service: ServiceFunc<ProcessRequest, string>)
-    : Promise<ProcessResponse> =>
-    service(request).then(deserialiseProcessResponse);
+    export const deserialiseJsonProcessResponse
+        : Filter<ProcessRequest, ProcessResponse, ProcessRequest, string>
+        = (request: ProcessRequest, service: ServiceFunc<ProcessRequest, string>)
+        : Promise<ProcessResponse> =>
+        service(request).then(Deserialise.ProcessResponse);
 
-export const deserialiseJsonFinishResponse
-    : Filter<FinishRequest, FinishResponse, FinishRequest, string>
-    = (request: FinishRequest, service: ServiceFunc<FinishRequest, string>)
-    : Promise<FinishResponse> =>
-    service(request).then(deserialiseFinishResponse);
-
-function serialiseListRequest(request: ListRequest): string {
-    return toTransport({method: "list", params: request});
+    export const deserialiseJsonFinishResponse
+        : Filter<FinishRequest, FinishResponse, FinishRequest, string>
+        = (request: FinishRequest, service: ServiceFunc<FinishRequest, string>)
+        : Promise<FinishResponse> =>
+        service(request).then(Deserialise.FinishResponse);
 }
 
-function serialiseListResponse(response: ListResponse): string {
-    return toTransport({method: "list", result: toWireListResponse(response)});
+export namespace Serialise {
+    export function ListRequest(request: ListRequest): string {
+        return toTransport({method: "list", params: request});
+    }
+
+    export function ListResponse(response: ListResponse): string {
+        return toTransport({method: "list", result: toWireListResponse(response)});
+    }
+
+    export function LoadRequest(request: LoadRequest): string {
+        return toTransport({method: "load", params: toWireLoadRequest(request)});
+    }
+
+    export function LoadResponse(response: LoadResponse): string {
+        return toTransport({method: "load", result: toWireLoadResponse(response)});
+    }
+
+    export function ConfigurationRequest(request: ConfigurationRequest): string {
+        return toTransport({method: "configure", params: toWireConfigurationRequest(request)});
+    }
+
+    export function ConfigurationResponse(response: ConfigurationResponse): string {
+        return toTransport({method: "configure", result: toWireConfigurationResponse(response)});
+    }
+
+    export function ProcessRequest(request: ProcessRequest): string {
+        return toTransport({method: "process", params: toWireProcessRequest(request)});
+    }
+
+    export function ProcessResponse(response: ProcessResponse): string {
+        return toTransport({method: "process", result: toWireProcessResponse(response)});
+    }
+
+    export function FinishRequest(request: FinishRequest): string {
+        return toTransport({method: "finish", params: request});
+    }
+
+    export function FinishResponse(response: FinishResponse): string {
+        return toTransport({method: "finish", result: toWireProcessResponse(response as ProcessResponse)});
+    }
 }
 
-function serialiseLoadRequest(request: LoadRequest): string {
-    return toTransport({method: "load", params: toWireLoadRequest(request)});
-}
+export namespace Deserialise {
+    export function ListRequest(request: string): ListRequest {
+        return toTransport({})
+    }
 
-function serialiseLoadResponse(response: LoadResponse): string {
-    return toTransport({method: "load", result: toWireLoadResponse(response)});
-}
+    export function ListResponse(response: string): ListResponse {
+        return toListResponse(fromTransport(response));
+    }
 
-function serialiseConfigurationRequest(request: ConfigurationRequest): string {
-    return toTransport({method: "configure", params: toWireConfigurationRequest(request)});
-}
+    export function LoadRequest(request: string): LoadRequest {
+        return toLoadRequest(fromTransport(request));
+    }
 
-function serialiseConfigurationResponse(response: ConfigurationResponse): string {
-    return toTransport({method: "configure", result: toWireConfigurationResponse(response)});
-}
+    export function LoadResponse(response: string): LoadResponse {
+        return toLoadResponse(fromTransport(response));
+    }
 
-function serialiseProcessRequest(request: ProcessRequest): string {
-    return toTransport({method: "process", params: toWireProcessRequest(request)});
-}
+    export function ConfigurationRequest(request: string): ConfigurationRequest {
+        return toConfigurationRequest(fromTransport(request));
+    }
 
-function serialiseProcessResponse(response: ProcessResponse): string {
-    return toTransport({method: "process", result: toWireProcessResponse(response)});
-}
+    export function ConfigurationResponse(response: string): ConfigurationResponse {
+        return toConfigurationResponse(fromTransport(response));
+    }
 
-function serialiseFinishRequest(request: FinishRequest): string {
-    return toTransport({method: "finish", params: request});
-}
+    export function ProcessRequest(request: string): ProcessRequest {
+        return toProcessRequest(fromTransport(request));
+    }
 
-function serialiseFinishResponse(response: FinishResponse): string {
-    return toTransport({method: "finish", result: toWireProcessResponse(response)});
-}
+    export function ProcessResponse(response: string): ProcessResponse {
+        return toProcessResponse(fromTransport(response));
+    }
 
-function deserialiseListRequest(request: string): ListRequest {
-    return toTransport({})
-}
+    export function FinishRequest(request: string): FinishRequest {
+        return fromTransport(request);
+    }
 
-function deserialiseListResponse(response: string): ListResponse {
-    return toListResponse(fromTransport(response));
-}
-
-function deserialiseLoadRequest(request: string): LoadRequest {
-    return toLoadRequest(fromTransport(request));
-}
-
-function deserialiseLoadResponse(response: string): LoadResponse {
-    return toLoadResponse(fromTransport(response));
-}
-
-function deserialiseConfigurationRequest(request: string): ConfigurationRequest {
-    return toConfigurationRequest(fromTransport(request));
-}
-
-function deserialiseConfigurationResponse(response: string): ConfigurationResponse {
-    return toConfigurationResponse(fromTransport(response));
-}
-
-function deserialiseProcessRequest(request: string): ProcessRequest {
-    return toProcessRequest(fromTransport(request));
-}
-
-function deserialiseProcessResponse(response: string): ProcessResponse {
-    return toProcessResponse(fromTransport(response));
-}
-
-function deserialiseFinishRequest(request: string): FinishRequest {
-    return fromTransport(request);
-}
-
-function deserialiseFinishResponse(response: string): FinishResponse {
-    return deserialiseProcessResponse(response);
+    export function FinishResponse(response: string): FinishResponse {
+        return ProcessResponse(response);
+    }
 }
 
 type WireFeatureValues = number[] | string;

@@ -7,7 +7,7 @@ chai.should();
 chai.use(chaiAsPromised);
 import {Feature, FeatureSet, FeatureList} from "feats/Feature";
 import {ProcessInput} from "feats/FeatureExtractor";
-import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, segment, AudioBufferStub} from "./AudioUtilities";
+import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, AudioBufferStub} from "./AudioUtilities";
 import {FeatureExtractor} from "feats/FeatureExtractor";
 import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
 
@@ -81,57 +81,6 @@ describe("BatchBlockProcess", () => {
             block => Promise.resolve(extractor.process(block)),
             () => Promise.resolve(extractor.finish()));
         return featureSet.then(featureSet => featureSet.get("sum").length.should.equal((10.0 * 8000.0) / 64.0));
-    });
-});
-
-describe("Segment", () => {
-    const blockSize: number = 8;
-    const stepSize: number = 4;
-    const nBlocks: number = 4;
-    const audioData: Float32Array = new Float32Array(nBlocks * blockSize);
-    const fillBlocksWithConsecutiveIntegers = (audioData: Float32Array) => {
-        for (let nBlock = 1; nBlock < nBlocks; ++nBlock)
-            audioData.fill(nBlock, nBlock * blockSize, (nBlock * blockSize) + blockSize);
-    };
-
-    fillBlocksWithConsecutiveIntegers(audioData);
-    let frames: IterableIterator<Float32Array>;
-
-    beforeEach("reset segment generator", () => {
-        frames = segment(blockSize, stepSize, audioData)
-    });
-
-    it("Should zero pad the block when there are no more samples", () => {
-        frames = segment(blockSize, stepSize, new Float32Array(0));
-        frames.next().value.should.deep.equal(new Float32Array(blockSize));
-    });
-
-    it('Can be used as an iterator', () => {
-        frames.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 0, 0, 0, 0]));
-        frames.next().value.should.deep.equal(new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]));
-        frames.next().value.should.deep.equal(new Float32Array([1, 1, 1, 1, 1, 1, 1, 1]));
-        frames.next().value.should.deep.equal(new Float32Array([1, 1, 1, 1, 2, 2, 2, 2]));
-        frames.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 2, 2, 2, 2]));
-        frames.next().value.should.deep.equal(new Float32Array([2, 2, 2, 2, 3, 3, 3, 3]));
-        frames.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 3, 3, 3, 3]));
-        frames.next().value.should.deep.equal(new Float32Array([3, 3, 3, 3, 0, 0, 0, 0]));
-        return frames.next().done.should.be.true;
-    });
-
-    it('Can be looped over', () => {
-        const expectedBlocks: number[][] = [
-            [ 0, 0, 0, 0, 0, 0, 0, 0 ],
-            [ 0, 0, 0, 0, 1, 1, 1, 1 ],
-            [ 1, 1, 1, 1, 1, 1, 1, 1 ],
-            [ 1, 1, 1, 1, 2, 2, 2, 2 ],
-            [ 2, 2, 2, 2, 2, 2, 2, 2 ],
-            [ 2, 2, 2, 2, 3, 3, 3, 3 ],
-            [ 3, 3, 3, 3, 3, 3, 3, 3 ],
-            [ 3, 3, 3, 3, 0, 0, 0, 0 ]
-        ];
-        let i = 0;
-        for (let block of frames)
-            Array.from(block).should.deep.equal(expectedBlocks[i++]);
     });
 });
 

@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 24/10/2016.
  */
-import {RealFft, KissRealFft} from "../ext/fft/RealFft";
+import {RealFft, KissRealFft, RealFftFactory} from "./fft/RealFft";
 import {
     ProcessInput, FeatureExtractor, Configuration,
     ConfiguredOutputs
@@ -13,14 +13,16 @@ import {ProcessInputBuffersAdjuster} from "./ProcessInputAdjuster";
 export class FrequencyDomainAdapter implements FeatureExtractor {
     private wrapped: FeatureExtractor;
     private fft: RealFft;
+    private fftFactory: RealFftFactory;
     private adjuster: ProcessInputBuffersAdjuster;
 
-    constructor(extractor: FeatureExtractor, ) {
+    constructor(extractor: FeatureExtractor, fftFactory: RealFftFactory) {
         this.wrapped = extractor;
+        this.fftFactory = fftFactory;
     }
 
     configure(configuration: Configuration): ConfiguredOutputs {
-        this.fft = new KissRealFft(configuration.blockSize); // TODO verify power of 2? And use a factory
+        this.fft = this.fftFactory(configuration.blockSize); // TODO verify power of 2?
         this.adjuster = new ProcessInputBuffersAdjuster(configuration);
         return this.wrapped.configure(configuration);
     }

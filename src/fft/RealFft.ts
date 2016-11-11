@@ -2,7 +2,7 @@
  * Created by lucast on 18/10/16.
  */
 import KissFFT = require("./KissFft");
-import {EmscriptenModule} from "../../src/Emscripten";
+import {EmscriptenModule} from "../EmscriptenProxy";
 
 export interface RealFft {
     forward(real: Float32Array): Float32Array;
@@ -11,6 +11,8 @@ export interface RealFft {
     // therefore manual resource freeing / de-allocation will be required
     dispose(): void;
 }
+
+export type RealFftFactory = (size: number, args?: {[key: string]: any}) => RealFft;
 
 export class KissRealFft implements RealFft {
     private size: number;
