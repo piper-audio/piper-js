@@ -5,7 +5,8 @@
     "noImplicitAny": true,
     "outDir": "dist/ts",
     "module": "commonjs",
-    "declaration": true
+    "declaration": true,
+    "lib": ["es2016", "dom"]
   },
   "exclude": [
     "node_modules",
