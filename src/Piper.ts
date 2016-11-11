@@ -101,3 +101,4 @@ export {EmscriptenProxy} from "./EmscriptenProxy";
 export * from "./JsonProtocol";
 export {FeatsService} from "./FeatsService";
 export {PiperClient} from "./PiperClient";
+export {segment, process, collect} from "./HigherLevelUtilities";
