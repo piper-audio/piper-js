@@ -79,41 +79,29 @@ function createOrConcat(data: FeatureList, key: string, map: FeatureSet) {
     map.has(key) ? map.set(key, map.get(key).concat(data)) : map.set(key, data);
 }
 
-export function* segment(blockSize: number, stepSize: number, buffer: Float32Array): IterableIterator<Float32Array> {
-    let nStep: number = 0;
-    const nSteps: number = buffer.length / stepSize; // TODO this won't work for streaming input
-    const isDone = (step: number) => step >= nSteps;
-
-    do {
-        const start: number = nStep++ * stepSize;
-        const stop: number = start + blockSize;
-        let subArray: Float32Array = buffer.subarray(start, stop);
-        if (isDone(nStep))
-            subArray = Float32Array.of(...subArray, ...new Float32Array(blockSize - subArray.length));
-        yield subArray;
-    } while (!isDone(nStep));
-}
-
-export function* segmentAudioBuffer(blockSize: number, stepSize: number, audioBuffer: AudioBuffer): IterableIterator<ProcessInput> {
+export function* segmentAudioBuffer(blockSize: number,
+                                    stepSize: number,
+                                    audioBuffer: AudioBuffer): IterableIterator<ProcessInput> {
     let nStep: number = 0;
     const nSteps: number = audioBuffer.length / stepSize;
     const nChannels: number = audioBuffer.numberOfChannels;
     const channels: number[] = [...Array(nChannels).keys()];
-    const isDone = (step: number) => step >= nSteps;
 
-    do {
+    while (nStep < nSteps) {
         const start: number = nStep * stepSize;
         const stop: number = start + blockSize;
         const currentTimestamp: Timestamp = frame2timestamp(nStep++ * stepSize, audioBuffer.sampleRate);
         const audioData: Float32Array[] = channels.map(channel => audioBuffer.getChannelData(channel));
-        let subArrays: Float32Array[] = audioData.map(channelData => channelData.subarray(start, stop));
-        if (isDone(nStep))
-            subArrays = channels.map(channel => Float32Array.of(...subArrays[channel], ...new Float32Array(blockSize - subArrays[channel].length)));
         yield {
             timestamp: currentTimestamp,
-            inputBuffers: subArrays
+            inputBuffers: audioData.map(channelData => {
+                const block = channelData.subarray(start, stop);
+                return block.length === blockSize
+                    ? channelData.subarray(start, stop)
+                    : Float32Array.of(...block, ...new Float32Array(blockSize - block.length));
+            })
         };
-    } while (!isDone(nStep))
+    }
 }
 
 export function* lfo(sampleRate: number, frequency: number, amplitude: number = 1.0): IterableIterator<number> {
