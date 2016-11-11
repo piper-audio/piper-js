@@ -18,13 +18,20 @@ import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "f
 import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
 import {PiperClient} from "../src/PiperClient";
 import {FeatureExtractor} from "feats";
-import {EmscriptenModule} from "../src/Emscripten";
+import {EmscriptenModule} from "../src/EmscriptenProxy";
 import VampTestPluginModule = require("../ext/VampTestPlugin");
+import {
+    createEmscriptenCleanerWithNodeGlobal,
+    EmscriptenListenerCleaner
+} from "./TestUtilities";
 
 chai.should();
 chai.use(chaiAsPromised);
+const cleaner: EmscriptenListenerCleaner = createEmscriptenCleanerWithNodeGlobal();
 
 describe("EmscriptenProxyTest", () => {
+    afterEach(() => cleaner.clean());
+
     const client: Service = new PiperClient(new EmscriptenProxy(VampExamplePlugins()));
 
     const loadFixture = (name : string) => {
@@ -141,6 +148,7 @@ describe("EmscriptenProxyTest", () => {
 });
 
 describe("EmscriptenFeatureExtractor", () => {
+    afterEach(() => cleaner.clean());
     it("Can construct a plugin with a valid key", () => {
         const module: EmscriptenModule = VampTestPluginModule();
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
