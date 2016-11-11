@@ -9,6 +9,7 @@ import {FeatureSet} from "feats/Feature";
 export type ExtractorHandle = number;
 
 export interface ListRequest {
+    from?: string[];
 }
 
 export interface ListResponse {
@@ -61,6 +62,14 @@ export interface Service {
     configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
     process(request: ProcessRequest): Promise<ProcessResponse>;
     finish(request: FinishRequest): Promise<FinishResponse>;
+}
+
+export interface SynchronousService {
+    list(request: ListRequest): ListResponse;
+    load(request: LoadRequest) : LoadResponse;
+    configure(request: ConfigurationRequest): ConfigurationResponse;
+    process(request: ProcessRequest): ProcessResponse;
+    finish(request: FinishRequest): FinishResponse;
 }
 
 export type ServiceFunc<Request, Response> = (req: Request) => Promise<Response>;
