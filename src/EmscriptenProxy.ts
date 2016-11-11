@@ -133,6 +133,10 @@ export class EmscriptenProxy implements Service {
     }
 }
 
+export function list(module: EmscriptenModule, request: ListRequest): ListResponse {
+    return Deserialise.ListResponse(jsonRequest(module, Serialise.ListRequest(request)));
+}
+
 const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
     "piperFreeJson",
     "void",
