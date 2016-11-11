@@ -152,20 +152,24 @@ describe("EmscriptenFeatureExtractor", () => {
     it("Can construct a plugin with a valid key", () => {
         const module: EmscriptenModule = VampTestPluginModule();
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
-            module, "vamp-test-plugin:vamp-test-plugin", 16
+            module, 16, "vamp-test-plugin:vamp-test-plugin"
         );
         return extractor.should.exist;
     });
 
     it("Throws on construction with invalid key", () => {
         chai.expect(() => new EmscriptenFeatureExtractor(
-            VampTestPluginModule(), "", 16
+            VampTestPluginModule(), 16, "invalid-key",
         )).to.throw(Error);
+    });
+
+    it("Uses the first available extractor when no key is provided", () => {
+        return new EmscriptenFeatureExtractor(VampTestPluginModule(), 16).should.exist;
     });
 
     it("Should provide a default configuration", () => {
         const config = new EmscriptenFeatureExtractor(
-            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+            VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         ).getDefaultConfiguration();
         return (config.hasOwnProperty("blockSize")
             && config.hasOwnProperty("channelCount")
@@ -174,7 +178,7 @@ describe("EmscriptenFeatureExtractor", () => {
 
     it("Should be configurable", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
-            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+            VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         return (extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4})
             instanceof Map).should.be.true;
@@ -182,7 +186,7 @@ describe("EmscriptenFeatureExtractor", () => {
 
     it("Should process a block", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
-            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+            VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
         return extractor.process({
@@ -193,7 +197,7 @@ describe("EmscriptenFeatureExtractor", () => {
 
     it("should return remaining features and clear up", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
-            VampTestPluginModule(), "vamp-test-plugin:vamp-test-plugin", 16
+            VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
         extractor.finish().has("curve-fsr").should.be.true;

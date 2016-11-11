@@ -39,8 +39,9 @@ export class EmscriptenFeatureExtractor implements FeatureExtractor {
     private handle: ExtractorHandle;
     private defaultConfig: Configuration;
 
-    constructor(module: EmscriptenModule, pluginKey: string, sampleRate: number) {
+    constructor(module: EmscriptenModule, sampleRate: number, pluginKey?: string) {
         this.module = module;
+        pluginKey = pluginKey ? pluginKey : list(module, {}).available[0].key;
         const response: LoadResponse = Deserialise.LoadResponse(
             jsonRequest(module, Serialise.LoadRequest({
                 key: pluginKey,

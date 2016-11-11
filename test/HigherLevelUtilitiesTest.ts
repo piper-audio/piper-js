@@ -5,14 +5,13 @@ import * as chai from "chai";
 import {
     processConfiguredExtractor,
     segment,
-    process, AudioStream, ExtractorFactory, ExtractorFactoryArgs, collect,
+    process, ExtractorFactory, ExtractorFactoryArgs, collect,
     AudioStreamFormat, AudioStreamFactory,
     FixedSpacedFeatures, AudioData
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor, makeTimestamp} from "feats";
 import {
-    EmscriptenFeatureExtractor,
-    EmscriptenModule, list
+    EmscriptenFeatureExtractor
 } from "../src/EmscriptenProxy";
 import VampTestPluginModule = require('../ext/VampTestPlugin');
 import {Feature} from "feats/Feature";
@@ -56,8 +55,8 @@ function createStreamFactory(numberOfChannels: number,
 const extractorFactory: ExtractorFactory = (args: ExtractorFactoryArgs) => {
     return new EmscriptenFeatureExtractor(
         VampTestPluginModule(),
-        args.key,
-        args.sampleRate
+        args.sampleRate,
+        args.key
     )
 };
 
@@ -140,8 +139,8 @@ describe("processConfiguredExtractor()", function () {
 
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(),
-            "vamp-test-plugin:vamp-test-plugin",
-            sampleRate
+            sampleRate,
+            "vamp-test-plugin:vamp-test-plugin"
         );
 
         extractor.configure({
