@@ -49,6 +49,13 @@ describe("OneSamplePerStepFeatureTimeAdjuster", () => {
         feature.timestamp.should.deep.equal(expectedTimestamp);
     });
 
+    it("should produce a timestamp of zero on the first adjustment (when no timestamp provided)", () => {
+        const adjuster: FeatureTimeAdjuster = new OneSamplePerStepFeatureTimeAdjuster(stepSizeSeconds);
+        let feature: Feature = {};
+        adjuster.adjust(feature);
+        feature.timestamp.should.eql({s: 0, n: 0});
+    });
+
     it("Should throw on construction if not provided with the step size (secs)", () => {
         chai.expect(() => new OneSamplePerStepFeatureTimeAdjuster(undefined)).to.throw(Error);
     });

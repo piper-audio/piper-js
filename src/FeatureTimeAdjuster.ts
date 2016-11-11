@@ -46,7 +46,7 @@ export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster 
         if (stepSizeSeconds === undefined)
             throw new Error("Host must provide the step size (seconds).");
         this.stepSizeSeconds = stepSizeSeconds;
-        this.previousTimestamp = {s: 0.0, n: 0.0};
+        this.previousTimestamp = makeTimestamp(-stepSizeSeconds);
     }
 
     adjust(feature: Feature, inputTimestamp: Timestamp): void {
