@@ -12,7 +12,7 @@
     "build": "tsc && rm -rf piper && cp -R dist/ts piper && cp src/fft/KissFft.js piper/fft",
     "clean": "rm -rf piper fft *.js *.js.map *.d.ts dist/ts",
     "prepublish": "npm run build-browser && cp -r piper/* .",
-    "postinstall": "npm run build-browser"
+    "postinstall": "npm run build-browser && cp -r piper/* ."
   },
   "bin": {
     "piper-bundle": "bin/build-module.js"
