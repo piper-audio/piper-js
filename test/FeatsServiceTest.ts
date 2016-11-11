@@ -19,6 +19,7 @@ import {
     MetaDataStub
 } from "./fixtures/FeatureExtractorStub";
 import {FeatureSet} from "feats/Feature";
+import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -26,11 +27,12 @@ describe("FeatsService", () => {
     const metadata: StaticData = MetaDataStub;
     const factory: FeatureExtractorFactory = sr => new FeatureExtractorStub();
     const plugins: PluginFactory[] = [];
+    const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
     plugins.push({extractor: factory, metadata: metadata});
 
     describe("List request handling", () => {
         it("Resolves to a response whose content body is {available: StaticData[]}", () => {
-            const service: FeatsService = new FeatsService(...plugins);
+            const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             return service.list({}).then(response => {
                 response.should.eql({available: [metadata]});
             });
@@ -38,7 +40,7 @@ describe("FeatsService", () => {
     });
 
     describe("Load request handling", () => {
-        const service: Service = new FeatsService(...plugins);
+        const service: Service = new FeatsService(fftFactory, ...plugins);
         it("Rejects when the request contains an invalid plugin key", () => {
             const response: Promise<LoadResponse> = service.load({
                 key: "not-a-real:plugin",
@@ -78,12 +80,12 @@ describe("FeatsService", () => {
         };
 
         it("Rejects when the request contains an invalid plugin handle", () => {
-            const service: FeatsService = new FeatsService(...plugins);
+            const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             return service.configure(configRequest).should.eventually.be.rejected;
         });
 
         it("Rejects when the plugin mapping to the handle in the request has already been configured", () => {
-            const service: FeatsService = new FeatsService(...plugins);
+            const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             const loadResponse: Promise<LoadResponse> = service.load(loadRequest);
             const configure = (response: LoadResponse): Promise<ConfigurationResponse> => {
                 return service.configure({
@@ -96,7 +98,7 @@ describe("FeatsService", () => {
 
         it("Resolves to a response whose content body is a ConfigurationResponse", () => {
             const expectedResponse: ConfigurationResponse = require('./fixtures/expected-configuration-response-js.json');
-            const service: FeatsService = new FeatsService(...plugins);
+            const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             return service.load(loadRequest).then(response => {
                 const configResponse: Promise<ConfigurationResponse> = service.configure({
                     handle: response.handle,
@@ -108,7 +110,7 @@ describe("FeatsService", () => {
     });
 
     describe("Process and Finish request handling", () => {
-        const service: FeatsService = new FeatsService(...plugins);
+        const service: FeatsService = new FeatsService(fftFactory, ...plugins);
         const config: (key: string) => Promise<ConfigurationResponse> = (key) => {
             return service.load({
                 key: key,

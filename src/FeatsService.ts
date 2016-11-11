@@ -5,11 +5,14 @@ import {
     FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData, InputDomain
 } from "feats/FeatureExtractor";
 import {
-    Service, LoadRequest, LoadResponse, ConfigurationRequest, ConfigurationResponse, ProcessRequest,
-    ProcessResponse, ListResponse, FinishResponse, FinishRequest, ExtractorHandle, ListRequest
+    Service, LoadRequest, LoadResponse, ConfigurationRequest,
+    ConfigurationResponse, ProcessRequest,
+    ProcessResponse, ListResponse, FinishResponse, FinishRequest,
+    ExtractorHandle, ListRequest, SynchronousService
 } from "./Piper";
 import {FeatureSet} from "feats/Feature";
 import {FrequencyDomainAdapter} from "./FrequencyDomainAdapter";
+import {RealFftFactory} from "./fft/RealFft";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
 
@@ -23,51 +26,53 @@ export interface Plugin {
     metadata: StaticData;
 }
 
-export class FeatsService implements Service {
+export class FeatsSynchronousService implements SynchronousService {
     private factories: Map<string, PluginFactory>;
     private loaded: Map<number, Plugin>;
     private configured: Map<number, Plugin>;
     private countingHandle: number;
+    private fftFactory: RealFftFactory;
 
-    constructor(...factories: PluginFactory[]) {
-        FeatsService.sanitiseStaticData(factories);
+    constructor(fftFactory: RealFftFactory, ...factories: PluginFactory[]) {
+        FeatsSynchronousService.sanitiseStaticData(factories);
         this.factories = new Map(factories.map(plugin => [plugin.metadata.key, plugin] as [string, PluginFactory]));
         this.loaded = new Map();
         this.configured = new Map();
         this.countingHandle = 0;
+        this.fftFactory = fftFactory;
     }
 
-    list(request: ListRequest): Promise<ListResponse> {
-        return Promise.resolve({
+    list(request: ListRequest): ListResponse {
+        return {
             available: [...this.factories.values()].map(plugin => plugin.metadata)
-        });
+        };
     }
 
-    load(request: LoadRequest): Promise<LoadResponse> {
+    load(request: LoadRequest): LoadResponse {
         // TODO what do I do with adapter flags? channel adapting stuff, frequency domain transformation etc
         // TODO what about parameterValues?
-        if (!this.factories.has(request.key)) return Promise.reject("Invalid plugin key.");
+        if (!this.factories.has(request.key)) throw new Error("Invalid plugin key.");
 
         const factory: PluginFactory = this.factories.get(request.key);
         const metadata: StaticData = factory.metadata;
         const extractor: FeatureExtractor =
             metadata.inputDomain === InputDomain.FrequencyDomain
-                ? new FrequencyDomainAdapter(factory.extractor(request.inputSampleRate))
+                ? new FrequencyDomainAdapter(factory.extractor(request.inputSampleRate), this.fftFactory)
                 : factory.extractor(request.inputSampleRate);
         this.loaded.set(++this.countingHandle, {extractor: extractor, metadata: metadata}); // TODO should the first assigned handle be 1 or 0? currently 1
 
         const defaultConfiguration: Configuration = extractor.getDefaultConfiguration();
 
-        return Promise.resolve({
+        return {
             handle: this.countingHandle,
             staticData: metadata,
             defaultConfiguration: defaultConfiguration
-        });
+        };
     }
 
-    configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        if (!this.loaded.has(request.handle)) return Promise.reject("Invalid plugin handle");
-        if (this.configured.has(request.handle)) return Promise.reject("PluginFactory is already configured");
+    configure(request: ConfigurationRequest): ConfigurationResponse {
+        if (!this.loaded.has(request.handle)) throw new Error("Invalid plugin handle");
+        if (this.configured.has(request.handle)) throw new Error("PluginFactory is already configured");
 
         const plugin: Plugin = this.loaded.get(request.handle);
         // TODO this is probably where the error handling for channel mismatch should be...
@@ -79,35 +84,35 @@ export class FeatsService implements Service {
                 configured: Object.assign({binNames: [], sampleRate: 0}, outputs.get(basic.identifier))
             };
         });
-        return Promise.resolve({handle: request.handle, outputList: outputList});
+        return {handle: request.handle, outputList: outputList};
     }
 
     // TODO what about FrequencyDomain input?, or channel count mis-match?
     // ^^ The AdapterFlags will indicate the work to be done, but I've not yet implemented anything which does it
-    process(request: ProcessRequest): Promise<ProcessResponse> { // TODO what if this was over the wire?
+    process(request: ProcessRequest): ProcessResponse { // TODO what if this was over the wire?
         if (!this.configured.has(request.handle))
-            return Promise.reject("Invalid plugin handle, or plugin not configured.");
+            throw new Error("Invalid plugin handle, or plugin not configured.");
 
         const plugin: Plugin = this.configured.get(request.handle);
         const numberOfInputs: number = request.processInput.inputBuffers.length;
         const metadata: StaticData = plugin.metadata;
 
         if (numberOfInputs < metadata.minChannelCount || numberOfInputs > metadata.maxChannelCount) // TODO is there a specific number of channels after configure is called?
-            return Promise.reject("wrong number of channels supplied.");
+            throw new Error("wrong number of channels supplied.");
 
         const features: FeatureSet = plugin.extractor.process(request.processInput);
-        return Promise.resolve({handle: request.handle, features: features});
+        return {handle: request.handle, features: features};
     }
 
-    finish(request: FinishRequest): Promise<FinishResponse> {
+    finish(request: FinishRequest): FinishResponse {
         const handle: ExtractorHandle = request.handle;
         if (!this.configured.has(handle))
-            return Promise.reject("Invalid plugin handle, or plugin not configured.");
+            throw new Error("Invalid plugin handle, or plugin not configured.");
         const plugin: Plugin = this.configured.get(handle);
         const features: FeatureSet = plugin.extractor.finish();
         this.loaded.delete(handle);
         this.configured.delete(handle);
-        return Promise.resolve({handle: handle, features: features});
+        return {handle: handle, features: features};
     }
 
     private static sanitiseStaticData(factories: PluginFactory[]): void {
@@ -115,6 +120,44 @@ export class FeatsService implements Service {
         factories.forEach(plugin => {
             if (typeof plugin.metadata.inputDomain === "string") {
                 plugin.metadata.inputDomain = InputDomain[plugin.metadata.inputDomain as any] as any;
+            }
+        });
+    }
+}
+
+export class FeatsService implements Service {
+    private service: FeatsSynchronousService;
+
+    constructor(fftFactory: RealFftFactory, ...factories: PluginFactory[]) {
+        this.service = new FeatsSynchronousService(fftFactory, ...factories);
+    }
+
+    list(request: ListRequest): Promise<ListResponse> {
+        return this.request(request, (req: any) => this.service.list(req));
+    }
+
+    load(request: LoadRequest): Promise<LoadResponse> {
+        return this.request(request, (req: any) => this.service.load(req));
+    }
+
+    configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
+        return this.request(request, (req: any) => this.service.configure(req));
+    }
+
+    process(request: ProcessRequest): Promise<ProcessResponse> {
+        return this.request(request, (req: any) => this.service.process(req));
+    }
+
+    finish(request: FinishRequest): Promise<FinishResponse> {
+        return this.request(request, (req: any) => this.service.finish(req));
+    }
+
+    private request(request: any, handler: Function): Promise<any> {
+        return new Promise((res, rej) => {
+            try {
+                res(handler(request));
+            } catch (err) {
+                rej(err);
             }
         });
     }

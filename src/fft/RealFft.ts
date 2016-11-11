@@ -12,6 +12,8 @@ export interface RealFft {
     dispose(): void;
 }
 
+export type RealFftFactory = (size: number, args?: {[key: string]: any}) => RealFft;
+
 export class KissRealFft implements RealFft {
     private size: number;
     private forwardConfig: any;
