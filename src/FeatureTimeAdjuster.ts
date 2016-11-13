@@ -40,24 +40,25 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
 
 export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster {
     private stepSizeSeconds: number;
-    private previousTimestamp: Timestamp;
+    private lastFeatureIndex: number;
 
     constructor(stepSizeSeconds: number) {
         if (stepSizeSeconds === undefined)
             throw new Error("Host must provide the step size (seconds).");
         this.stepSizeSeconds = stepSizeSeconds;
-        this.previousTimestamp = makeTimestamp(-stepSizeSeconds);
+        this.lastFeatureIndex = -1;
     }
 
     adjust(feature: Feature, inputTimestamp: Timestamp): void {
         const isValidTimestamp = inputTimestamp && inputTimestamp.hasOwnProperty("s") && inputTimestamp.hasOwnProperty("n");
         feature.timestamp = isValidTimestamp ? inputTimestamp : this.calculateNextTimestamp();
+        if (isValidTimestamp)
+            this.lastFeatureIndex = Math.round(toSeconds(feature.timestamp) / this.stepSizeSeconds);
         delete feature.duration; // host should ignore duration
-        this.previousTimestamp = feature.timestamp;
     }
 
     private calculateNextTimestamp() {
-        return makeTimestamp(toSeconds(this.previousTimestamp) + this.stepSizeSeconds);
+        return makeTimestamp(++this.lastFeatureIndex * this.stepSizeSeconds);
     }
 }
 
