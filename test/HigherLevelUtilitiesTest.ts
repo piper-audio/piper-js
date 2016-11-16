@@ -5,9 +5,13 @@ import * as chai from "chai";
 import {
     processConfiguredExtractor,
     segment,
-    process, ExtractorFactory, ExtractorFactoryArgs, collect,
-    AudioStreamFormat, AudioStreamFactory,
-    FixedSpacedFeatures, AudioData
+    process,
+    collect,
+    AudioStreamFormat,
+    FixedSpacedFeatures,
+    AudioData,
+    CreateFeatureExtractorFunction,
+    CreateAudioStreamFunction
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {makeTimestamp} from "../src/Timestamp"
@@ -37,8 +41,8 @@ const streamFormat: AudioStreamFormat = {
     sampleRate: sampleRate
 };
 
-function createStreamFactory(numberOfChannels: number,
-                             numberOfSamples: number): AudioStreamFactory {
+function createStreamCallback(numberOfChannels: number,
+                             numberOfSamples: number): CreateAudioStreamFunction {
     return (blockSize: number,
             stepSize: number,
             format: AudioStreamFormat) => {
@@ -53,11 +57,12 @@ function createStreamFactory(numberOfChannels: number,
     }
 }
 
-const extractorFactory: ExtractorFactory = (args: ExtractorFactoryArgs) => {
+const createExtractorCallback: CreateFeatureExtractorFunction
+    = (sampleRate, key) => {
     return new EmscriptenFeatureExtractor(
         VampTestPluginModule(),
-        args.sampleRate,
-        args.key
+        sampleRate,
+        key
     )
 };
 
@@ -168,9 +173,9 @@ describe("process()", () => {
     });
     it("can process time domain extractors", () => {
         [...process(
-            createStreamFactory(1, blockSize),
+            createStreamCallback(1, blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-summary"
         )].length.should.equal(1);
@@ -178,9 +183,9 @@ describe("process()", () => {
 
     it("can process frequency domain extractors", () => {
         [...process(
-            createStreamFactory(1, blockSize),
+            createStreamCallback(1, blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorFrequencyDomainKey,
             "input-summary"
         )].length.should.equal(2); // one complete block starting at zero, one half-full
@@ -188,9 +193,9 @@ describe("process()", () => {
 
     it("will use the first output if no output identifier provided", () => {
         const features = process(
-            createStreamFactory(1, blockSize),
+            createStreamCallback(1, blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey
         );
         let i = 0;
@@ -200,9 +205,9 @@ describe("process()", () => {
 
     it("can configure the extractor with provided parameters", () => {
         [...process(
-            createStreamFactory(1, blockSize * 10),
+            createStreamCallback(1, blockSize * 10),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-summary",
             new Map([["produce_output", 0]])
@@ -211,9 +216,9 @@ describe("process()", () => {
 
     it("can process with a specified block and step size", () => {
         const features = process(
-            createStreamFactory(1, blockSize * 10),
+            createStreamCallback(1, blockSize * 10),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-timestamp",
             new Map(),
@@ -226,9 +231,9 @@ describe("process()", () => {
 
     it("produces valid output for time domain (input-summary)", () => {
         const features = [...process(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-summary"
         )];
@@ -240,9 +245,9 @@ describe("process()", () => {
 
     it("produces valid output for frequency domain (input-summary)", () => {
         const features = [...process(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorFrequencyDomainKey,
             "input-summary"
         )];
@@ -264,9 +269,9 @@ describe("collect()", function () {
 
     it("produces output", () => {
         return collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-summary"
         ).should.exist;
@@ -274,9 +279,9 @@ describe("collect()", function () {
 
     it("produces valid output for one sample per step features", () => {
         const features = collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-timestamp"
         );
@@ -291,9 +296,9 @@ describe("collect()", function () {
 
     it("produces valid vector shape for known extractor (Vamp Plugin Test input-summary)", () => {
         let features = collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-summary",
             new Map([["produce_output", 0]])
@@ -301,9 +306,9 @@ describe("collect()", function () {
         features.shape.should.equal("vector");
         features.data.length.should.equal(0);
         features = collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-summary",
             new Map([["produce_output", 1]])
@@ -316,12 +321,12 @@ describe("collect()", function () {
         const stepSize = 4;
         const sampleRate = 16;
         const features = collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             {
                 channelCount: 1,
                 sampleRate: sampleRate
             },
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "input-summary",
             undefined, // TODO consider revising the function signature for these optional arguments - seems awkward and not very idiomatic JS, I've been too directly influenced from the Python code here
@@ -334,9 +339,9 @@ describe("collect()", function () {
 
     it("produces valid matrix shape for known extractor (Vamp Plugin Test grid-oss)", () => {
         const features = collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "grid-oss"
         );
@@ -351,9 +356,9 @@ describe("collect()", function () {
 
     it("produces valid list shape for variable sample rate extractor (Vamp Plugin Test curve-vsr)", () => {
         const features = collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "curve-vsr"
         );
@@ -365,9 +370,9 @@ describe("collect()", function () {
 
     it("throws an exception when an invalid output identifier is requested", () => {
         chai.expect(() => collect(
-            createStreamFactory(1, 10 * blockSize),
+            createStreamCallback(1, 10 * blockSize),
             streamFormat,
-            extractorFactory,
+            createExtractorCallback,
             extractorKey,
             "non-existent-output"
             )

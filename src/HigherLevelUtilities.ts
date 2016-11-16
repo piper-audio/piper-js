@@ -13,14 +13,6 @@ import {
     createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
 
-// // TODO combine with similar definitions in FeatsService for something generic?
-export interface ExtractorFactoryArgs {
-    sampleRate: number;
-    key: string;
-    [key: string]: any; // additional args?
-}
-
-export type ExtractorFactory = (args: ExtractorFactoryArgs) => FeatureExtractor;
 export type AudioData = Float32Array[];
 export type Output = {[key: string]: Feature}; // TODO rename / re-think
 export type FramedAudio = IterableIterator<AudioData>;
@@ -35,12 +27,27 @@ export interface AudioStream {
     format: AudioStreamFormat;
 }
 
-// TODO should format be passed in or derived by the factory?
+export type FeatureCollectionShape = "matrix" | "vector" | "list";
+// TODO consider revising
+export interface FeatureCollection {
+    shape: FeatureCollectionShape;
+    data: FeatureList | Float32Array | Float32Array[];
+}
+
+export interface FixedSpacedFeatures extends FeatureCollection {
+    stepDuration: number;
+}
+export type KeyValueObject = {[key: string]: any};
+export type CreateFeatureExtractorFunction = (sampleRate: number,
+                                       key: string,
+                                       additionalArgs?: KeyValueObject) => FeatureExtractor;
+
+// TODO should format be passed in or derived by the callback?
 // TODO does this even make any sense? This only exists because the extractor can inform the buffer size, so one might want to stream at that size
-export type AudioStreamFactory = (blockSize: number,
-                                  stepSize: number,
-                                  format: AudioStreamFormat,
-                                  ...args: any[]) => AudioStream;
+export type CreateAudioStreamFunction = (blockSize: number,
+                                         stepSize: number,
+                                         format: AudioStreamFormat,
+                                         additionalArgs?: KeyValueObject) => AudioStream;
 
 export function* segment(blockSize: number,
                          stepSize: number,
@@ -62,7 +69,7 @@ export function* segment(blockSize: number,
 export function loadAndConfigure(extractor: FeatureExtractor,
                                  channelCount: number,
                                  params: Parameters = new Map(),
-                                 args: {[key: string]: any} = {}): [Configuration, ConfiguredOutputs] {
+                                 args: KeyValueObject = {}): [Configuration, ConfiguredOutputs] {
     const defaultConfig: Configuration = extractor.getDefaultConfiguration();
     let blockSize: number = (args)["blockSize"] || defaultConfig.blockSize || 1024;
     let stepSize: number = (args)["stepSize"] || defaultConfig.stepSize || blockSize;
@@ -104,17 +111,6 @@ export function* processConfiguredExtractor(frames: FramedAudio,
 
     for (let output of lazyOutput(extractor.finish()))
         yield output;
-}
-
-export type FeatureCollectionShape = "matrix" | "vector" | "list";
-// TODO consider revising
-export interface FeatureCollection {
-    shape: FeatureCollectionShape;
-    data: FeatureList | Float32Array | Float32Array[];
-}
-
-export interface FixedSpacedFeatures extends FeatureCollection {
-    stepDuration: number;
 }
 
 function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionShape {
@@ -176,21 +172,25 @@ function getFeatureStepDuration(sampleRate: number,
 }
 
 // TODO revise "factories"
-export function collect(streamFactory: AudioStreamFactory,
+export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
                         streamFormat: AudioStreamFormat,
-                        extractorFactory: ExtractorFactory,
+                        createFeatureExtractorCallback: CreateFeatureExtractorFunction,
                         extractorKey: string,
                         outputId?: OutputIdentifier,
                         params?: Parameters,
-                        args: {[key: string]: any} = {}): FeatureCollection {
+                        args: KeyValueObject = {}): FeatureCollection {
     // TODO reduce duplication with process - only issue stopping calling process directly here for lazyOutputs is that ConfiguredOutputs and Configuration are needed
-    const extractor = extractorFactory({
-        sampleRate: streamFormat.sampleRate,
-        key: extractorKey
-    });
+    const extractor = createFeatureExtractorCallback(
+        streamFormat.sampleRate,
+        extractorKey
+    );
 
     const [config, outputs] = loadAndConfigure(extractor, streamFormat.channelCount, params, args);
-    const stream: AudioStream = streamFactory(config.blockSize, config.stepSize, streamFormat);
+    const stream: AudioStream = createAudioStreamCallback(
+        config.blockSize,
+        config.stepSize,
+        streamFormat
+    );
     outputId = outputId ? outputId : outputs.keys().next().value;
 
     if (!outputs.has(outputId)) throw Error("Invalid output identifier.");
@@ -211,22 +211,26 @@ export function collect(streamFactory: AudioStreamFactory,
     );
 }
 
-export function* process(streamFactory: AudioStreamFactory,
+export function* process(createAudioStreamCallback: CreateAudioStreamFunction,
                          streamFormat: AudioStreamFormat,
-                         extractorFactory: ExtractorFactory,
+                         createFeatureExtractorCallback: CreateFeatureExtractorFunction,
                          extractorKey: string,
                          outputId?: OutputIdentifier,
                          params?: Parameters,
-                         args: {[key: string]: any} = {}): IterableIterator<Feature> {
+                         args: KeyValueObject = {}): IterableIterator<Feature> {
     // TODO needs wrapping to handle input domain, channel and buffer adapter?
     // this is going to happen automatically in piper-vamp / emscripten extractors - Perhaps it should happen in the factory
-    const extractor = extractorFactory({
-        sampleRate: streamFormat.sampleRate,
-        key: extractorKey
-    });
+    const extractor = createFeatureExtractorCallback(
+        streamFormat.sampleRate,
+        extractorKey
+    );
 
     const [config, outputs] = loadAndConfigure(extractor, streamFormat.channelCount, params, args);
-    const stream: AudioStream = streamFactory(config.blockSize, config.stepSize, streamFormat);
+    const stream: AudioStream = createAudioStreamCallback(
+        config.blockSize,
+        config.stepSize,
+        streamFormat
+    );
     outputId = outputId ? outputId : outputs.keys().next().value;
     const descriptor: ConfiguredOutputDescriptor = outputs.get(outputId);
     const lazyOutputs = processConfiguredExtractor(
