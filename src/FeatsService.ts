@@ -3,14 +3,14 @@
  */
 import {
     FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData, InputDomain
-} from "feats/FeatureExtractor";
+} from "./FeatureExtractor";
 import {
     Service, LoadRequest, LoadResponse, ConfigurationRequest,
     ConfigurationResponse, ProcessRequest,
     ProcessResponse, ListResponse, FinishResponse, FinishRequest,
     ExtractorHandle, ListRequest, SynchronousService
 } from "./Piper";
-import {FeatureSet} from "feats/Feature";
+import {FeatureSet} from "./Feature";
 import {FrequencyDomainAdapter} from "./FrequencyDomainAdapter";
 import {RealFftFactory} from "./fft/RealFft";
 

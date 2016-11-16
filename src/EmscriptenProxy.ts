@@ -12,8 +12,8 @@ import {
 } from "./JsonProtocol";
 import {
     ConfiguredOutputs, Configuration, ProcessInput, FeatureExtractor, AdapterFlags
-} from "feats";
-import {FeatureSet} from "feats/Feature";
+} from "./FeatureExtractor";
+import {FeatureSet} from "./Feature";
 
 export interface EmscriptenModule {
     cwrap(ident: string, returnType: string, argTypes: string[]): Function;
@@ -217,4 +217,4 @@ const emscriptenProcess
     = (emscripten: EmscriptenModule) =>
     (request: ProcessRequest): Promise<string> => {
         return Promise.resolve(rawProcess(emscripten, request));
-};
+    };

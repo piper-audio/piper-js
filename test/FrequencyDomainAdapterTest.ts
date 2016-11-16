@@ -3,12 +3,13 @@
  */
 import * as chai from "chai";
 import {
-    ProcessInput, makeTimestamp
-} from "feats";
-import {FeatureList, Feature} from "feats/Feature";
+    ProcessInput
+} from "../src/FeatureExtractor";
+import {FeatureList, Feature} from "../src/Feature";
 import {PassThroughExtractor} from "./fixtures/FrequencyDomainExtractorStub";
 import {FrequencyDomainAdapter} from "../src/FrequencyDomainAdapter";
 import {KissRealFft} from "../src/fft/RealFft";
+import {makeTimestamp} from "../src/Timestamp";
 chai.should();
 
 function crudeBuffering(input: Float32Array,

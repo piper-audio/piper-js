@@ -3,11 +3,11 @@
  */
 import {
     Parameters, OutputIdentifier, FeatureExtractor, Configuration,
-    ConfiguredOutputs, StaticData, ConfiguredOutputDescriptor,
+    ConfiguredOutputs, ConfiguredOutputDescriptor,
     SampleType
-} from "feats";
-import {Feature, FeatureSet, FeatureList} from "feats/Feature";
-import {frame2timestamp} from "feats/Timestamp";
+} from "./FeatureExtractor";
+import {Feature, FeatureSet, FeatureList} from "./Feature";
+import {frame2timestamp} from "./Timestamp";
 import {
     FeatureTimeAdjuster,
     createFeatureTimeAdjuster
@@ -119,8 +119,8 @@ export interface FixedSpacedFeatures extends FeatureCollection {
 
 function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionShape {
     const isList = descriptor.hasDuration
-                || descriptor.sampleType === SampleType.VariableSampleRate
-                || !descriptor.binCount;
+        || descriptor.sampleType === SampleType.VariableSampleRate
+        || !descriptor.binCount;
     const isVector = descriptor.binCount === 1;
     if (isList) return "list";
     if (isVector) return "vector";

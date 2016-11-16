@@ -1,8 +1,8 @@
 /**
  * Created by lucast on 30/08/2016.
  */
-import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from "feats/FeatureExtractor";
-import {FeatureSet} from "feats/Feature";
+import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from "./FeatureExtractor";
+import {FeatureSet} from "./Feature";
 
 // Types used in the application
 
@@ -102,3 +102,5 @@ export * from "./JsonProtocol";
 export {FeatsService} from "./FeatsService";
 export {PiperClient} from "./PiperClient";
 export {segment, process, collect} from "./HigherLevelUtilities";
+export * from "./FeatureExtractor";
+export {makeTimestamp, frame2timestamp, toSeconds} from "./Timestamp";

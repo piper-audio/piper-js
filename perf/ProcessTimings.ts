@@ -1,8 +1,8 @@
 /* -*- indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import {AdapterFlags, ProcessInput} from "feats/FeatureExtractor";
-import {frame2timestamp} from "feats/Timestamp";
+import {AdapterFlags, ProcessInput} from "../src/FeatureExtractor";
+import {frame2timestamp} from "../src/Timestamp";
 import {batchProcess} from "../test/AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenProxy} from "../src/EmscriptenProxy";

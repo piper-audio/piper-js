@@ -1,9 +1,11 @@
-import {
-    Configuration, ConfiguredOutputs, FeatureExtractor, ProcessInput, StaticData, InputDomain, OutputIdentifier,
-    ConfiguredOutputDescriptor, SampleType
-} from "feats/FeatureExtractor";
-import {FeatureSet, FeatureList} from "feats/Feature";
 
+
+import {
+    FeatureExtractor, ConfiguredOutputs,
+    Configuration, ConfiguredOutputDescriptor, OutputIdentifier, SampleType,
+    ProcessInput, StaticData, InputDomain
+} from "../../src/FeatureExtractor";
+import {FeatureSet, FeatureList} from "../../src/Feature";
 export class FrequencyDomainExtractorStub implements FeatureExtractor {
     private binCount: number;
 

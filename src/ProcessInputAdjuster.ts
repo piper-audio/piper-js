@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 20/10/2016.
  */
-import {ProcessInput, Configuration} from "feats";
+import {ProcessInput, Configuration} from "./FeatureExtractor";
 
 export interface ProcessInputAdjuster {
     adjust(input: ProcessInput): ProcessInput;

@@ -2,11 +2,12 @@
  * Created by lucast on 20/10/2016.
  */
 import * as chai from "chai";
-import {makeTimestamp, Configuration} from "feats";
 import {
     ProcessInputBuffersAdjuster,
     ProcessInputAdjuster
 } from "../src/ProcessInputAdjuster";
+import {Configuration} from "../src/FeatureExtractor";
+import {makeTimestamp} from "../src/Timestamp";
 chai.should();
 
 describe("ProcessInputBuffersAdjuster", () => {

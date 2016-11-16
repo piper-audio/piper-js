@@ -2,7 +2,7 @@
  * Created by lucast on 04/10/2016.
  */
 import * as base64 from "base64-js";
-import {Timestamp} from "feats/Timestamp";
+import {Timestamp} from "./Timestamp";
 import {
     ExtractorHandle,
     ProcessRequest,
@@ -22,7 +22,7 @@ import {
     Feature,
     FeatureList,
     FeatureSet
-} from "feats/Feature";
+} from "./Feature";
 import {
     AdapterFlags,
     InputDomain,
@@ -31,7 +31,7 @@ import {
     ParameterDescriptor,
     ValueExtents,
     Configuration, StaticData, ProcessInput
-} from "feats/FeatureExtractor";
+} from "./FeatureExtractor";
 
 export namespace Filters {
     export const serialiseJsonListRequest
@@ -378,17 +378,17 @@ function toWireConfiguration(config: Configuration): WireConfiguration {
     return config.parameterValues == null
         ? {channelCount: config.channelCount, stepSize: config.stepSize, blockSize: config.blockSize}
         : Object.assign({}, config, {
-            parameterValues: [...config.parameterValues.entries()]
-                .reduce((obj, pair) => Object.assign(obj, {[pair[0]]: pair[1]}), {})
-        });
+        parameterValues: [...config.parameterValues.entries()]
+            .reduce((obj, pair) => Object.assign(obj, {[pair[0]]: pair[1]}), {})
+    });
 }
 
 function toConfiguration(config: WireConfiguration): Configuration {
     return config.parameterValues == null
         ? {channelCount: config.channelCount, stepSize: config.stepSize, blockSize: config.blockSize}
         : Object.assign({}, config, {
-            parameterValues: new Map(Object.keys(config.parameterValues).map(key => [key, config.parameterValues[key]]) as any)
-        });
+        parameterValues: new Map(Object.keys(config.parameterValues).map(key => [key, config.parameterValues[key]]) as any)
+    });
 }
 
 function toWireProcessRequest(request: ProcessRequest, asBase64?: boolean): WireProcessRequest {

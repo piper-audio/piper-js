@@ -2,9 +2,9 @@
 /**
  * Created by lucas on 02/09/2016.
  */
-import {Timestamp, frame2timestamp} from "feats/Timestamp";
-import {FeatureList, FeatureSet} from "feats/Feature";
-import {ProcessInput} from "feats/FeatureExtractor";
+import {Timestamp, frame2timestamp} from "../src/Timestamp";
+import {FeatureList, FeatureSet} from "../src/Feature";
+import {ProcessInput} from "../src/FeatureExtractor";
 
 export interface AudioBuffer {
     sampleRate: number,
@@ -54,11 +54,11 @@ export function batchProcess(blocks: Iterable<ProcessInput>,
                              process: (block: ProcessInput) => Promise<FeatureSet>,
                              finish: () => Promise<FeatureSet>)
 : Promise<FeatureSet> {
-                                 
+
     const processThunks: (() => Promise<FeatureSet>)[] =
         [...blocks].map(block => () => process(block))
-        .concat([finish]);
-    
+            .concat([finish]);
+
     return processThunks.reduce((runningFeatures, nextBlock) => {
         return runningFeatures.then((features) => {
             return concatFeatures(features, nextBlock());

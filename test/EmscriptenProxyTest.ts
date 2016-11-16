@@ -5,8 +5,8 @@
 
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
-import {FeatureSet, FeatureList} from "feats/Feature";
-import {Timestamp} from "feats/Timestamp";
+import {FeatureSet, FeatureList} from "../src/Feature";
+import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "./AudioUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {
@@ -14,10 +14,9 @@ import {
     EmscriptenFeatureExtractor
 } from "../src/EmscriptenProxy";
 import fs = require("fs");
-import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain} from "feats/FeatureExtractor";
+import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain, FeatureExtractor} from "../src/FeatureExtractor";
 import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
 import {PiperClient} from "../src/PiperClient";
-import {FeatureExtractor} from "feats";
 import {EmscriptenModule} from "../src/EmscriptenProxy";
 import VampTestPluginModule = require("../ext/VampTestPlugin");
 import {
@@ -172,8 +171,8 @@ describe("EmscriptenFeatureExtractor", () => {
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         ).getDefaultConfiguration();
         return (config.hasOwnProperty("blockSize")
-            && config.hasOwnProperty("channelCount")
-            && config.hasOwnProperty("stepSize")).should.be.true;
+        && config.hasOwnProperty("channelCount")
+        && config.hasOwnProperty("stepSize")).should.be.true;
     });
 
     it("Should be configurable", () => {
@@ -181,7 +180,7 @@ describe("EmscriptenFeatureExtractor", () => {
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         return (extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4})
-            instanceof Map).should.be.true;
+        instanceof Map).should.be.true;
     });
 
     it("Should process a block", () => {

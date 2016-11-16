@@ -13,12 +13,12 @@ import {
     FeatureExtractorFactory,
     FeatsService
 } from "../src/FeatsService";
-import {StaticData, Configuration, AdapterFlags} from "feats/FeatureExtractor";
+import {StaticData, Configuration, AdapterFlags} from "../src/FeatureExtractor";
 import {
     FeatureExtractorStub,
     MetaDataStub
 } from "./fixtures/FeatureExtractorStub";
-import {FeatureSet} from "feats/Feature";
+import {FeatureSet} from "../src/Feature";
 import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
 chai.should();
 chai.use(chaiAsPromised);
@@ -166,7 +166,7 @@ describe("FeatsService", () => {
                             inputBuffers: [new Float32Array([1, 1, 1, 1, 1, 1, 1, 1])]
                         }
                     });
-                }));
+                })  as Promise<ProcessResponse>);
 
             return Promise.all(responses).then(responses => {
                 const expectedValues: FeatureSet[] = [...expected.values()];
