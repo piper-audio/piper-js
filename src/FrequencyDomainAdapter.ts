@@ -1,12 +1,12 @@
 /**
  * Created by lucast on 24/10/2016.
  */
-import {RealFft, KissRealFft, RealFftFactory} from "./fft/RealFft";
+import {RealFft, RealFftFactory} from "./fft/RealFft";
 import {
     ProcessInput, FeatureExtractor, Configuration,
     ConfiguredOutputs
-} from "feats";
-import {FeatureSet} from "feats/Feature"
+} from "./FeatureExtractor";
+import {FeatureSet} from "./Feature"
 import {cyclicShiftInPlace, applyHannWindowTo} from "./FftUtilities";
 import {ProcessInputBuffersAdjuster} from "./ProcessInputAdjuster";
 

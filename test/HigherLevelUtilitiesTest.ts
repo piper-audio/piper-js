@@ -9,12 +9,13 @@ import {
     AudioStreamFormat, AudioStreamFactory,
     FixedSpacedFeatures, AudioData
 } from "../src/HigherLevelUtilities";
-import {FeatureExtractor, makeTimestamp} from "feats";
+import {FeatureExtractor} from "../src/FeatureExtractor";
+import {makeTimestamp} from "../src/Timestamp"
 import {
     EmscriptenFeatureExtractor
 } from "../src/EmscriptenProxy";
 import VampTestPluginModule = require('../ext/VampTestPlugin');
-import {Feature} from "feats/Feature";
+import {Feature} from "../src/Feature";
 import {
     EmscriptenListenerCleaner,
     createEmscriptenCleanerWithNodeGlobal
@@ -248,8 +249,8 @@ describe("process()", () => {
         features.length.should.equal(20);
         features.forEach((feature, i) => {
             let expected = (i === features.length - 1)
-            ? 0
-            : i * blockSize * 0.5 + blockSize * 0.5 + 1;
+                ? 0
+                : i * blockSize * 0.5 + blockSize * 0.5 + 1;
             expected = expected + blockSize - 1;
             Math.abs(feature.featureValues[0] - expected).should.be.approximately(0, delta);
         });

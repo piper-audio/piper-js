@@ -1,10 +1,10 @@
 /**
  * Created by lucast on 08/09/2016.
  */
-import {toSeconds, frame2timestamp, Timestamp, makeTimestamp} from "feats/Timestamp";
-import {OutputDescriptor, SampleType} from "feats/FeatureExtractor";
-import {Feature} from "feats/Feature";
-import {ConfiguredOutputDescriptor} from "feats";
+import {toSeconds, frame2timestamp, Timestamp, makeTimestamp} from "./Timestamp";
+import {OutputDescriptor, SampleType} from "./FeatureExtractor";
+import {Feature} from "./Feature";
+import {ConfiguredOutputDescriptor} from "./FeatureExtractor";
 
 export interface FeatureTimeAdjuster {
     adjust(feature: Feature, inputTimestamp?: Timestamp): void;

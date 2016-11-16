@@ -5,10 +5,11 @@ import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 chai.should();
 chai.use(chaiAsPromised);
-import {Feature, FeatureSet, FeatureList} from "feats/Feature";
-import {ProcessInput} from "feats/FeatureExtractor";
+
+import {Feature, FeatureSet, FeatureList} from "../src/Feature";
+import {ProcessInput} from "../src/FeatureExtractor";
 import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, AudioBufferStub} from "./AudioUtilities";
-import {FeatureExtractor} from "feats/FeatureExtractor";
+import {FeatureExtractor} from "../src/FeatureExtractor";
 import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
 
 describe("BatchBlockProcess", () => {
