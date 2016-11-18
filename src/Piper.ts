@@ -103,4 +103,4 @@ export {FeatsService} from "./FeatsService";
 export {PiperClient} from "./PiperClient";
 export {segment, process, collect} from "./HigherLevelUtilities";
 export * from "./FeatureExtractor";
-export {makeTimestamp, frame2timestamp, toSeconds} from "./Timestamp";
+export {fromSeconds, fromFrames, toSeconds} from "./Timestamp";

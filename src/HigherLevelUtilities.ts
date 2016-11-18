@@ -7,7 +7,7 @@ import {
     SampleType
 } from "./FeatureExtractor";
 import {Feature, FeatureSet, FeatureList} from "./Feature";
-import {frame2timestamp} from "./Timestamp";
+import {fromFrames} from "./Timestamp";
 import {
     FeatureTimeAdjuster,
     createFeatureTimeAdjuster
@@ -99,7 +99,7 @@ export function* processConfiguredExtractor(frames: FramedAudio,
 
     for (let frame of frames) {
         const features: FeatureSet = extractor.process({
-            timestamp: frame2timestamp(nFrame, sampleRate),
+            timestamp: fromFrames(nFrame, sampleRate),
             inputBuffers: frame
         });
 

@@ -14,7 +14,7 @@ import {
     CreateAudioStreamFunction
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
-import {makeTimestamp} from "../src/Timestamp"
+import {fromSeconds} from "../src/Timestamp"
 import {
     EmscriptenFeatureExtractor
 } from "../src/EmscriptenProxy";
@@ -200,7 +200,7 @@ describe("process()", () => {
         );
         let i = 0;
         for (let feature of features)
-            feature.timestamp.should.eql(makeTimestamp(i++ * 1.5));
+            feature.timestamp.should.eql(fromSeconds(i++ * 1.5));
     });
 
     it("can configure the extractor with provided parameters", () => {
@@ -363,7 +363,7 @@ describe("collect()", function () {
             "curve-vsr"
         );
         (features.data as Float32Array).forEach((feature: Feature, i: number) => {
-            feature.timestamp.should.eql(makeTimestamp(i * 0.75));
+            feature.timestamp.should.eql(fromSeconds(i * 0.75));
             (Math.abs(feature.featureValues[0] - i * 0.1) < delta).should.be.true
         });
     });
