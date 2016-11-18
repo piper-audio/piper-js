@@ -11,7 +11,10 @@ import {
     ExtractorHandle, ListRequest, SynchronousService
 } from "./Piper";
 import {FeatureSet} from "./Feature";
-import {FrequencyDomainAdapter} from "./FrequencyDomainAdapter";
+import {
+    FrequencyDomainAdapter,
+    ProcessInputAdjustmentMethod
+} from "./FrequencyDomainAdapter";
 import {RealFftFactory} from "./fft/RealFft";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
@@ -57,7 +60,12 @@ export class FeatsSynchronousService implements SynchronousService {
         const metadata: StaticData = factory.metadata;
         const extractor: FeatureExtractor =
             metadata.inputDomain === InputDomain.FrequencyDomain
-                ? new FrequencyDomainAdapter(factory.extractor(request.inputSampleRate), this.fftFactory)
+                ? new FrequencyDomainAdapter(
+                    factory.extractor(request.inputSampleRate),
+                    this.fftFactory,
+                    request.inputSampleRate,
+                    ProcessInputAdjustmentMethod.Timestamp
+                )
                 : factory.extractor(request.inputSampleRate);
         this.loaded.set(++this.countingHandle, {extractor: extractor, metadata: metadata}); // TODO should the first assigned handle be 1 or 0? currently 1
 
