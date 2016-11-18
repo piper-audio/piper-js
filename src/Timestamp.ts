@@ -171,8 +171,8 @@ function msecText(fixedDp: boolean, ms: number) {
  * i.e. millisecond resolution, even if the number of milliseconds is
  * a multiple of 10.
  */
-export function toTextHMSm(ts_in: Timestamp, fixedDp: boolean): string {
-    var ts = canonicalise(ts_in);
+export function toTextHMSm(t: Timestamp, fixedDp: boolean): string {
+    var ts = canonicalise(t);
     if (ts.s < 0 || ts.n < 0) {
         return "-" + toTextHMSm({ s: -ts.s, n: -ts.n }, fixedDp);
     }
@@ -191,8 +191,8 @@ export function toTextHMSm(ts_in: Timestamp, fixedDp: boolean): string {
  * Note that the representation always rounds seconds down towards
  * zero. This is generally what is expected for time displays.
  */
-export function toTextHMS(ts_in: Timestamp): string {
-    var ts = canonicalise(ts_in);
+export function toTextHMS(t: Timestamp): string {
+    var ts = canonicalise(t);
     if (ts.s < 0 || ts.n < 0) {
         return "-" + toTextHMS({ s: -ts.s, n: -ts.n });
     }
@@ -215,8 +215,8 @@ export function toTextHMS(ts_in: Timestamp): string {
  * i.e. millisecond resolution, even if the number of milliseconds is
  * a multiple of 10.
  */
-export function toTextMsec(ts_in: Timestamp, fixedDp: boolean): string {
-    var ts = canonicalise(ts_in);
+export function toTextMsec(t: Timestamp, fixedDp: boolean): string {
+    var ts = canonicalise(t);
     if (ts.s < 0 || ts.n < 0) {
         return "-" + toTextMsec({ s: -ts.s, n: -ts.n }, fixedDp);
     }
