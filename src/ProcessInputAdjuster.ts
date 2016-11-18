@@ -2,6 +2,7 @@
  * Created by lucast on 20/10/2016.
  */
 import {ProcessInput, Configuration} from "./FeatureExtractor";
+import {makeTimestamp, toSeconds} from "./Timestamp";
 
 export interface ProcessInputAdjuster {
     adjust(input: ProcessInput): ProcessInput;
@@ -31,5 +32,20 @@ export class ProcessInputBuffersAdjuster implements ProcessInputAdjuster {
                 return this.buffers[i].slice(0, this.blockSize);
             })
         };
+    }
+}
+
+export class ProcessInputTimestampAdjuster implements ProcessInputAdjuster {
+    private adjustmentSeconds: number;
+
+    constructor(blockSize: number, sampleRate: number) {
+        this.adjustmentSeconds = 0.5 * (blockSize / sampleRate);
+    }
+
+    adjust(input: ProcessInput): ProcessInput {
+        return {
+            timestamp: makeTimestamp(toSeconds(input.timestamp) + this.adjustmentSeconds),
+            inputBuffers: input.inputBuffers
+        }
     }
 }

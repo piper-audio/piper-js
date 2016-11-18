@@ -4,7 +4,7 @@
 import * as chai from "chai";
 import {
     ProcessInputBuffersAdjuster,
-    ProcessInputAdjuster
+    ProcessInputAdjuster, ProcessInputTimestampAdjuster
 } from "../src/ProcessInputAdjuster";
 import {Configuration} from "../src/FeatureExtractor";
 import {makeTimestamp} from "../src/Timestamp";
@@ -142,5 +142,23 @@ describe("ProcessInputBuffersAdjuster", () => {
                 new Float32Array([8, 8, 8, 8])
             ]);
         });
+    });
+});
+
+describe("ProcessInputTimestampAdjuster", () => {
+    const sampleRate = 16;
+    const blockSize = 16;
+    const input = {
+        timestamp: {s: 0, n: 500000000},
+        inputBuffers: [new Float32Array(blockSize)]
+    };
+    const expected = {
+        timestamp: {s: 1, n: 0},
+        inputBuffers: [new Float32Array(blockSize)]
+    };
+
+    it("should shift the timestamp by half the blockSize", () => {
+       const adjuster = new ProcessInputTimestampAdjuster(blockSize, sampleRate);
+       adjuster.adjust(input).should.eql(expected);
     });
 });
