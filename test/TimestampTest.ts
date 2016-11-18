@@ -1,37 +1,37 @@
 
 import chai = require("chai");
-import { Timestamp, fromSeconds, toSeconds, fromFrames, toFrames, canonicalise, ZERO_TIME } from "../src/Timestamp";
+import { Timestamp, fromSeconds, toSeconds, fromFrames, toFrames, toTextHMSm, toTextHMS, toTextMsec, canonicalise, ZERO_TIME } from "../src/Timestamp";
 
 describe("Timestamp", () => {
 
     const ONE_BILLION = 1e9;
     const HALF_A_BILLION = 5e8;
     
-    it("Converts zero seconds to timestamp", () => {
+    it("converts zero seconds to timestamp", () => {
         fromSeconds(0.0).should.deep.equal({ s: 0, n: 0 })
     });
 
-    it("Converts +ve seconds to timestamp", () => {
+    it("converts +ve seconds to timestamp", () => {
         fromSeconds(1.5).should.deep.equal({ s: 1, n: HALF_A_BILLION })
     });
 
-    it("Converts -ve seconds to timestamp", () => {
+    it("converts -ve seconds to timestamp", () => {
         fromSeconds(-1.5).should.deep.equal({ s: -1, n: -HALF_A_BILLION })
     });
 
-    it("Converts zero timestamp to seconds", () => {
+    it("converts zero timestamp to seconds", () => {
         toSeconds(ZERO_TIME).should.equal(0.0)
     });
 
-    it("Converts +ve timestamp to seconds", () => {
+    it("converts +ve timestamp to seconds", () => {
         toSeconds({ s: 1, n: HALF_A_BILLION }).should.equal(1.5)
     });
 
-    it("Converts -ve timestamp to seconds", () => {
+    it("converts -ve timestamp to seconds", () => {
         toSeconds({ s: -1, n: -HALF_A_BILLION }).should.equal(-1.5)
     });
 
-    it("Canonicalises various timestamps", () => {
+    it("canonicalises various timestamps", () => {
 
         // Some of these are already canonical (to test that it
         // doesn't change them), but most are not
@@ -120,9 +120,7 @@ describe("Timestamp", () => {
             { s: 0, n: -HALF_A_BILLION },
         ];
        
-        const actual : Timestamp[] = inputs.map(canonicalise);
-
-        actual.should.deep.equal(expected);
+        inputs.map(canonicalise).should.deep.equal(expected);
     });
 
     const testFrameCounts : number[] = [
@@ -163,7 +161,7 @@ describe("Timestamp", () => {
           { s: 0, n: 22050 }, { s: 0, n: 499999999 }, { s: 1, n: 0 } ]
     ];
     
-    it("Converts +ve frame to timestamp", () => {
+    it("converts +ve frame to timestamp", () => {
         const actual = testFrameRates.map(
             rate =>
                 testFrameCounts.map(
@@ -173,7 +171,7 @@ describe("Timestamp", () => {
         actual.should.deep.equal(testTimestamps);
     });
     
-    it("Converts -ve frame to timestamp", () => {
+    it("converts -ve frame to timestamp", () => {
         const actual = testFrameRates.map(
             rate =>
                 testFrameCounts.map(
@@ -189,7 +187,7 @@ describe("Timestamp", () => {
         actual.should.deep.equal(expected);
     });
 
-    it("Converts +ve timestamp to frame", () => {
+    it("converts +ve timestamp to frame", () => {
         const actual = testTimestamps.map(
             (tss, ix) =>
                 tss.map(
@@ -219,7 +217,7 @@ describe("Timestamp", () => {
         actual.should.deep.equal(expected);
     });
         
-    it("Converts -ve timestamp to frame", () => {
+    it("converts -ve timestamp to frame", () => {
         const actual = testTimestamps.map(
             (tss, ix) =>
                 tss.map(
@@ -251,5 +249,125 @@ describe("Timestamp", () => {
         );
         actual.should.deep.equal(expected);
     });
-        
+
+    const textTestInputs: Timestamp[] = [
+        { s: 0, n: 0 },
+        { s: 1, n: HALF_A_BILLION },
+        { s: -1, n: -HALF_A_BILLION },
+        { s: 1, n: 1000 },
+        { s: 1, n: 100000 },
+        { s: 1, n: 1000000 },
+        { s: 60, n: 0 },
+        { s: 61, n: 50000000 },
+        { s: 601, n : 50000000 },
+        { s: 3600, n: 0 },
+        { s: 3599, n: ONE_BILLION-1 },
+        { s: 3600*4 + 60*5 + 3, n: 10000000 },
+        { s: -3600*4 -60*5 - 3, n: -10000000 },
+    ];
+    
+    it("converts timestamp to HH:MM:SS.mmm string", () => {
+
+        const expected: string[] = [
+            "0",
+            "1.5",
+            "-1.5",
+            "1",
+            "1",
+            "1.001",
+            "1:00",
+            "1:01.05",
+            "10:01.05",
+            "1:00:00",
+            "59:59.999",
+            "4:05:03.01",
+            "-4:05:03.01"
+        ];
+
+        textTestInputs.map(t => toTextHMSm(t, false)).should.deep.equal(expected)
+    });
+
+    it("converts timestamp to fixed-precision HH:MM:SS.mmm string", () => {
+
+        const expected: string[] = [
+            "0.000",
+            "1.500",
+            "-1.500",
+            "1.000",
+            "1.000",
+            "1.001",
+            "1:00.000",
+            "1:01.050",
+            "10:01.050",
+            "1:00:00.000",
+            "59:59.999",
+            "4:05:03.010",
+            "-4:05:03.010"
+        ];
+
+        textTestInputs.map(t => toTextHMSm(t, true)).should.deep.equal(expected);
+    });
+
+    it("converts timestamp to HH:MM:SS string", () => {
+
+        const expected: string[] = [
+            "0",
+            "1",
+            "-1",
+            "1",
+            "1",
+            "1",
+            "1:00",
+            "1:01",
+            "10:01",
+            "1:00:00",
+            "59:59",
+            "4:05:03",
+            "-4:05:03"
+        ];
+
+        textTestInputs.map(t => toTextHMS(t)).should.deep.equal(expected)
+    });
+
+    it("converts timestamp to SSSSSS.mmm string", () => {
+
+        const expected: string[] = [
+            "0",
+            "1.5",
+            "-1.5",
+            "1",
+            "1",
+            "1.001",
+            "60",
+            "61.05",
+            "601.05",
+            "3600",
+            "3599.999",
+            "14703.01",
+            "-14703.01"
+        ];
+
+        textTestInputs.map(t => toTextMsec(t, false)).should.deep.equal(expected);
+    });
+
+    it("converts timestamp to fixed-precision SSSSSS.mmm string", () => {
+
+        const expected: string[] = [
+            "0.000",
+            "1.500",
+            "-1.500",
+            "1.000",
+            "1.000",
+            "1.001",
+            "60.000",
+            "61.050",
+            "601.050",
+            "3600.000",
+            "3599.999",
+            "14703.010",
+            "-14703.010"
+        ];
+
+        textTestInputs.map(t => toTextMsec(t, true)).should.deep.equal(expected);
+    });
 });

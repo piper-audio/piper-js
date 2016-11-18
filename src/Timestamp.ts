@@ -103,3 +103,122 @@ export function canonicalise(noncanon: Timestamp): Timestamp {
 
     return { s: s, n: n };
 }
+
+function secText(hms: boolean, sec: number) {
+    // sec should be a positive integer when called
+    if (sec < 0 || sec !== Math.round(sec)) {
+        throw "secText should be called with +ve integer values only"
+    }
+    if (!hms) {
+        return "" + sec;
+    }
+    var out: string = "";
+    if (sec >= 3600) {
+        out += Math.floor(sec / 3600) + ":";
+    }
+    if (sec >= 60) {
+        const minutes = Math.floor((sec % 3600) / 60);
+        if (sec >= 3600 && minutes < 10) out += "0";
+        out += minutes + ":";
+    }
+    if (sec >= 10) {
+        out += Math.floor((sec % 60) / 10);
+    }
+    out += (sec % 10);
+    return out;
+}
+
+function msecText(fixedDp: boolean, ms: number) {
+    // ms should be a positive integer when called
+    if (ms < 0 || ms !== Math.round(ms)) {
+        throw "msecText should be called with +ve integer values only"
+    }
+    var out: string = "";
+    if (ms !== 0) {
+        out += ".";
+        out += Math.floor(ms / 100);
+        ms = ms % 100;
+        if (ms !== 0) {
+            out += Math.floor(ms / 10);
+            ms = ms % 10;
+        } else if (fixedDp) {
+            out += "0";
+        }
+        if (ms !== 0) {
+            out += ms;
+        } else if (fixedDp) {
+            out += "0";
+        }
+    } else if (fixedDp) {
+        out += ".000";
+    }
+    return out;
+}
+
+/**
+ * Return a user-readable string representation of a Timestamp to the
+ * nearest millisecond. This is intended for time displays; don't use
+ * it for data interchange (use e.g. JSON of the timestamp object
+ * instead).
+ *
+ * Results will be in the form HH:MM:SS.mmm, though any leading zero
+ * fields will be omitted.
+ *
+ * Note that the representation always rounds milliseconds down
+ * towards zero. This is generally what is expected for time displays.
+ *
+ * If fixedDp is true, the result will be padded to 3 dp,
+ * i.e. millisecond resolution, even if the number of milliseconds is
+ * a multiple of 10.
+ */
+export function toTextHMSm(ts_in: Timestamp, fixedDp: boolean): string {
+    var ts = canonicalise(ts_in);
+    if (ts.s < 0 || ts.n < 0) {
+        return "-" + toTextHMSm({ s: -ts.s, n: -ts.n }, fixedDp);
+    }
+    return secText(true, ts.s) + msecText(fixedDp, Math.floor(ts.n / 1000000));
+}
+
+/**
+ * Return a user-readable string representation of a Timestamp to the
+ * nearest second. This is intended for time displays; don't use it
+ * for data interchange (use e.g. JSON of the timestamp object
+ * instead).
+ *
+ * Results will be in the form HH:MM:SS, though any leading zero
+ * fields will be omitted.
+ *
+ * Note that the representation always rounds seconds down towards
+ * zero. This is generally what is expected for time displays.
+ */
+export function toTextHMS(ts_in: Timestamp): string {
+    var ts = canonicalise(ts_in);
+    if (ts.s < 0 || ts.n < 0) {
+        return "-" + toTextHMS({ s: -ts.s, n: -ts.n });
+    }
+    return secText(true, ts.s);
+}
+
+/**
+ * Return a user-readable string representation of a Timestamp to the
+ * nearest millisecond. This is intended for time displays; don't use
+ * it for data interchange (use e.g. JSON of the timestamp object
+ * instead).
+ *
+ * Results will be in the form SSSSSS.mmm, i.e. consisting of seconds
+ * and milliseconds fields only.
+ *
+ * Note that the representation always rounds milliseconds down
+ * towards zero. This is generally what is expected for time displays.
+ * 
+ * If fixedDp is true, the result will be padded to 3 dp,
+ * i.e. millisecond resolution, even if the number of milliseconds is
+ * a multiple of 10.
+ */
+export function toTextMsec(ts_in: Timestamp, fixedDp: boolean): string {
+    var ts = canonicalise(ts_in);
+    if (ts.s < 0 || ts.n < 0) {
+        return "-" + toTextMsec({ s: -ts.s, n: -ts.n }, fixedDp);
+    }
+    return secText(false, ts.s) + msecText(fixedDp, Math.floor(ts.n / 1000000));
+}
