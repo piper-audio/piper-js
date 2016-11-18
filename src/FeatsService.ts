@@ -2,7 +2,8 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData, InputDomain
+    FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
+    InputDomain, AdapterFlags
 } from "./FeatureExtractor";
 import {
     Service, LoadRequest, LoadResponse, ConfigurationRequest,
@@ -55,11 +56,17 @@ export class FeatsSynchronousService implements SynchronousService {
         // TODO what do I do with adapter flags? channel adapting stuff, frequency domain transformation etc
         // TODO what about parameterValues?
         if (!this.factories.has(request.key)) throw new Error("Invalid plugin key.");
+        const isInputDomainAdapted = request.adapterFlags.length > 0
+            && (
+                request.adapterFlags.includes(AdapterFlags.AdaptAll)
+                || request.adapterFlags.includes(AdapterFlags.AdaptAllSafe)
+                || request.adapterFlags.includes(AdapterFlags.AdaptInputDomain)
+            );
 
         const factory: PluginFactory = this.factories.get(request.key);
         const metadata: StaticData = factory.metadata;
         const extractor: FeatureExtractor =
-            metadata.inputDomain === InputDomain.FrequencyDomain
+            metadata.inputDomain === InputDomain.FrequencyDomain && isInputDomainAdapted
                 ? new FrequencyDomainAdapter(
                     factory.extractor(request.inputSampleRate),
                     this.fftFactory,
