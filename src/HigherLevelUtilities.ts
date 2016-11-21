@@ -49,6 +49,22 @@ export type CreateAudioStreamFunction = (blockSize: number,
                                          format: AudioStreamFormat,
                                          additionalArgs?: KeyValueObject) => AudioStream;
 
+
+export interface SimpleRequest {
+    audioData: AudioData;
+    key: string;
+    outputId?: OutputIdentifier;
+    parameterValues?: Parameters;
+    stepSize?: number;
+    blockSize?: number;
+}
+
+export interface SimpleService {
+    list(request: ListRequest): Promise<ListResponse>;
+    process(request: SimpleRequest): Promise<FeatureList[]>;
+    collect(request: SimpleRequest): Promise<FeatureCollection[]>;
+}
+
 export function* segment(blockSize: number,
                          stepSize: number,
                          audioData: AudioData): IterableIterator<AudioData> {
@@ -66,20 +82,44 @@ export function* segment(blockSize: number,
     }
 }
 
-export function loadAndConfigure(extractor: FeatureExtractor,
-                                 channelCount: number,
-                                 params: Parameters = new Map(),
-                                 args: KeyValueObject = {}): [Configuration, ConfiguredOutputs] {
-    const defaultConfig: Configuration = extractor.getDefaultConfiguration();
-    let blockSize: number = (args)["blockSize"] || defaultConfig.blockSize || 1024;
-    let stepSize: number = (args)["stepSize"] || defaultConfig.stepSize || blockSize;
+interface OptionalConfiguration {
+    channelCount?: number;
+    blockSize?: number;
+    stepSize?: number;
+    parameterValues?: Parameters;
+}
+
+function determineConfiguration(defaultConfig: Configuration,
+                                overrides?: OptionalConfiguration): Configuration {
+    let blockSize: number = overrides.blockSize || defaultConfig.blockSize || 1024;
+    let stepSize: number = overrides.stepSize || defaultConfig.stepSize || blockSize;
+    let channelCount: number = overrides.channelCount || defaultConfig.channelCount || 1; // TODO is 1 okay?
 
     let config: Configuration = {
         channelCount: channelCount,
         blockSize: blockSize,
         stepSize: stepSize
     };
-    if (params.size) config["parameterValues"] = params;
+
+    if (overrides.parameterValues && overrides.parameterValues.size > 0)
+        config["parameterValues"] = overrides.parameterValues;
+
+    return config;
+}
+
+function loadAndConfigure(extractor: FeatureExtractor,
+                          defaultConfig: Configuration,
+                          channelCount: number,
+                          params: Parameters = new Map(),
+                          args: KeyValueObject = {}): [Configuration, ConfiguredOutputs] {
+
+    const config = determineConfiguration(defaultConfig, {
+        blockSize: (args)["blockSize"],
+        stepSize: (args)["stepSize"],
+        channelCount: channelCount,
+        parameterValues: params
+    });
+
     return [config, extractor.configure(config)];
 }
 
@@ -185,7 +225,14 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
         extractorKey
     );
 
-    const [config, outputs] = loadAndConfigure(extractor, streamFormat.channelCount, params, args);
+    const [config, outputs] = loadAndConfigure(
+        extractor,
+        extractor.getDefaultConfiguration(),
+        streamFormat.channelCount,
+        params,
+        args
+    );
+
     const stream: AudioStream = createAudioStreamCallback(
         config.blockSize,
         config.stepSize,
@@ -225,7 +272,14 @@ export function* process(createAudioStreamCallback: CreateAudioStreamFunction,
         extractorKey
     );
 
-    const [config, outputs] = loadAndConfigure(extractor, streamFormat.channelCount, params, args);
+    const [config, outputs] = loadAndConfigure(
+        extractor,
+        extractor.getDefaultConfiguration(),
+        streamFormat.channelCount,
+        params,
+        args
+    );
+
     const stream: AudioStream = createAudioStreamCallback(
         config.blockSize,
         config.stepSize,
