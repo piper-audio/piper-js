@@ -7,7 +7,7 @@
 import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
-import {FeatureSet} from "./Feature";
+import {FeatureSet, Feature} from "./Feature";
 import {Timestamp, fromSeconds, toSeconds} from "./Timestamp";
 import {
     ExtractorHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
@@ -102,7 +102,7 @@ export class PiperClient implements Service {
 
         for (let [i, featureList] of features.entries()) {
             const adjuster: FeatureTimeAdjuster = this.timeAdjusters.get(i);
-            featureList.map(feature => {
+            featureList.map((feature: Feature) => {
                 adjuster.adjust(feature, inputTimestamp);
 
                 if (this.isFrequencyDomainExtractor(handle)) {
