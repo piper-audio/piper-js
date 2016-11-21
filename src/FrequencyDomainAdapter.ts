@@ -8,22 +8,39 @@ import {
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature"
 import {cyclicShiftInPlace, applyHannWindowTo} from "./FftUtilities";
-import {ProcessInputBuffersAdjuster} from "./ProcessInputAdjuster";
+import {
+    ProcessInputBuffersAdjuster,
+    ProcessInputAdjuster, ProcessInputTimestampAdjuster
+} from "./ProcessInputAdjuster";
+
+export enum ProcessInputAdjustmentMethod {
+    Timestamp,
+    Buffer
+}
 
 export class FrequencyDomainAdapter implements FeatureExtractor {
     private wrapped: FeatureExtractor;
     private fft: RealFft;
     private fftFactory: RealFftFactory;
-    private adjuster: ProcessInputBuffersAdjuster;
+    private adjuster: ProcessInputAdjuster;
+    private sampleRate: number;
+    private adjustmentMethod: ProcessInputAdjustmentMethod;
 
-    constructor(extractor: FeatureExtractor, fftFactory: RealFftFactory) {
+    constructor(extractor: FeatureExtractor,
+                fftFactory: RealFftFactory,
+                sampleRate: number,
+                adjustmentMethod: ProcessInputAdjustmentMethod) {
         this.wrapped = extractor;
         this.fftFactory = fftFactory;
+        this.sampleRate = sampleRate;
+        this.adjustmentMethod = adjustmentMethod;
     }
 
     configure(configuration: Configuration): ConfiguredOutputs {
         this.fft = this.fftFactory(configuration.blockSize); // TODO verify power of 2?
-        this.adjuster = new ProcessInputBuffersAdjuster(configuration);
+        this.adjuster = this.adjustmentMethod === ProcessInputAdjustmentMethod.Buffer
+                        ? new ProcessInputBuffersAdjuster(configuration)
+                        : new ProcessInputTimestampAdjuster(configuration.blockSize, this.sampleRate);
         return this.wrapped.configure(configuration);
     }
 

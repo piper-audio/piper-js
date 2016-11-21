@@ -2,7 +2,8 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData, InputDomain
+    FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
+    InputDomain, AdapterFlags
 } from "./FeatureExtractor";
 import {
     Service, LoadRequest, LoadResponse, ConfigurationRequest,
@@ -11,7 +12,10 @@ import {
     ExtractorHandle, ListRequest, SynchronousService
 } from "./Piper";
 import {FeatureSet} from "./Feature";
-import {FrequencyDomainAdapter} from "./FrequencyDomainAdapter";
+import {
+    FrequencyDomainAdapter,
+    ProcessInputAdjustmentMethod
+} from "./FrequencyDomainAdapter";
 import {RealFftFactory} from "./fft/RealFft";
 
 export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
@@ -52,12 +56,23 @@ export class FeatsSynchronousService implements SynchronousService {
         // TODO what do I do with adapter flags? channel adapting stuff, frequency domain transformation etc
         // TODO what about parameterValues?
         if (!this.factories.has(request.key)) throw new Error("Invalid plugin key.");
+        const isInputDomainAdapted = request.adapterFlags.length > 0
+            && (
+                request.adapterFlags.includes(AdapterFlags.AdaptAll)
+                || request.adapterFlags.includes(AdapterFlags.AdaptAllSafe)
+                || request.adapterFlags.includes(AdapterFlags.AdaptInputDomain)
+            );
 
         const factory: PluginFactory = this.factories.get(request.key);
         const metadata: StaticData = factory.metadata;
         const extractor: FeatureExtractor =
-            metadata.inputDomain === InputDomain.FrequencyDomain
-                ? new FrequencyDomainAdapter(factory.extractor(request.inputSampleRate), this.fftFactory)
+            metadata.inputDomain === InputDomain.FrequencyDomain && isInputDomainAdapted
+                ? new FrequencyDomainAdapter(
+                    factory.extractor(request.inputSampleRate),
+                    this.fftFactory,
+                    request.inputSampleRate,
+                    ProcessInputAdjustmentMethod.Timestamp
+                )
                 : factory.extractor(request.inputSampleRate);
         this.loaded.set(++this.countingHandle, {extractor: extractor, metadata: metadata}); // TODO should the first assigned handle be 1 or 0? currently 1
 

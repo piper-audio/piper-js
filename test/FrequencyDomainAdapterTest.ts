@@ -7,7 +7,10 @@ import {
 } from "../src/FeatureExtractor";
 import {FeatureList, Feature} from "../src/Feature";
 import {PassThroughExtractor} from "./fixtures/FrequencyDomainExtractorStub";
-import {FrequencyDomainAdapter} from "../src/FrequencyDomainAdapter";
+import {
+    FrequencyDomainAdapter,
+    ProcessInputAdjustmentMethod
+} from "../src/FrequencyDomainAdapter";
 import {KissRealFft} from "../src/fft/RealFft";
 import {fromSeconds} from "../src/Timestamp";
 chai.should();
@@ -48,7 +51,12 @@ describe("FrequencyDomainAdapter", () => {
         const sampleRate: number = 16;
         const blockSize: number = 4;
         const stepSize: number = 2;
-        let extractor = new FrequencyDomainAdapter(new PassThroughExtractor(), (size: number) => new KissRealFft(size));
+        let extractor = new FrequencyDomainAdapter(
+            new PassThroughExtractor(),
+            (size: number) => new KissRealFft(size),
+            sampleRate,
+            ProcessInputAdjustmentMethod.Buffer
+        );
         extractor.configure(extractor.getDefaultConfiguration());
 
         const expectedFeatures: FeatureList = [
