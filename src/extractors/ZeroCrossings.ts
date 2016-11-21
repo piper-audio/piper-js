@@ -7,7 +7,7 @@ import {
     ProcessInput
 } from "../FeatureExtractor";
 import {FeatureSet, FeatureList} from "../Feature";
-import {frame2timestamp} from "../Timestamp";
+import {fromFrames} from "../Timestamp";
 
 
 export default class ZeroCrossings implements FeatureExtractor {
@@ -52,7 +52,7 @@ export default class ZeroCrossings implements FeatureExtractor {
         channel.forEach((sample, nSample) => {
             if (this.hasCrossedAxis(sample)) {
                 ++count;
-                crossingPoints.push({timestamp: frame2timestamp(nSample, this.inputSampleRate)});
+                crossingPoints.push({timestamp: fromFrames(nSample, this.inputSampleRate)});
             }
             this.previousSample = sample;
         });

@@ -2,7 +2,7 @@
 /**
  * Created by lucas on 02/09/2016.
  */
-import {Timestamp, frame2timestamp} from "../src/Timestamp";
+import {Timestamp, fromFrames} from "../src/Timestamp";
 import {FeatureList, FeatureSet} from "../src/Feature";
 import {ProcessInput} from "../src/FeatureExtractor";
 
@@ -90,7 +90,7 @@ export function* segmentAudioBuffer(blockSize: number,
     while (nStep < nSteps) {
         const start: number = nStep * stepSize;
         const stop: number = start + blockSize;
-        const currentTimestamp: Timestamp = frame2timestamp(nStep++ * stepSize, audioBuffer.sampleRate);
+        const currentTimestamp: Timestamp = fromFrames(nStep++ * stepSize, audioBuffer.sampleRate);
         const audioData: Float32Array[] = channels.map(channel => audioBuffer.getChannelData(channel));
         yield {
             timestamp: currentTimestamp,

@@ -6,7 +6,7 @@ import chai = require('chai');
 import {ProcessInput} from "../src/FeatureExtractor";
 import ZeroCrossings from "../src/extractors/ZeroCrossings";
 import {FeatureSet} from "../src/Feature";
-import {frame2timestamp} from "../src/Timestamp";
+import {fromFrames} from "../src/Timestamp";
 chai.should();
 
 describe('ZeroCrossings', () => {
@@ -35,7 +35,7 @@ describe('ZeroCrossings', () => {
                 featureValues: new Float32Array([5])
             }]);
 
-            [1,2,4,5,7].forEach((frame, index) => frame2timestamp(frame, 16)
+            [1,2,4,5,7].forEach((frame, index) => fromFrames(frame, 16)
                 .should.eql(features.get("crossings")[index].timestamp));
         });
 
