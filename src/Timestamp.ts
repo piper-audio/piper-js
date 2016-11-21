@@ -14,7 +14,7 @@ export interface Timestamp {
     n: number;
 }
 
-export const ZERO_TIME : Timestamp = { s: 0, n: 0 }
+export const ZERO_TIME : Timestamp = { s: 0, n: 0 };
 
 /**
  * Convert from time in seconds to timestamp value.
@@ -26,7 +26,7 @@ export function fromSeconds(seconds: number): Timestamp {
             n: Math.floor((seconds - Math.floor(seconds)) * 1e9 + 0.5)
         });
     } else {
-        var { s, n } = fromSeconds(-seconds);
+        const { s, n } = fromSeconds(-seconds);
         return canonicalise({ s: -s, n: -n });
     }
 }
@@ -54,10 +54,9 @@ export function fromFrames(frame: number, frameRate: number): Timestamp {
  */
 export function toFrames(timestamp: Timestamp, frameRate: number): number {
     const t = toSeconds(timestamp);
-    let f;
-    if (t < 0) f = -Math.floor((-t) * frameRate + 0.5)
-    else f = Math.floor(t * frameRate + 0.5);
-    return f;
+    return (t < 0)
+        ? -Math.floor((-t) * frameRate + 0.5)
+        : Math.floor(t * frameRate + 0.5);
 }
 
 /**
@@ -73,8 +72,8 @@ export function toFrames(timestamp: Timestamp, frameRate: number): number {
  */
 export function canonicalise(noncanon: Timestamp): Timestamp {
 
-    var s = Math.round(noncanon.s)
-    var n = Math.round(noncanon.n)
+    let s = Math.round(noncanon.s);
+    let n = Math.round(noncanon.n);
 
     if (s !== noncanon.s) {
         // Non-integral number of seconds: convert that, then add
@@ -112,7 +111,7 @@ function secText(hms: boolean, sec: number) {
     if (!hms) {
         return "" + sec;
     }
-    var out: string = "";
+    let out: string = "";
     if (sec >= 3600) {
         out += Math.floor(sec / 3600) + ":";
     }
@@ -133,7 +132,7 @@ function msecText(fixedDp: boolean, ms: number) {
     if (ms < 0 || ms !== Math.round(ms)) {
         throw "msecText should be called with +ve integer values only"
     }
-    var out: string = "";
+    let out: string = "";
     if (ms !== 0) {
         out += ".";
         out += Math.floor(ms / 100);
@@ -172,7 +171,7 @@ function msecText(fixedDp: boolean, ms: number) {
  * a multiple of 10.
  */
 export function toTextHMSm(t: Timestamp, fixedDp: boolean): string {
-    var ts = canonicalise(t);
+    const ts = canonicalise(t);
     if (ts.s < 0 || ts.n < 0) {
         return "-" + toTextHMSm({ s: -ts.s, n: -ts.n }, fixedDp);
     }
@@ -192,7 +191,7 @@ export function toTextHMSm(t: Timestamp, fixedDp: boolean): string {
  * zero. This is generally what is expected for time displays.
  */
 export function toTextHMS(t: Timestamp): string {
-    var ts = canonicalise(t);
+    const ts = canonicalise(t);
     if (ts.s < 0 || ts.n < 0) {
         return "-" + toTextHMS({ s: -ts.s, n: -ts.n });
     }
@@ -216,7 +215,7 @@ export function toTextHMS(t: Timestamp): string {
  * a multiple of 10.
  */
 export function toTextMsec(t: Timestamp, fixedDp: boolean): string {
-    var ts = canonicalise(t);
+    const ts = canonicalise(t);
     if (ts.s < 0 || ts.n < 0) {
         return "-" + toTextMsec({ s: -ts.s, n: -ts.n }, fixedDp);
     }
