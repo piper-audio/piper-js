@@ -12,7 +12,7 @@ import {
     ProcessInputAdjustmentMethod
 } from "../src/FrequencyDomainAdapter";
 import {KissRealFft} from "../src/fft/RealFft";
-import {makeTimestamp} from "../src/Timestamp";
+import {fromSeconds} from "../src/Timestamp";
 chai.should();
 
 function crudeBuffering(input: Float32Array,
@@ -32,7 +32,7 @@ function crudeBuffering(input: Float32Array,
         }
 
         blocks.push({
-            timestamp: makeTimestamp(n * stepSizeSeconds),
+            timestamp: fromSeconds(n * stepSizeSeconds),
             inputBuffers: [buffer]
         });
     }

@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 08/09/2016.
  */
-import {toSeconds, frame2timestamp, Timestamp, makeTimestamp} from "./Timestamp";
+import {toSeconds, fromFrames, Timestamp, fromSeconds} from "./Timestamp";
 import {OutputDescriptor, SampleType} from "./FeatureExtractor";
 import {Feature} from "./Feature";
 import {ConfiguredOutputDescriptor} from "./FeatureExtractor";
@@ -17,7 +17,7 @@ export class VariableSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuste
         if (!feature.hasOwnProperty("timestamp")) throw new Error("Feature must have a timestamp");
         const hasSampleRate: boolean = this.descriptor.hasOwnProperty("sampleRate") && this.descriptor.sampleRate !== 0.0;
         if (!feature.hasOwnProperty("duration"))
-            feature.duration = hasSampleRate ? frame2timestamp(1, this.descriptor.sampleRate) : {s: 0, n: 0};
+            feature.duration = hasSampleRate ? fromFrames(1, this.descriptor.sampleRate) : {s: 0, n: 0};
     }
 }
 
@@ -32,8 +32,8 @@ export class FixedSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
     adjust(feature: Feature): void {
         const sr: number = this.descriptor.sampleRate;
         const featureIndex: number = feature.hasOwnProperty("timestamp") ? Math.round(toSeconds(feature.timestamp) * sr) : this.lastFeatureIndex + 1;
-        feature.timestamp = frame2timestamp(featureIndex, sr);
-        feature.duration = feature.hasOwnProperty("duration") ? frame2timestamp(Math.round(toSeconds(feature.duration) * sr), sr) : {s: 0, n: 0};
+        feature.timestamp = fromFrames(featureIndex, sr);
+        feature.duration = feature.hasOwnProperty("duration") ? fromFrames(Math.round(toSeconds(feature.duration) * sr), sr) : {s: 0, n: 0};
         this.lastFeatureIndex = featureIndex;
     }
 }
@@ -58,7 +58,7 @@ export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster 
     }
 
     private calculateNextTimestamp() {
-        return makeTimestamp(++this.lastFeatureIndex * this.stepSizeSeconds);
+        return fromSeconds(++this.lastFeatureIndex * this.stepSizeSeconds);
     }
 }
 

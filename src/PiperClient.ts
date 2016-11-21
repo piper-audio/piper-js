@@ -8,7 +8,7 @@ import {
     FeatureTimeAdjuster, createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
 import {FeatureSet} from "./Feature";
-import {Timestamp, makeTimestamp, toSeconds} from "./Timestamp";
+import {Timestamp, fromSeconds, toSeconds} from "./Timestamp";
 import {
     ExtractorHandle, ListResponse, LoadRequest, ConfigurationRequest, ConfigurationResponse,
     LoadResponse, ProcessRequest, FinishRequest, ProcessResponse, FinishResponse, ListRequest, Service
@@ -108,7 +108,7 @@ export class PiperClient implements Service {
                 if (this.isFrequencyDomainExtractor(handle)) {
                     const offset = this.handleToConfiguration.get(handle)
                             .blockSize * 0.5 / this.handleToSampleRate.get(handle);
-                    feature.timestamp = makeTimestamp(toSeconds(feature.timestamp) + offset);
+                    feature.timestamp = fromSeconds(toSeconds(feature.timestamp) + offset);
                 }
             });
         }

@@ -2,7 +2,7 @@
  * Created by lucast on 20/10/2016.
  */
 import {ProcessInput, Configuration} from "./FeatureExtractor";
-import {makeTimestamp, toSeconds} from "./Timestamp";
+import {fromSeconds, toSeconds} from "./Timestamp";
 
 export interface ProcessInputAdjuster {
     adjust(input: ProcessInput): ProcessInput;
@@ -44,7 +44,7 @@ export class ProcessInputTimestampAdjuster implements ProcessInputAdjuster {
 
     adjust(input: ProcessInput): ProcessInput {
         return {
-            timestamp: makeTimestamp(toSeconds(input.timestamp) + this.adjustmentSeconds),
+            timestamp: fromSeconds(toSeconds(input.timestamp) + this.adjustmentSeconds),
             inputBuffers: input.inputBuffers
         }
     }

@@ -7,7 +7,7 @@ import {
     ProcessInputAdjuster, ProcessInputTimestampAdjuster
 } from "../src/ProcessInputAdjuster";
 import {Configuration} from "../src/FeatureExtractor";
-import {makeTimestamp} from "../src/Timestamp";
+import {fromSeconds} from "../src/Timestamp";
 chai.should();
 
 describe("ProcessInputBuffersAdjuster", () => {
@@ -66,7 +66,7 @@ describe("ProcessInputBuffersAdjuster", () => {
             ]);
 
             adjuster.adjust({
-                timestamp: makeTimestamp(stepSizeSeconds),
+                timestamp: fromSeconds(stepSizeSeconds),
                 inputBuffers: [
                     new Float32Array([1, 1, 2, 2]),
                     new Float32Array([5, 5, 6, 6])
@@ -77,7 +77,7 @@ describe("ProcessInputBuffersAdjuster", () => {
             ]);
 
             adjuster.adjust({
-                timestamp: makeTimestamp(2.0 * stepSizeSeconds),
+                timestamp: fromSeconds(2.0 * stepSizeSeconds),
                 inputBuffers: [
                     new Float32Array([2, 2, 2, 2]),
                     new Float32Array([6, 6, 6, 6])
@@ -88,7 +88,7 @@ describe("ProcessInputBuffersAdjuster", () => {
             ]);
 
             adjuster.adjust({
-                timestamp: makeTimestamp(3.0 * stepSizeSeconds),
+                timestamp: fromSeconds(3.0 * stepSizeSeconds),
                 inputBuffers: [
                     new Float32Array([2, 2, 3, 3]),
                     new Float32Array([6, 6, 7, 7])
@@ -99,7 +99,7 @@ describe("ProcessInputBuffersAdjuster", () => {
             ]);
 
             adjuster.adjust({
-                timestamp: makeTimestamp(4.0 * stepSizeSeconds),
+                timestamp: fromSeconds(4.0 * stepSizeSeconds),
                 inputBuffers: [
                     new Float32Array([3, 3, 3, 3]),
                     new Float32Array([7, 7, 7, 7])
@@ -110,7 +110,7 @@ describe("ProcessInputBuffersAdjuster", () => {
             ]);
 
             adjuster.adjust({
-                timestamp: makeTimestamp(5.0 * stepSizeSeconds),
+                timestamp: fromSeconds(5.0 * stepSizeSeconds),
                 inputBuffers: [
                     new Float32Array([3, 3, 4, 4]),
                     new Float32Array([7, 7, 8, 8])
@@ -121,7 +121,7 @@ describe("ProcessInputBuffersAdjuster", () => {
             ]);
 
             adjuster.adjust({
-                timestamp: makeTimestamp(6.0 * stepSizeSeconds),
+                timestamp: fromSeconds(6.0 * stepSizeSeconds),
                 inputBuffers: [
                     new Float32Array([4, 4, 4, 4]),
                     new Float32Array([8, 8, 8, 8])
@@ -132,7 +132,7 @@ describe("ProcessInputBuffersAdjuster", () => {
             ]);
 
             adjuster.adjust({
-                timestamp: makeTimestamp(7.0 * stepSizeSeconds),
+                timestamp: fromSeconds(7.0 * stepSizeSeconds),
                 inputBuffers: [
                     new Float32Array([4, 4, 0, 0]),
                     new Float32Array([8, 8, 0, 0])

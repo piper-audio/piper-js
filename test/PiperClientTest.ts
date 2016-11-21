@@ -12,7 +12,7 @@ import {KissRealFft, RealFftFactory} from "../src/fft/RealFft";
 import {PiperClient} from "../src/PiperClient";
 import {AdapterFlags} from "../src/FeatureExtractor";
 import {ProcessResponse} from "../src/Piper";
-import {makeTimestamp, Timestamp} from "../src/Timestamp";
+import {fromSeconds, Timestamp} from "../src/Timestamp";
 import {
     FeatureExtractorStub,
     MetaDataStub
@@ -62,7 +62,7 @@ describe("PiperClient", () => {
             .then((response: ProcessResponse) => response.features.get(outputId)[0].timestamp)
         };
 
-        const expectedFreqTimestamp = makeTimestamp(0.5 * blockSize / sampleRate);
+        const expectedFreqTimestamp = fromSeconds(0.5 * blockSize / sampleRate);
         const freqOutputId = FrequencyMetaDataStub.basicOutputInfo[0].identifier;
         const timeOutputId = MetaDataStub.basicOutputInfo[0].identifier;
         return Promise.all([
