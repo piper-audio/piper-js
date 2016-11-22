@@ -4,7 +4,7 @@
 import {
     Parameters, OutputIdentifier, FeatureExtractor, Configuration,
     ConfiguredOutputs, ConfiguredOutputDescriptor,
-    SampleType
+    SampleType, ProcessInput, AdapterFlags
 } from "./FeatureExtractor";
 import {Feature, FeatureSet, FeatureList} from "./Feature";
 import {fromFrames} from "./Timestamp";
@@ -12,6 +12,12 @@ import {
     FeatureTimeAdjuster,
     createFeatureTimeAdjuster
 } from "./FeatureTimeAdjuster";
+import {
+    ListRequest, ListResponse, Service, LoadResponse,
+    ExtractorHandle
+} from "./Piper";
+import {PiperClient} from "./PiperClient";
+import {batchProcess} from "../test/AudioUtilities";
 
 export type AudioData = Float32Array[];
 export type Output = {[key: string]: Feature}; // TODO rename / re-think
@@ -52,6 +58,7 @@ export type CreateAudioStreamFunction = (blockSize: number,
 
 export interface SimpleRequest {
     audioData: AudioData;
+    audioFormat: AudioStreamFormat;
     key: string;
     outputId?: OutputIdentifier;
     parameterValues?: Parameters;
@@ -303,5 +310,105 @@ export function* process(createAudioStreamCallback: CreateAudioStreamFunction,
     for (let output of lazyOutputs) {
         adjuster.adjust(output[outputId]);
         yield output[outputId];
+    }
+}
+
+export class PiperSimpleClient implements SimpleService {
+    private client: Service;
+
+    constructor(service: Service) {
+        this.client = new PiperClient(service);
+    }
+
+    list(request: ListRequest): Promise<ListResponse> {
+        return this.client.list(request);
+    }
+
+    process(request: SimpleRequest): Promise<FeatureList[]> {
+        const load = (response: ListResponse): Promise<LoadResponse> => {
+            const metadata = response.available.filter(metadata => metadata.key === request.key);
+            if (metadata.length !== 1) throw Error("Invalid key.");
+
+            return this.client.load({
+                key: request.key,
+                inputSampleRate: request.audioFormat.sampleRate,
+                adapterFlags: [AdapterFlags.AdaptAllSafe]
+            });
+        };
+
+        interface CustomConfigurationResponse {
+            handle: ExtractorHandle;
+            blocks: IterableIterator<ProcessInput>;
+            outputId: string;
+        }
+
+        const configure = (res: LoadResponse): Promise<CustomConfigurationResponse> => {
+            const config = determineConfiguration(
+                res.defaultConfiguration,
+                {
+                    blockSize: request.blockSize,
+                    stepSize: request.stepSize,
+                    channelCount: request.audioFormat.channelCount,
+                    parameterValues: request.parameterValues
+                }
+            );
+
+            // TODO refactor parts of processConfiguredExtractor for use here / reduce dup
+            const toProcessInputStream = function* (stream: AudioStream): IterableIterator<ProcessInput> {
+                let nFrame: number = 0;
+                for (let frame of stream.frames) {
+                    yield {
+                        timestamp: fromFrames(nFrame, stream.format.sampleRate),
+                        inputBuffers: frame
+                    };
+                    nFrame += config.stepSize;
+                }
+            };
+
+            return this.client.configure({
+                handle: res.handle,
+                configuration: config
+            }).then(res => {
+                const outputId = request.outputId
+                    ? request.outputId
+                    : res.outputList[0].basic.identifier;
+
+                if (res.outputList.filter(output => output.basic.identifier === outputId).length === 0)
+                    throw Error("Invalid output identifier.");
+
+                return {
+                    handle: res.handle,
+                    blocks: toProcessInputStream({
+                        frames: segment(config.blockSize, config.stepSize, request.audioData),
+                        format: request.audioFormat
+                    }),
+                    outputId: outputId
+                }
+            });
+        };
+
+        const processAndFinish = (res: CustomConfigurationResponse): Promise<FeatureList[]> => {
+            // TODO remove batchProcess?
+            return batchProcess(
+                res.blocks,
+                (block) => this.client.process({
+                    handle: res.handle,
+                    processInput: block
+                }).then(response => response.features),
+                () => this.client.finish({handle: res.handle}).then(res => res.features)
+            ).then(featureSet => {
+                return featureSet.get(res.outputId)
+            });
+        };
+
+        // TODO come up with a mechanism for pipelining requests to reduce client-server round-trips
+        return this.client.list({})
+            .then(load)
+            .then(configure)
+            .then(processAndFinish);
+    }
+
+    collect(request: SimpleRequest): Promise<FeatureCollection[]> {
+        return undefined;
     }
 }
