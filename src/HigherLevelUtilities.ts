@@ -363,7 +363,8 @@ export class PiperSimpleClient implements SimpleService {
                             request.stepSize,
                             response.configuredOutputDescriptor
                         ),
-                        response.configuredOutputDescriptor
+                        response.configuredOutputDescriptor,
+                        false
                     );
                 });
         };
