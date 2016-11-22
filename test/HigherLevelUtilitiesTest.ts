@@ -11,7 +11,8 @@ import {
     FixedSpacedFeatures,
     AudioData,
     CreateFeatureExtractorFunction,
-    CreateAudioStreamFunction, PiperSimpleClient
+    CreateAudioStreamFunction, PiperSimpleClient, FeatureCollection,
+    SimpleRequest
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {fromSeconds, fromFrames} from "../src/Timestamp"
@@ -391,27 +392,39 @@ describe("collect()", function () {
 });
 
 describe("PiperSimpleClient", () => {
+    const fftInitCallback: RealFftFactory = (size: number) => new KissRealFft(size);
+    const freqStubInitCallback: FeatureExtractorFactory = sr => new FrequencyDomainExtractorStub();
+    const timeStubInitCallback: FeatureExtractorFactory = sr => new FeatureExtractorStub();
+    const service = new FeatsService(
+        fftInitCallback,
+        {extractor: freqStubInitCallback, metadata: FrequencyMetaDataStub},
+        {extractor: timeStubInitCallback, metadata: MetaDataStub}
+    );
+    const client = new PiperSimpleClient(service);
+    const sampleRate: number = 16;
+    const blockSize: number = 4;
+    const stepSize: number = 2;
+    const frameRate: number = 1 / (stepSize / sampleRate);
+    const audioData: Float32Array[] = [
+        new Float32Array([
+            -1, -1, -1, -1,
+            0,  0,  0,  0,
+            1,  1,  1,  1,
+        ])
+    ];
+    const request: SimpleRequest  = {
+        audioData: audioData,
+        audioFormat: {
+            channelCount: 1,
+            sampleRate: sampleRate
+        },
+        key: "stub:sum",
+        outputId: "sum",
+        blockSize: blockSize,
+        stepSize: stepSize
+    };
+
     it("Can process an entire AudioStream, for a single output", () => {
-        const fftInitCallback: RealFftFactory = (size: number) => new KissRealFft(size);
-        const freqStubInitCallback: FeatureExtractorFactory = sr => new FrequencyDomainExtractorStub();
-        const timeStubInitCallback: FeatureExtractorFactory = sr => new FeatureExtractorStub();
-        const service = new FeatsService(
-            fftInitCallback,
-            {extractor: freqStubInitCallback, metadata: FrequencyMetaDataStub},
-            {extractor: timeStubInitCallback, metadata: MetaDataStub}
-        );
-        const client = new PiperSimpleClient(service);
-        const sampleRate: number = 16;
-        const blockSize: number = 4;
-        const stepSize: number = 2;
-        const frameRate: number = 1 / (stepSize / sampleRate);
-        const audioData: Float32Array[] = [
-            new Float32Array([
-                -1, -1, -1, -1,
-                 0,  0,  0,  0,
-                 1,  1,  1,  1,
-            ])
-        ];
         const toFeature = (frame: number, frameRate: number, values: number[]): Feature => {
             return {
                 timestamp: fromFrames(frame, frameRate),
@@ -419,17 +432,7 @@ describe("PiperSimpleClient", () => {
             };
         };
 
-        return client.process({
-            audioData: audioData,
-            audioFormat: {
-                channelCount: 1,
-                sampleRate: sampleRate
-            },
-            key: "stub:sum",
-            outputId: "sum",
-            blockSize: blockSize,
-            stepSize: stepSize
-        }).then(res => {
+        return client.process(request).then(res => {
             const expectedFeatures = [
                 toFeature(0, frameRate, [-4]),
                 toFeature(1, frameRate, [-2]),
@@ -446,4 +449,14 @@ describe("PiperSimpleClient", () => {
             });
         });
     });
+
+    it("can collect (reshape), features extracted from an entire AudioStream", () => {
+        const expected: FixedSpacedFeatures = {
+            shape: "vector",
+            data: new Float32Array([-4, -2, 0, 2, 4, 2]),
+            stepDuration: blockSize / sampleRate
+        };
+        return client.collect(request).should.eventually.eql(expected)
+    });
+
 });

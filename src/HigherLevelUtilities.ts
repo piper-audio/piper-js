@@ -68,8 +68,8 @@ export interface SimpleRequest {
 
 export interface SimpleService {
     list(request: ListRequest): Promise<ListResponse>;
-    process(request: SimpleRequest): Promise<FeatureList[]>;
-    collect(request: SimpleRequest): Promise<FeatureCollection[]>;
+    process(request: SimpleRequest): Promise<FeatureList>;
+    collect(request: SimpleRequest): Promise<FeatureCollection>;
 }
 
 export function* segment(blockSize: number,
@@ -170,14 +170,16 @@ function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionS
     return "matrix";
 }
 
-function reshape(outputs: IterableIterator<Output>,
+function reshape(outputs: Iterable<Output>,
                  id: OutputIdentifier,
                  stepDuration: number,
-                 descriptor: ConfiguredOutputDescriptor): FeatureCollection | FixedSpacedFeatures {
+                 descriptor: ConfiguredOutputDescriptor,
+                 adjustTimestamps: boolean = true): FeatureCollection | FixedSpacedFeatures {
     const shape: FeatureCollectionShape = deduceShape(descriptor);
     const adjuster: FeatureTimeAdjuster = createFeatureTimeAdjuster(descriptor, stepDuration);
 
     // TODO switch suggests that matrix and list could be types, dynamically dispatch to a .data() method or similar
+    // TODO adjust timestamps for vector and matrix
     switch(shape) {
         case "vector":
             return {
@@ -196,7 +198,8 @@ function reshape(outputs: IterableIterator<Output>,
                 shape: shape,
                 data: [...outputs].map(output => {
                     const feature: Feature = output[id];
-                    adjuster.adjust(feature);
+                    if (adjustTimestamps)
+                        adjuster.adjust(feature);
                     return feature;
                 })
             };
@@ -313,6 +316,15 @@ export function* process(createAudioStreamCallback: CreateAudioStreamFunction,
     }
 }
 
+
+
+interface CustomConfigurationResponse {
+    handle: ExtractorHandle;
+    blocks: IterableIterator<ProcessInput>;
+    outputId: string;
+    configuredOutputDescriptor: ConfiguredOutputDescriptor;
+}
+
 export class PiperSimpleClient implements SimpleService {
     private client: Service;
 
@@ -324,91 +336,114 @@ export class PiperSimpleClient implements SimpleService {
         return this.client.list(request);
     }
 
-    process(request: SimpleRequest): Promise<FeatureList[]> {
-        const load = (response: ListResponse): Promise<LoadResponse> => {
-            const metadata = response.available.filter(metadata => metadata.key === request.key);
-            if (metadata.length !== 1) throw Error("Invalid key.");
-
-            return this.client.load({
-                key: request.key,
-                inputSampleRate: request.audioFormat.sampleRate,
-                adapterFlags: [AdapterFlags.AdaptAllSafe]
-            });
-        };
-
-        interface CustomConfigurationResponse {
-            handle: ExtractorHandle;
-            blocks: IterableIterator<ProcessInput>;
-            outputId: string;
-        }
-
-        const configure = (res: LoadResponse): Promise<CustomConfigurationResponse> => {
-            const config = determineConfiguration(
-                res.defaultConfiguration,
-                {
-                    blockSize: request.blockSize,
-                    stepSize: request.stepSize,
-                    channelCount: request.audioFormat.channelCount,
-                    parameterValues: request.parameterValues
-                }
-            );
-
-            // TODO refactor parts of processConfiguredExtractor for use here / reduce dup
-            const toProcessInputStream = function* (stream: AudioStream): IterableIterator<ProcessInput> {
-                let nFrame: number = 0;
-                for (let frame of stream.frames) {
-                    yield {
-                        timestamp: fromFrames(nFrame, stream.format.sampleRate),
-                        inputBuffers: frame
-                    };
-                    nFrame += config.stepSize;
-                }
-            };
-
-            return this.client.configure({
-                handle: res.handle,
-                configuration: config
-            }).then(res => {
-                const outputId = request.outputId
-                    ? request.outputId
-                    : res.outputList[0].basic.identifier;
-
-                if (res.outputList.filter(output => output.basic.identifier === outputId).length === 0)
-                    throw Error("Invalid output identifier.");
-
-                return {
-                    handle: res.handle,
-                    blocks: toProcessInputStream({
-                        frames: segment(config.blockSize, config.stepSize, request.audioData),
-                        format: request.audioFormat
-                    }),
-                    outputId: outputId
-                }
-            });
-        };
-
-        const processAndFinish = (res: CustomConfigurationResponse): Promise<FeatureList[]> => {
-            // TODO remove batchProcess?
-            return batchProcess(
-                res.blocks,
-                (block) => this.client.process({
-                    handle: res.handle,
-                    processInput: block
-                }).then(response => response.features),
-                () => this.client.finish({handle: res.handle}).then(res => res.features)
-            ).then(featureSet => {
-                return featureSet.get(res.outputId)
-            });
-        };
-
+    // TODO could this be a generator?
+    process(request: SimpleRequest): Promise<FeatureList> {
         // TODO come up with a mechanism for pipelining requests to reduce client-server round-trips
-        return this.client.list({})
-            .then(load)
-            .then(configure)
-            .then(processAndFinish);
+        return this.client.list({}) // TODO is the list really necessary? - prevents doing any processing if the extractor / output is not available
+            .then(this.load(request))
+            .then(this.configure(request))
+            .then(this.processAndFinish);
     }
 
-    collect(request: SimpleRequest): Promise<FeatureCollection[]> {
-        return undefined;
+    collect(request: SimpleRequest): Promise<FeatureCollection> {
+
+        const processFinishReshape = (response: CustomConfigurationResponse): Promise<FeatureCollection> => {
+            return this.processAndFinish(response)
+                .then(features => {
+                    // TODO refactor parts of reshape so additional reshaping isn't required here
+                    return reshape(
+                        features.map(feature => {
+                            return {
+                                [response.outputId]: feature
+                            }
+                        }), // map FeatureList to {outputId: Feature}[]
+                        response.outputId,
+                        getFeatureStepDuration(
+                            request.audioFormat.sampleRate,
+                            request.stepSize,
+                            response.configuredOutputDescriptor
+                        ),
+                        response.configuredOutputDescriptor
+                    );
+                });
+        };
+
+        return this.client.list({})
+            .then(this.load(request))
+            .then(this.configure(request))
+            .then(processFinishReshape)
     }
+
+    // TODO sort this shit out
+
+    private load = (request: SimpleRequest) => (response: ListResponse): Promise<LoadResponse> => {
+        const metadata = response.available.filter(metadata => metadata.key === request.key);
+        if (metadata.length !== 1) throw Error("Invalid key.");
+
+        return this.client.load({
+            key: request.key,
+            inputSampleRate: request.audioFormat.sampleRate,
+            adapterFlags: [AdapterFlags.AdaptAllSafe]
+        });
+    };
+
+    private configure = (request: SimpleRequest) => (res: LoadResponse): Promise<CustomConfigurationResponse> => {
+        const config = determineConfiguration(
+            res.defaultConfiguration,
+            {
+                blockSize: request.blockSize,
+                stepSize: request.stepSize,
+                channelCount: request.audioFormat.channelCount,
+                parameterValues: request.parameterValues
+            }
+        );
+
+        // TODO refactor parts of processConfiguredExtractor for use here / reduce dup
+        const toProcessInputStream = function* (stream: AudioStream): IterableIterator<ProcessInput> {
+            let nFrame: number = 0;
+            for (let frame of stream.frames) {
+                yield {
+                    timestamp: fromFrames(nFrame, stream.format.sampleRate),
+                    inputBuffers: frame
+                };
+                nFrame += config.stepSize;
+            }
+        };
+
+        return this.client.configure({
+            handle: res.handle,
+            configuration: config
+        }).then(res => {
+            const outputId = request.outputId
+                ? request.outputId
+                : res.outputList[0].basic.identifier;
+
+            if (res.outputList.filter(output => output.basic.identifier === outputId).length === 0)
+                throw Error("Invalid output identifier.");
+
+            return {
+                handle: res.handle,
+                blocks: toProcessInputStream({
+                    frames: segment(config.blockSize, config.stepSize, request.audioData),
+                    format: request.audioFormat
+                }),
+                outputId: outputId,
+                configuredOutputDescriptor: res.outputList.find(output => output.basic.identifier === outputId).configured
+            }
+        });
+    };
+
+    private processAndFinish = (res: CustomConfigurationResponse): Promise<FeatureList> => {
+        // TODO implement something better than batchProcess?
+        return batchProcess(
+            res.blocks,
+            (block) => this.client.process({
+                handle: res.handle,
+                processInput: block
+            }).then(response => response.features),
+            () => this.client.finish({handle: res.handle}).then(res => res.features)
+        ).then(featureSet => {
+            return featureSet.get(res.outputId)
+        });
+    };
 }
