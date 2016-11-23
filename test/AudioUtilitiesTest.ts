@@ -8,9 +8,10 @@ chai.use(chaiAsPromised);
 
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
 import {ProcessInput} from "../src/FeatureExtractor";
-import {batchProcess, lfo, generateSineWave, segmentAudioBuffer, AudioBufferStub} from "./AudioUtilities";
+import {lfo, generateSineWave, segmentAudioBuffer, AudioBufferStub} from "./AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
+import {batchProcess} from "../src/HigherLevelUtilities";
 
 describe("BatchBlockProcess", () => {
     it("should aggregate features extracted from multiple blocks", () => {
