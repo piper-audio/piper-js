@@ -454,9 +454,9 @@ describe("PiperSimpleClient", () => {
         const expected: FixedSpacedFeatures = {
             shape: "vector",
             data: new Float32Array([-4, -2, 0, 2, 4, 2]),
-            stepDuration: blockSize / sampleRate
+            stepDuration: stepSize / sampleRate
         };
-        return client.collect(request).should.eventually.eql(expected)
+        return client.collect(request).then(features => features.should.eql(expected));
     });
 
 });
