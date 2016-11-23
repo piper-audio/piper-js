@@ -116,7 +116,7 @@ export namespace Serialise {
     }
 
     export function ProcessRequest(request: ProcessRequest): string {
-        return toTransport({method: "process", params: toWireProcessRequest(request)});
+        return toTransport({method: "process", params: toWireProcessRequest(request, true)});
     }
 
     export function ProcessResponse(response: ProcessResponse): string {
