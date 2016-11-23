@@ -115,8 +115,8 @@ export namespace Serialise {
         return toTransport({method: "configure", result: toWireConfigurationResponse(response)});
     }
 
-    export function ProcessRequest(request: ProcessRequest): string {
-        return toTransport({method: "process", params: toWireProcessRequest(request, true)});
+    export function ProcessRequest(request: ProcessRequest, asBase64: boolean = true): string {
+        return toTransport({method: "process", params: toWireProcessRequest(request, asBase64)});
     }
 
     export function ProcessResponse(response: ProcessResponse): string {
@@ -477,7 +477,13 @@ function toBase64(values: Float32Array): string {
     // true in a network situation. The Float32Array docs say "If
     // control over byte order is needed, use DataView instead" so
     // I guess that's a !!! todo item
-    return base64.fromByteArray(new Uint8Array(values.buffer));
+    return base64.fromByteArray(
+        new Uint8Array(
+            values.buffer,
+            values.byteOffset,
+            values.byteLength
+        )
+    );
 }
 
 function fromBase64(b64: string): Float32Array {
