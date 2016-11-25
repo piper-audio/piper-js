@@ -401,7 +401,7 @@ export class PiperSimpleClient implements SimpleService {
             .then(processFinishReshape)
     }
 
-    // TODO sort this shit out
+    // TODO sort this out
 
     private load = (request: SimpleRequest) => (response: ListResponse): Promise<LoadResponse> => {
         const metadata = response.available.filter(metadata => metadata.key === request.key);
