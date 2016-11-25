@@ -344,7 +344,7 @@ function createOrConcat(data: FeatureList, key: string, map: FeatureSet) {
     map.has(key) ? map.set(key, map.get(key).concat(data)) : map.set(key, data);
 }
 
-interface SimpleConfigurationResponse {
+export interface SimpleConfigurationResponse {
     handle: ExtractorHandle;
     configuredOutputId: string;
     configuredBlockSize: number;
