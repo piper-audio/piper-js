@@ -7,7 +7,7 @@ import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
-import {batchProcess} from "./AudioUtilities";
+import {batchProcess} from "../src/HigherLevelUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {
     EmscriptenProxy,

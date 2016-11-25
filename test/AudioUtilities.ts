@@ -50,35 +50,6 @@ export class AudioBufferStub implements AudioBuffer {
     }
 }
 
-export function batchProcess(blocks: Iterable<ProcessInput>,
-                             process: (block: ProcessInput) => Promise<FeatureSet>,
-                             finish: () => Promise<FeatureSet>)
-: Promise<FeatureSet> {
-
-    const processThunks: (() => Promise<FeatureSet>)[] =
-        [...blocks].map(block => () => process(block))
-            .concat([finish]);
-
-    return processThunks.reduce((runningFeatures, nextBlock) => {
-        return runningFeatures.then((features) => {
-            return concatFeatures(features, nextBlock());
-        });
-    }, Promise.resolve(new Map() as FeatureSet));
-}
-
-function concatFeatures(running: FeatureSet, nextBlock: Promise<FeatureSet>): Promise<FeatureSet> {
-    return nextBlock.then((block) => {
-        for (const [i, feature] of block.entries()) {
-            createOrConcat(feature, i, running);
-        }
-        return running;
-    });
-}
-
-function createOrConcat(data: FeatureList, key: string, map: FeatureSet) {
-    map.has(key) ? map.set(key, map.get(key).concat(data)) : map.set(key, data);
-}
-
 export function* segmentAudioBuffer(blockSize: number,
                                     stepSize: number,
                                     audioBuffer: AudioBuffer): IterableIterator<ProcessInput> {

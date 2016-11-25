@@ -11,10 +11,11 @@ import {
     FixedSpacedFeatures,
     AudioData,
     CreateFeatureExtractorFunction,
-    CreateAudioStreamFunction
+    CreateAudioStreamFunction, PiperSimpleClient, FeatureCollection,
+    SimpleRequest
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
-import {fromSeconds} from "../src/Timestamp"
+import {fromSeconds, fromFrames} from "../src/Timestamp"
 import {
     EmscriptenFeatureExtractor
 } from "../src/EmscriptenProxy";
@@ -24,6 +25,16 @@ import {
     EmscriptenListenerCleaner,
     createEmscriptenCleanerWithNodeGlobal
 } from "./TestUtilities";
+import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
+import {FeatureExtractorFactory, FeatsService} from "../src/FeatsService";
+import {
+    FrequencyDomainExtractorStub,
+    FrequencyMetaDataStub
+} from "./fixtures/FrequencyDomainExtractorStub";
+import {
+    FeatureExtractorStub,
+    MetaDataStub
+} from "./fixtures/FeatureExtractorStub";
 chai.should();
 
 const cleaner: EmscriptenListenerCleaner = createEmscriptenCleanerWithNodeGlobal();
@@ -380,3 +391,72 @@ describe("collect()", function () {
     });
 });
 
+describe("PiperSimpleClient", () => {
+    const fftInitCallback: RealFftFactory = (size: number) => new KissRealFft(size);
+    const freqStubInitCallback: FeatureExtractorFactory = sr => new FrequencyDomainExtractorStub();
+    const timeStubInitCallback: FeatureExtractorFactory = sr => new FeatureExtractorStub();
+    const service = new FeatsService(
+        fftInitCallback,
+        {extractor: freqStubInitCallback, metadata: FrequencyMetaDataStub},
+        {extractor: timeStubInitCallback, metadata: MetaDataStub}
+    );
+    const client = new PiperSimpleClient(service);
+    const sampleRate: number = 16;
+    const blockSize: number = 4;
+    const stepSize: number = 2;
+    const frameRate: number = 1 / (stepSize / sampleRate);
+    const audioData: Float32Array[] = [
+        new Float32Array([
+            -1, -1, -1, -1,
+            0,  0,  0,  0,
+            1,  1,  1,  1,
+        ])
+    ];
+    const request: SimpleRequest  = {
+        audioData: audioData,
+        audioFormat: {
+            channelCount: 1,
+            sampleRate: sampleRate
+        },
+        key: "stub:sum",
+        outputId: "sum",
+        blockSize: blockSize,
+        stepSize: stepSize
+    };
+
+    it("Can process an entire AudioStream, for a single output", () => {
+        const toFeature = (frame: number, frameRate: number, values: number[]): Feature => {
+            return {
+                timestamp: fromFrames(frame, frameRate),
+                featureValues: new Float32Array(values)
+            };
+        };
+
+        return client.process(request).then(res => {
+            const expectedFeatures = [
+                toFeature(0, frameRate, [-4]),
+                toFeature(1, frameRate, [-2]),
+                toFeature(2, frameRate, [0]),
+                toFeature(3, frameRate, [2]),
+                toFeature(4, frameRate, [4]),
+                toFeature(5, frameRate, [2]),
+                // toFeature(6, frameRate, [0]) // TODO should there be one more buffer?
+            ];
+
+            res.length.should.equal(expectedFeatures.length);
+            res.forEach((value, index) => {
+                value.should.eql(expectedFeatures[index]);
+            });
+        });
+    });
+
+    it("can collect (reshape), features extracted from an entire AudioStream", () => {
+        const expected: FixedSpacedFeatures = {
+            shape: "vector",
+            data: new Float32Array([-4, -2, 0, 2, 4, 2]),
+            stepDuration: stepSize / sampleRate
+        };
+        return client.collect(request).then(features => features.should.eql(expected));
+    });
+
+});

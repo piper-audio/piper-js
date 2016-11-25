@@ -2,8 +2,8 @@
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 import {AdapterFlags, ProcessInput} from "../src/FeatureExtractor";
-import {frame2timestamp} from "../src/Timestamp";
-import {batchProcess} from "../test/AudioUtilities";
+import {fromFrames} from "../src/Timestamp";
+import {batchProcess} from "../src/HigherLevelUtilities";
 import VampExamplePlugins = require("../ext/VampExamplePlugins");
 import {EmscriptenProxy} from "../src/EmscriptenProxy";
 import {PiperClient} from "../src/PiperClient";
@@ -51,7 +51,7 @@ describe('ProcessTimings', () => {
                         arr[i] = i / blockSize;
                     }
                     return {
-                        timestamp : frame2timestamp(n * blockSize, rate),
+                        timestamp : fromFrames(n * blockSize, rate),
                         inputBuffers : [ arr ],
                     }
                 });
