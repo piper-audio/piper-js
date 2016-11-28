@@ -169,7 +169,7 @@ function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionS
     return "matrix";
 }
 
-function reshape(outputs: Iterable<Output>,
+export function reshape(outputs: Iterable<Output>,
                  id: OutputIdentifier,
                  stepDuration: number,
                  descriptor: ConfiguredOutputDescriptor,
