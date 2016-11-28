@@ -171,11 +171,20 @@ function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionS
 
 export function reshape(outputs: Iterable<Output>,
                  id: OutputIdentifier,
-                 stepDuration: number,
+                 inputSampleRate: number,
+                 stepSize: number,
                  descriptor: ConfiguredOutputDescriptor,
                  adjustTimestamps: boolean = true): FeatureCollection | FixedSpacedFeatures {
     const shape: FeatureCollectionShape = deduceShape(descriptor);
-    const adjuster: FeatureTimeAdjuster = createFeatureTimeAdjuster(descriptor, stepDuration);
+    const stepDuration: number = getFeatureStepDuration(
+        inputSampleRate,
+        stepSize,
+        descriptor
+    );
+    const adjuster: FeatureTimeAdjuster = createFeatureTimeAdjuster(
+        descriptor,
+        stepDuration
+    );
 
     // TODO switch suggests that matrix and list could be types, dynamically dispatch to a .data() method or similar
     // TODO adjust timestamps for vector and matrix
@@ -207,12 +216,12 @@ export function reshape(outputs: Iterable<Output>,
     }
 }
 
-function getFeatureStepDuration(sampleRate: number,
+function getFeatureStepDuration(inputSampleRate: number,
                                 stepSize: number,
                                 descriptor: ConfiguredOutputDescriptor) {
     switch (descriptor.sampleType) {
         case SampleType.OneSamplePerStep:
-            return stepSize / sampleRate;
+            return stepSize / inputSampleRate;
         case SampleType.FixedSampleRate:
             return 1.0 / descriptor.sampleRate;
         default:
@@ -262,7 +271,8 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
     return reshape(
         lazyOutputs,
         outputId,
-        getFeatureStepDuration(stream.format.sampleRate, config.stepSize, descriptor),
+        stream.format.sampleRate,
+        config.stepSize,
         descriptor
     );
 }
@@ -346,6 +356,7 @@ function createOrConcat(data: FeatureList, key: string, map: FeatureSet) {
 
 export interface SimpleConfigurationResponse {
     handle: ExtractorHandle;
+    inputSampleRate: number; // TODO this is here for convenience - might not belong here
     configuredOutputId: string;
     configuredBlockSize: number;
     configuredStepSize: number;
@@ -390,6 +401,7 @@ export function loadAndConfigure(request: SimpleRequest,
 
             return {
                 handle: res.handle,
+                inputSampleRate: request.audioFormat.sampleRate,
                 configuredOutputId: outputId,
                 configuredBlockSize: config.blockSize,
                 configuredStepSize: config.stepSize,
@@ -433,11 +445,8 @@ export class PiperSimpleClient implements SimpleService {
                             }
                         }), // map FeatureList to {outputId: Feature}[]
                         response.configuredOutputId,
-                        getFeatureStepDuration(
-                            request.audioFormat.sampleRate,
-                            request.stepSize,
-                            response.configuredOutputDescriptor
-                        ),
+                        response.inputSampleRate,
+                        response.configuredStepSize,
                         response.configuredOutputDescriptor,
                         false
                     );
