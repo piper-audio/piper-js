@@ -343,7 +343,7 @@ export function batchProcess(blocks: Iterable<ProcessInput>,
 
 function concatFeatures(running: FeatureSet, nextBlock: Promise<FeatureSet>): Promise<FeatureSet> {
     return nextBlock.then((block) => {
-        for (const [i, feature] of block.entries()) {
+        for (let [i, feature] of block.entries()) {
             createOrConcat(feature, i, running);
         }
         return running;
@@ -427,7 +427,6 @@ export class PiperSimpleClient implements SimpleService {
         return this.client.list(request);
     }
 
-    // TODO could this be a generator?
     process(request: SimpleRequest): Promise<FeatureList> {
         return loadAndConfigure(request, this.client).then(this.processAndFinish(request));
     }
