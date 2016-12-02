@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 18/10/16.
  */
-import KissFFT = require("./KissFft");
+import { KissFft } from "./KissFftModule";
 import {EmscriptenModule} from "../EmscriptenProxy";
 
 export interface RealFft {
@@ -31,7 +31,7 @@ export class KissRealFft implements RealFft {
     private kiss_fftr_free: any;
 
     constructor(size: number) {
-        this.kissFFTModule = KissFFT();
+        this.kissFFTModule = KissFft();
         this.kiss_fftr_alloc = this.kissFFTModule.cwrap(
             'kiss_fftr_alloc', 'number', ['number', 'number', 'number', 'number' ]
         );

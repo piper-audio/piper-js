@@ -3,5 +3,5 @@
  */
 import {EmscriptenModule} from '../EmscriptenProxy'
 
-declare function KissFFT(): EmscriptenModule;
-export = KissFFT;
+export const KissFft: () => EmscriptenModule;
+export default KissFft;

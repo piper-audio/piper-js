@@ -19,7 +19,7 @@ import {fromSeconds, fromFrames} from "../src/Timestamp"
 import {
     EmscriptenFeatureExtractor
 } from "../src/EmscriptenProxy";
-import VampTestPluginModule = require('../ext/VampTestPlugin');
+import VampTestPluginModule from '../ext/VampTestPluginModule';
 import {Feature} from "../src/Feature";
 import {
     EmscriptenListenerCleaner,

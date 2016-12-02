@@ -4,7 +4,7 @@ import chaiAsPromised = require('chai-as-promised');
 import {AdapterFlags, ProcessInput} from "../src/FeatureExtractor";
 import {fromFrames} from "../src/Timestamp";
 import {batchProcess} from "../src/HigherLevelUtilities";
-import VampExamplePlugins = require("../ext/VampExamplePlugins");
+import VampExamplePlugins from "../ext/VampExamplePluginsModule";
 import {EmscriptenProxy} from "../src/EmscriptenProxy";
 import {PiperClient} from "../src/PiperClient";
 

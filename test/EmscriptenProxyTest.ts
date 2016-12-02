@@ -8,7 +8,7 @@ import chaiAsPromised = require("chai-as-promised");
 import {FeatureSet, FeatureList} from "../src/Feature";
 import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/HigherLevelUtilities";
-import VampExamplePlugins = require("../ext/VampExamplePlugins");
+import VampExamplePlugins from "../ext/VampExamplePluginsModule";
 import {
     EmscriptenProxy,
     EmscriptenFeatureExtractor
@@ -18,7 +18,7 @@ import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain, Feature
 import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
 import {PiperClient} from "../src/PiperClient";
 import {EmscriptenModule} from "../src/EmscriptenProxy";
-import VampTestPluginModule = require("../ext/VampTestPlugin");
+import VampTestPluginModule from "../ext/VampTestPluginModule";
 import {
     createEmscriptenCleanerWithNodeGlobal,
     EmscriptenListenerCleaner
@@ -30,7 +30,6 @@ const cleaner: EmscriptenListenerCleaner = createEmscriptenCleanerWithNodeGlobal
 
 describe("EmscriptenProxyTest", () => {
     afterEach(() => cleaner.clean());
-
     const client: Service = new PiperClient(new EmscriptenProxy(VampExamplePlugins()));
 
     const loadFixture = (name : string) => {
