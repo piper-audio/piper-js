@@ -20,7 +20,7 @@ import {
     EmscriptenFeatureExtractor
 } from "../src/EmscriptenProxy";
 import VampTestPluginModule from '../ext/VampTestPluginModule';
-import {Feature} from "../src/Feature";
+import {Feature, FeatureList} from "../src/Feature";
 import {
     EmscriptenListenerCleaner,
     createEmscriptenCleanerWithNodeGlobal
@@ -443,8 +443,8 @@ describe("PiperSimpleClient", () => {
                 // toFeature(6, frameRate, [0]) // TODO should there be one more buffer?
             ];
 
-            res.length.should.equal(expectedFeatures.length);
-            res.forEach((value, index) => {
+            res.features.data.length.should.equal(expectedFeatures.length);
+            (res.features.data as FeatureList).forEach((value, index) => {
                 value.should.eql(expectedFeatures[index]);
             });
         });
@@ -456,7 +456,19 @@ describe("PiperSimpleClient", () => {
             data: new Float32Array([-4, -2, 0, 2, 4, 2]),
             stepDuration: stepSize / sampleRate
         };
-        return client.collect(request).then(features => features.should.eql(expected));
+        return client.collect(request).then(response => {
+            response.features.should.eql(expected);
+            response.outputDescriptor.should.eql({
+                basic: MetaDataStub.basicOutputInfo[0],
+                configured: {
+                    binCount: 1,
+                    binNames: [],
+                    hasDuration: false,
+                    sampleRate: 0,
+                    sampleType: 0
+                }
+            })
+        });
     });
 
 });

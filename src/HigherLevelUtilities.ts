@@ -4,7 +4,7 @@
 import {
     Parameters, OutputIdentifier, FeatureExtractor, Configuration,
     ConfiguredOutputs, ConfiguredOutputDescriptor,
-    SampleType, ProcessInput, AdapterFlags
+    SampleType, ProcessInput, AdapterFlags, OutputDescriptor
 } from "./FeatureExtractor";
 import {Feature, FeatureSet, FeatureList} from "./Feature";
 import {fromFrames} from "./Timestamp";
@@ -65,10 +65,15 @@ export interface SimpleRequest {
     blockSize?: number;
 }
 
+export interface SimpleResponse {
+    features: FeatureCollection;
+    outputDescriptor: OutputDescriptor;
+}
+
 export interface SimpleService {
     list(request: ListRequest): Promise<ListResponse>;
-    process(request: SimpleRequest): Promise<FeatureList>;
-    collect(request: SimpleRequest): Promise<FeatureCollection>;
+    process(request: SimpleRequest): Promise<SimpleResponse>;
+    collect(request: SimpleRequest): Promise<SimpleResponse>;
 }
 
 export function* segment(blockSize: number,
@@ -170,11 +175,11 @@ function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionS
 }
 
 export function reshape(outputs: Iterable<Output>,
-                 id: OutputIdentifier,
-                 inputSampleRate: number,
-                 stepSize: number,
-                 descriptor: ConfiguredOutputDescriptor,
-                 adjustTimestamps: boolean = true): FeatureCollection | FixedSpacedFeatures {
+                        id: OutputIdentifier,
+                        inputSampleRate: number,
+                        stepSize: number,
+                        descriptor: ConfiguredOutputDescriptor,
+                        adjustTimestamps: boolean = true): FeatureCollection | FixedSpacedFeatures {
     const shape: FeatureCollectionShape = deduceShape(descriptor);
     const stepDuration: number = getFeatureStepDuration(
         inputSampleRate,
@@ -360,7 +365,7 @@ export interface SimpleConfigurationResponse {
     configuredOutputId: string;
     configuredBlockSize: number;
     configuredStepSize: number;
-    configuredOutputDescriptor: ConfiguredOutputDescriptor;
+    outputDescriptor: OutputDescriptor;
 }
 
 export function loadAndConfigure(request: SimpleRequest,
@@ -405,7 +410,8 @@ export function loadAndConfigure(request: SimpleRequest,
                 configuredOutputId: outputId,
                 configuredBlockSize: config.blockSize,
                 configuredStepSize: config.stepSize,
-                configuredOutputDescriptor: res.outputList.find(output => output.basic.identifier === outputId).configured
+                outputDescriptor: res.outputList
+                    .find(output => output.basic.identifier === outputId)
             }
         });
     };
@@ -427,35 +433,16 @@ export class PiperSimpleClient implements SimpleService {
         return this.client.list(request);
     }
 
-    process(request: SimpleRequest): Promise<FeatureList> {
+    process(request: SimpleRequest): Promise<SimpleResponse> {
         return loadAndConfigure(request, this.client).then(this.processAndFinish(request));
     }
 
-    collect(request: SimpleRequest): Promise<FeatureCollection> {
-
-        const processFinishReshape = (response: SimpleConfigurationResponse): Promise<FeatureCollection> => {
-            return this.processAndFinish(request)(response)
-                .then(features => {
-                    // TODO refactor parts of reshape so additional reshaping isn't required here
-                    return reshape(
-                        features.map(feature => {
-                            return {
-                                [response.configuredOutputId]: feature
-                            }
-                        }), // map FeatureList to {outputId: Feature}[]
-                        response.configuredOutputId,
-                        response.inputSampleRate,
-                        response.configuredStepSize,
-                        response.configuredOutputDescriptor,
-                        false
-                    );
-                });
-        };
-
-        return loadAndConfigure(request, this.client).then(processFinishReshape);
+    collect(request: SimpleRequest): Promise<SimpleResponse> {
+        return loadAndConfigure(request, this.client).then(this.processAndFinish(request, false));
     }
 
-    private processAndFinish(request: SimpleRequest): (res: SimpleConfigurationResponse) => Promise<FeatureList> {
+    private processAndFinish(request: SimpleRequest,
+                             forceList: boolean = true): (res: SimpleConfigurationResponse) => Promise<SimpleResponse> {
 
         // TODO implement something better than batchProcess?
         return (res: SimpleConfigurationResponse) => {
@@ -488,7 +475,27 @@ export class PiperSimpleClient implements SimpleService {
                 }).then(response => response.features),
                 () => this.client.finish({handle: res.handle}).then(res => res.features)
             ).then(featureSet => {
-                return featureSet.get(res.configuredOutputId)
+                return forceList ? {
+                    features: {
+                        shape: "list",
+                        data: featureSet.get(res.configuredOutputId)
+                    },
+                    outputDescriptor: res.outputDescriptor
+                } : {
+                    features: reshape(/* TODO avoid reshaping for list */
+                        featureSet.get(res.configuredOutputId).map(feature => {
+                            return {
+                                [res.configuredOutputId]: feature
+                            }
+                        }), // map FeatureList to {outputId: Feature}[]
+                        res.configuredOutputId,
+                        res.inputSampleRate,
+                        res.configuredStepSize,
+                        res.outputDescriptor.configured,
+                        false
+                    ),
+                    outputDescriptor: res.outputDescriptor
+                }
             });
         }
     };
