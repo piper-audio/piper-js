@@ -6,8 +6,10 @@ import {FeatureSet} from "../../src/Feature";
 
 export class FeatureExtractorStub implements FeatureExtractor {
     private cumulativeSum: number;
-    constructor() {
+    private includeConditionalOutput: boolean;
+    constructor(includeConditionalOutput = false) {
         this.cumulativeSum = 0;
+        this.includeConditionalOutput = includeConditionalOutput;
     }
 
     configure(configuration: Configuration): ConfiguredOutputs {
@@ -18,7 +20,8 @@ export class FeatureExtractorStub implements FeatureExtractor {
         };
         return new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
             ["sum", descriptor],
-            ["cumsum", descriptor]
+            ["cumsum", descriptor],
+            ["conditional", descriptor]
         ]);
     }
 
@@ -29,10 +32,13 @@ export class FeatureExtractorStub implements FeatureExtractor {
     process(block: ProcessInput): FeatureSet {
         const sum = block.inputBuffers[0].reduce((total, current) => total + current);
         this.cumulativeSum += sum;
-        return new Map([
-            ["sum", [{featureValues: new Float32Array([sum])}]],
-            ["cumsum", [{featureValues: new Float32Array([this.cumulativeSum])}]]
-        ]);
+        let outputs = new Map();
+        if (this.includeConditionalOutput)
+            outputs.set("conditional", [{featureValues: new Float32Array([666])}]);
+
+        outputs.set("sum", [{featureValues: new Float32Array([sum])}]);
+        outputs.set("cumsum", [{featureValues: new Float32Array([this.cumulativeSum])}]);
+        return outputs;
     }
 
     finish(): FeatureSet {
@@ -56,6 +62,11 @@ export const MetaDataStub: StaticData = {
             description: "The cumulative sum over all input blocks",
             identifier: "cumsum",
             name: "Cumulative Sum"
+        },
+        {
+            description: "An output which is only included sometimes",
+            identifier: "conditional",
+            name: "Conditional number"
         }
     ],
     inputDomain: InputDomain.TimeDomain,

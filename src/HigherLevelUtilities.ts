@@ -475,15 +475,16 @@ export class PiperSimpleClient implements SimpleService {
                 }).then(response => response.features),
                 () => this.client.finish({handle: res.handle}).then(res => res.features)
             ).then(featureSet => {
+                const features: FeatureList = featureSet.get(res.configuredOutputId) || [];
                 return forceList ? {
                     features: {
                         shape: "list",
-                        data: featureSet.get(res.configuredOutputId)
+                        data: features
                     },
                     outputDescriptor: res.outputDescriptor
                 } : {
                     features: reshape(/* TODO avoid reshaping for list */
-                        featureSet.get(res.configuredOutputId).map(feature => {
+                        features.map(feature => {
                             return {
                                 [res.configuredOutputId]: feature
                             }
