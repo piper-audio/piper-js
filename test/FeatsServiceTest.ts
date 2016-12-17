@@ -51,7 +51,15 @@ describe("FeatsService", () => {
         });
 
         it("Resolves to a response where the content body is a LoadResponse", () => {
-            const expectedResponse: LoadResponse = require('./fixtures/expected-load-response-js.json');
+            const expectedResponse: LoadResponse = {
+                defaultConfiguration: {
+                    blockSize: 0,
+                    channelCount: 1,
+                    stepSize: 0
+                },
+                handle: 1,
+                staticData: MetaDataStub
+            };
             const response: Promise<LoadResponse> = service.load({
                 key: "stub:sum",
                 inputSampleRate: 16,
@@ -97,7 +105,21 @@ describe("FeatsService", () => {
         });
 
         it("Resolves to a response whose content body is a ConfigurationResponse", () => {
-            const expectedResponse: ConfigurationResponse = require('./fixtures/expected-configuration-response-js.json');
+            const expectedResponse: ConfigurationResponse = {
+                handle: 1,
+                outputList: MetaDataStub.basicOutputInfo.map(basic => {
+                    return {
+                        basic: basic,
+                        configured: {
+                            binCount: 1,
+                            binNames: [],
+                            hasDuration: false,
+                            sampleRate: 0,
+                            sampleType: 0
+                        }
+                    }
+                })
+            };
             const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             return service.load(loadRequest).then(response => {
                 const configResponse: Promise<ConfigurationResponse> = service.configure({
