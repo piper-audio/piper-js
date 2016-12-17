@@ -471,4 +471,23 @@ describe("PiperSimpleClient", () => {
         });
     });
 
+    it("returns an empty list of features when requested output is empty", () => {
+        const expected: FixedSpacedFeatures = {
+            shape: "vector",
+            data: new Float32Array([]),
+            stepDuration: stepSize / sampleRate
+        };
+        return client.collect({
+            audioData: audioData,
+            audioFormat: {
+                channelCount: 1,
+                sampleRate: sampleRate
+            },
+            key: "stub:sum",
+            outputId: "conditional",
+            blockSize: blockSize,
+            stepSize: stepSize
+        }).then(actual => actual.features.should.eql(expected));
+    });
+
 });
