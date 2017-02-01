@@ -119,16 +119,16 @@ export namespace Serialise {
         return toTransport({method: "process", params: toWireProcessRequest(request, asBase64)});
     }
 
-    export function ProcessResponse(response: ProcessResponse): string {
-        return toTransport({method: "process", result: toWireProcessResponse(response)});
+    export function ProcessResponse(response: ProcessResponse, asBase64: boolean = true): string {
+        return toTransport({method: "process", result: toWireProcessResponse(response, asBase64)});
     }
 
     export function FinishRequest(request: FinishRequest): string {
         return toTransport({method: "finish", params: request});
     }
 
-    export function FinishResponse(response: FinishResponse): string {
-        return toTransport({method: "finish", result: toWireProcessResponse(response as ProcessResponse)});
+    export function FinishResponse(response: FinishResponse, asBase64: boolean = true): string {
+        return toTransport({method: "finish", result: toWireProcessResponse(response as ProcessResponse, asBase64)});
     }
 }
 
@@ -414,19 +414,21 @@ function toProcessRequest(request: WireProcessRequest): ProcessRequest {
     }; //TODO write test
 }
 
-function toWireProcessResponse(response: ProcessResponse): WireProcessResponse {
+function toWireProcessResponse(response: ProcessResponse, asBase64: boolean): WireProcessResponse {
     // TODO write test
     return {
         handle: response.handle,
         features: [...response.features.entries()].reduce((set, pair) => {
             const [key, featureList]: [string, FeatureList] = pair;
             return Object.assign(set, {
-                [key]: featureList.map((feature: Feature) => Object.assign({}, feature as any,
-                    (response.features != null ?
-                    {
-                        featureValues: this.asBase64 ? toBase64(feature.featureValues) : [...feature.featureValues]
-                    } : {}) as any
-                ))
+                [key]: featureList.map((feature: Feature) => {
+                    return Object.assign({}, feature as any,
+                        (response.features != null && feature.featureValues != null ?
+                            {
+                                featureValues: asBase64 ? toBase64(feature.featureValues) : [...feature.featureValues]
+                            } : {}) as any
+                    )
+                })
             })
         }, {})
     };
