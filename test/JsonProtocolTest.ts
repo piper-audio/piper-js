@@ -3,8 +3,9 @@
  */
 import * as chai from "chai";
 import {segment} from "../src/HigherLevelUtilities";
-import {ProcessRequest} from "../src/Piper";
+import {ProcessRequest, ProcessResponse} from "../src/Piper";
 import {Serialise} from "../src/JsonProtocol";
+import {FeatureList} from "../src/Feature";
 chai.should();
 
 describe("Serialise.ProcessRequest()", () => {
@@ -36,5 +37,36 @@ describe("Serialise.ProcessRequest()", () => {
                 .params.processInput.inputBuffers[0]
                 .should.eql(expectedBase64[index++])
         }
+    });
+});
+
+describe("Serialise.ProcessResponse()", () => {
+    it("can serialise ProcessResponses which have no featureValues", () => {
+        const toSerialise: ProcessResponse = {
+            handle: 1,
+            features: new Map<string, FeatureList>([
+                ["just-timestamps", [
+                    {timestamp: {s: 0, n: 0}},
+                    {timestamp: {s: 0, n: 500000000}},
+                    {timestamp: {s: 1, n: 0}},
+                    {timestamp: {s: 1, n: 500000000}},
+                ]]
+            ])
+        };
+        const expected: any = {
+            method: "process",
+            result: {
+                handle: 1,
+                features: {
+                    "just-timestamps": [
+                        {timestamp: {s: 0, n: 0}},
+                        {timestamp: {s: 0, n: 500000000}},
+                        {timestamp: {s: 1, n: 0}},
+                        {timestamp: {s: 1, n: 500000000}},
+                    ]
+                }
+            }
+        };
+        JSON.parse(Serialise.ProcessResponse(toSerialise)).should.eql(expected);
     });
 });
