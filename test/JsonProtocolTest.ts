@@ -184,5 +184,14 @@ describe("Various optional behaviour of (de)serialisation functions", () => {
         };
         Deserialise.ProcessResponse(response).should.eql(expected);
         Deserialise.ProcessResponse(JSON.stringify(response)).should.eql(expected);
+        // try a request to make sure params are tested
+        Deserialise.FinishRequest(JSON.stringify({
+            method: "finish",
+            params: {
+                handle: 1
+            }
+        })).should.eql({
+            handle: 1
+        });
     });
 });

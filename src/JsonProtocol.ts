@@ -342,7 +342,7 @@ function fromTransport(buffer: SerialisedJson): any {
         JSON.parse(buffer) : buffer;
 
     if (response.error) throw new Error(response.error.message);
-    return response.result;
+    return response.result || response.params;
 }
 
 function toWireListResponse(response: ListResponse): WireListResponse {
