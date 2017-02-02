@@ -6,7 +6,8 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
     LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service
+    ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service,
+    FinishRequest
 } from "../src/Piper";
 import {
     PluginFactory,
@@ -135,18 +136,29 @@ describe("FeatsService", () => {
 
     describe("Process and Finish request handling", () => {
         const service: FeatsService = new FeatsService(fftFactory, ...plugins);
-        const config: (key: string) => Promise<ConfigurationResponse> = (key) => {
+        const load: (key: string) => Promise<LoadResponse> = (key) => {
             return service.load({
                 key: key,
                 inputSampleRate: 16,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]
-            }).then(loadResponse => {
+            });
+        };
+        const config: (key: string) => Promise<ConfigurationResponse> = (key) => {
+            return load(key).then(loadResponse => {
                 return service.configure({
                     handle: loadResponse.handle,
                     configuration: {blockSize: 8, channelCount: 1, stepSize: 8}
                 })
             });
         };
+
+        it("cleans up a loaded extractor", () => {
+            return load("stub:sum").then(response => {
+                return service.finish({
+                    handle: response.handle
+                });
+            }).then(response => response.features.get("finish")).should.eventually.exist;
+        });
 
         it("Rejects when the wrong number of channels are supplied", () => {
             return config("stub:sum").then(response => {

@@ -121,9 +121,9 @@ export class FeatsSynchronousService implements SynchronousService {
 
     finish(request: FinishRequest): FinishResponse {
         const handle: ExtractorHandle = request.handle;
-        if (!this.configured.has(handle))
-            throw new Error("Invalid plugin handle, or plugin not configured.");
-        const plugin: Plugin = this.configured.get(handle);
+        if (!this.loaded.has(handle) && !this.configured.has(handle))
+            throw new Error("Invalid plugin handle.");
+        const plugin: Plugin = this.configured.get(handle) || this.loaded.get(handle);
         const features: FeatureSet = plugin.extractor.finish();
         this.loaded.delete(handle);
         this.configured.delete(handle);
