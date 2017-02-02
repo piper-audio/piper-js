@@ -108,6 +108,8 @@ describe("FeatsService", () => {
             const expectedResponse: ConfigurationResponse = {
                 handle: 1,
                 outputList: MetaDataStub.basicOutputInfo.map(basic => {
+                    const sampleType: number = basic.identifier === "finish" ?
+                        2 : 0;
                     return {
                         basic: basic,
                         configured: {
@@ -115,7 +117,7 @@ describe("FeatsService", () => {
                             binNames: [],
                             hasDuration: false,
                             sampleRate: 0,
-                            sampleType: 0
+                            sampleType: sampleType
                         }
                     }
                 })
@@ -203,8 +205,8 @@ describe("FeatsService", () => {
             return config("stub:sum")
                 .then(response => service.finish({handle: response.handle}))
                 .then(response => {
-                    // feature set should be empty
-                    if (!response.features.size.should.eql(0)) {
+                    // feature set should have one feature (the stub returns a single number from finish)
+                    if (!response.features.size.should.eql(1)) {
                         return Promise.reject("Finish did not return expected FeatureSet."); // did not pass
                     }
                     // assert that finish can't be called again, i.e. cleared up
