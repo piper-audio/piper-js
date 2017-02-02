@@ -152,7 +152,10 @@ export namespace Serialise {
     }
 
     export function FinishResponse(response: FinishResponse, asBase64: boolean = true, tag?: Tag): string {
-        return toTransport({method: "finish", result: toWireProcessResponse(response as ProcessResponse, asBase64)});
+        return toTransport(
+            {method: "finish", result: toWireProcessResponse(response as ProcessResponse, asBase64)},
+            tag
+        );
     }
 }
 
