@@ -91,85 +91,109 @@ export namespace Filters {
 }
 
 export namespace Serialise {
-    export function ListRequest(request: ListRequest): string {
-        return toTransport({method: "list", params: request});
+    export function ListRequest(request: ListRequest, tag?: Tag): string {
+        return toTransport({method: "list", params: request}, tag);
     }
 
-    export function ListResponse(response: ListResponse): string {
-        return toTransport({method: "list", result: toWireListResponse(response)});
+    export function ListResponse(response: ListResponse, tag?: Tag): string {
+        return toTransport(
+            {method: "list", result: toWireListResponse(response)},
+            tag
+        );
     }
 
-    export function LoadRequest(request: LoadRequest): string {
-        return toTransport({method: "load", params: toWireLoadRequest(request)});
+    export function LoadRequest(request: LoadRequest, tag?: Tag): string {
+        return toTransport(
+            {method: "load", params: toWireLoadRequest(request)},
+            tag
+        );
     }
 
-    export function LoadResponse(response: LoadResponse): string {
-        return toTransport({method: "load", result: toWireLoadResponse(response)});
+    export function LoadResponse(response: LoadResponse, tag?: Tag): string {
+        return toTransport(
+            {method: "load", result: toWireLoadResponse(response)},
+            tag
+        );
     }
 
-    export function ConfigurationRequest(request: ConfigurationRequest): string {
-        return toTransport({method: "configure", params: toWireConfigurationRequest(request)});
+    export function ConfigurationRequest(request: ConfigurationRequest, tag?: Tag): string {
+        return toTransport(
+            {method: "configure", params: toWireConfigurationRequest(request)},
+            tag
+        );
     }
 
-    export function ConfigurationResponse(response: ConfigurationResponse): string {
-        return toTransport({method: "configure", result: toWireConfigurationResponse(response)});
+    export function ConfigurationResponse(response: ConfigurationResponse, tag?: Tag): string {
+        return toTransport(
+            {method: "configure", result: toWireConfigurationResponse(response)},
+            tag
+        );
     }
 
-    export function ProcessRequest(request: ProcessRequest, asBase64: boolean = true): string {
-        return toTransport({method: "process", params: toWireProcessRequest(request, asBase64)});
+    export function ProcessRequest(request: ProcessRequest, asBase64: boolean = true, tag?: Tag): string {
+        return toTransport(
+            {method: "process", params: toWireProcessRequest(request, asBase64)},
+            tag
+        );
     }
 
-    export function ProcessResponse(response: ProcessResponse, asBase64: boolean = true): string {
-        return toTransport({method: "process", result: toWireProcessResponse(response, asBase64)});
+    export function ProcessResponse(response: ProcessResponse, asBase64: boolean = true, tag?: Tag): string {
+        return toTransport(
+            {method: "process", result: toWireProcessResponse(response, asBase64)},
+            tag
+        );
     }
 
-    export function FinishRequest(request: FinishRequest): string {
-        return toTransport({method: "finish", params: request});
+    export function FinishRequest(request: FinishRequest, tag?: Tag): string {
+        return toTransport(
+            {method: "finish", params: request},
+            tag
+        );
     }
 
-    export function FinishResponse(response: FinishResponse, asBase64: boolean = true): string {
+    export function FinishResponse(response: FinishResponse, asBase64: boolean = true, tag?: Tag): string {
         return toTransport({method: "finish", result: toWireProcessResponse(response as ProcessResponse, asBase64)});
     }
 }
 
 export namespace Deserialise {
-    export function ListRequest(request: string): ListRequest {
-        return toTransport({})
+    export function ListRequest(request: SerialisedJson): ListRequest {
+        return toListRequest(fromTransport(request))
     }
 
-    export function ListResponse(response: string): ListResponse {
+    export function ListResponse(response: SerialisedJson): ListResponse {
         return toListResponse(fromTransport(response));
     }
 
-    export function LoadRequest(request: string): LoadRequest {
+    export function LoadRequest(request: SerialisedJson): LoadRequest {
         return toLoadRequest(fromTransport(request));
     }
 
-    export function LoadResponse(response: string): LoadResponse {
+    export function LoadResponse(response: SerialisedJson): LoadResponse {
         return toLoadResponse(fromTransport(response));
     }
 
-    export function ConfigurationRequest(request: string): ConfigurationRequest {
+    export function ConfigurationRequest(request: SerialisedJson): ConfigurationRequest {
         return toConfigurationRequest(fromTransport(request));
     }
 
-    export function ConfigurationResponse(response: string): ConfigurationResponse {
+    export function ConfigurationResponse(response: SerialisedJson): ConfigurationResponse {
         return toConfigurationResponse(fromTransport(response));
     }
 
-    export function ProcessRequest(request: string): ProcessRequest {
+    export function ProcessRequest(request: SerialisedJson): ProcessRequest {
         return toProcessRequest(fromTransport(request));
     }
 
-    export function ProcessResponse(response: string): ProcessResponse {
+    export function ProcessResponse(response: SerialisedJson): ProcessResponse {
         return toProcessResponse(fromTransport(response));
     }
 
-    export function FinishRequest(request: string): FinishRequest {
+    export function FinishRequest(request: SerialisedJson): FinishRequest {
         return fromTransport(request);
     }
 
-    export function FinishResponse(response: string): FinishResponse {
+    export function FinishResponse(response: SerialisedJson): FinishResponse {
         return ProcessResponse(response);
     }
 }
@@ -194,6 +218,8 @@ interface WireProcessResponse {
     features: WireFeatureSet
 }
 
+type WireFinishResponse = WireProcessResponse;
+
 interface WireProcessInput {
     timestamp: Timestamp;
     inputBuffers: number[][] | string[];
@@ -203,6 +229,8 @@ interface WireProcessRequest {
     handle: ExtractorHandle;
     processInput: WireProcessInput;
 }
+
+type WireFinishRequest = FinishRequest;
 
 interface WireStaticData {
     key: string;
@@ -218,6 +246,8 @@ interface WireStaticData {
     inputDomain: string;
     basicOutputInfo: BasicDescriptor[];
 }
+
+type WireListRequest = ListRequest;
 
 interface WireListResponse {
     available: WireStaticData[];
@@ -272,8 +302,23 @@ interface WireOutputDescriptor {
 
 type WireOutputList = WireOutputDescriptor[];
 
-function toTransport(obj: any): string {
-    return JSON.stringify(obj);
+export type Tag = number | string;
+
+function toTransport(obj: any, tag?: Tag): string {
+    const value: any = tag != null ? Object.assign({}, obj, {id: tag}) : obj;
+    return JSON.stringify(value);
+}
+
+type RpcMethod = "list" | "load"  | "configure" | "process" | "finish";
+
+interface RpcRequest {
+    id: number;
+    method: RpcMethod;
+    params: WireListRequest
+        | WireLoadRequest
+        | WireConfigurationRequest
+        | WireProcessRequest
+        | WireFinishRequest;
 }
 
 interface ResponseError {
@@ -282,13 +327,16 @@ interface ResponseError {
 }
 
 interface RpcResponse {
-    method: string;
+    method: RpcMethod;
     result?: any;
     error?: ResponseError;
 }
 
-function fromTransport(buffer: string): any {
-    const response: RpcResponse = JSON.parse(buffer);
+export type SerialisedJson = string | {};
+
+function fromTransport(buffer: SerialisedJson): any {
+    const response: any = typeof buffer === 'string' ?
+        JSON.parse(buffer) : buffer;
 
     if (response.error) throw new Error(response.error.message);
     return response.result;
@@ -300,6 +348,10 @@ function toWireListResponse(response: ListResponse): WireListResponse {
             inputDomain: InputDomain[data.inputDomain]
         }))
     };
+}
+
+function toListRequest(request: WireListRequest): ListRequest {
+    return {}; // TODO actual parsing
 }
 
 function toListResponse(response: WireListResponse): ListResponse {
