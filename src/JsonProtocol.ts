@@ -447,54 +447,88 @@ function toConfiguration(config: WireConfiguration): Configuration {
 }
 
 function toWireProcessRequest(request: ProcessRequest, asBase64?: boolean): WireProcessRequest {
+    const nChannels: number = request.processInput.inputBuffers.length;
+    const inputBuffers: string[] | number[][] =
+        new Array(nChannels);
+    if (asBase64) {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = toBase64(request.processInput.inputBuffers[i]);
+    } else {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = Array.from(request.processInput.inputBuffers[i]);
+    }
     return {
         handle: request.handle,
         processInput: {
             timestamp: request.processInput.timestamp,
-            inputBuffers: asBase64 ?
-                request.processInput.inputBuffers.map(toBase64) :
-                request.processInput.inputBuffers.map(channel => [...channel])
+            inputBuffers: inputBuffers
         }
     }
 }
 
 function toProcessRequest(request: WireProcessRequest): ProcessRequest {
+    const hasBase64InputBuffer: boolean =
+        typeof request.processInput.inputBuffers[0] === "string";
+    const nChannels: number = request.processInput.inputBuffers.length;
+    let inputBuffers: Float32Array[] = new Array(nChannels);
+    const wireBuffers: string[] | number[][] = request.processInput.inputBuffers;
+    if (hasBase64InputBuffer) {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = fromBase64((wireBuffers as string[])[i]);
+    } else {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = new Float32Array((wireBuffers as number[][])[i]);
+    }
     return {
         handle: request.handle,
-        processInput: Object.assign({}, request.processInput, {
-            inputBuffers: (typeof request.processInput.inputBuffers[0]) === "string"
-                ? (request.processInput.inputBuffers as string[]).map(fromBase64)
-                : (request.processInput.inputBuffers as number[][]).map(channel => new Float32Array(channel))
-        } as ProcessInput)
-    }; //TODO write test
+        processInput: {
+            timestamp: request.processInput.timestamp,
+            inputBuffers: inputBuffers
+        }
+    };
 }
 
 function toWireProcessResponse(response: ProcessResponse, asBase64: boolean): WireProcessResponse {
-    // TODO write test
+    let wireFeatureSet: WireFeatureSet = {};
+    const keys: string[] = Array.from(response.features.keys());
+
+    for (let i = 0, nKeys = keys.length; i < nKeys; ++i) {
+        const featureList: FeatureList = response.features.get(keys[i]);
+        const nFeatures: number = featureList.length;
+        wireFeatureSet[keys[i]] = new Array(nFeatures);
+        const wireFeatureList = wireFeatureSet[keys[i]];
+        for (let j = 0; j < nFeatures; ++j) {
+            const feature: Feature = featureList[j];
+            const hasFeatureValues = response.features != null &&
+                feature.featureValues != null;
+
+            let wireFeature: WireFeature = {};
+            if (hasFeatureValues) {
+                if (asBase64) {
+                    wireFeature = {
+                        featureValues: toBase64(feature.featureValues)
+                    };
+                } else {
+                    wireFeature =  {
+                        featureValues: Array.from(feature.featureValues)
+                    }
+                }
+            }
+            wireFeatureList[j] = Object.assign({}, feature, wireFeature);
+        }
+    }
     return {
         handle: response.handle,
-        features: [...response.features.entries()].reduce((set, pair) => {
-            const [key, featureList]: [string, FeatureList] = pair;
-            return Object.assign(set, {
-                [key]: featureList.map((feature: Feature) => {
-                    return Object.assign({}, feature as any,
-                        (response.features != null && feature.featureValues != null ?
-                            {
-                                featureValues: asBase64 ? toBase64(feature.featureValues) : [...feature.featureValues]
-                            } : {}) as any
-                    )
-                })
-            })
-        }, {})
+        features: wireFeatureSet
     };
 }
 
 function toProcessResponse(response: WireProcessResponse): ProcessResponse {
     const features: FeatureSet = new Map();
     const wireFeatures: WireFeatureSet = response.features;
-    Object.keys(wireFeatures).forEach(key => {
-        return features.set(key, convertWireFeatureList(wireFeatures[key]));
-    });
+    const keys: string[] = Object.keys(wireFeatures);
+    for (let i = 0, nKeys = keys.length; i < nKeys; ++i)
+        features.set(keys[i], convertWireFeatureList(wireFeatures[keys[i]]))
     return {
         handle: response.handle,
         features: features
@@ -502,7 +536,11 @@ function toProcessResponse(response: WireProcessResponse): ProcessResponse {
 }
 
 function convertWireFeatureList(wfeatures: WireFeatureList): FeatureList {
-    return wfeatures.map(convertWireFeature);
+    const nFeatures: number = wfeatures.length;
+    let features: FeatureList = new Array(nFeatures);
+    for (let i = 0; i < nFeatures; ++i)
+        features[i] = convertWireFeature(wfeatures[i]);
+    return features;
 }
 
 function convertWireFeature(wfeature: WireFeature): Feature {
