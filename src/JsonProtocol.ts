@@ -461,7 +461,7 @@ function toWireProcessRequest(request: ProcessRequest, asBase64?: boolean): Wire
 function toProcessRequest(request: WireProcessRequest): ProcessRequest {
     return {
         handle: request.handle,
-        processInput: Object.assign({}, request, {
+        processInput: Object.assign({}, request.processInput, {
             inputBuffers: (typeof request.processInput.inputBuffers[0]) === "string"
                 ? (request.processInput.inputBuffers as string[]).map(fromBase64)
                 : (request.processInput.inputBuffers as number[][]).map(channel => new Float32Array(channel))
