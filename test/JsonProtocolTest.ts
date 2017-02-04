@@ -21,6 +21,10 @@ describe("Serialise.ProcessRequest()", () => {
             "AAAAAAAAAAAAAAAAAAAAAA==",
             "AACAPwAAgD8AAIA/AACAPw=="
         ];
+        const expected = [
+            [0, 0, 0, 0],
+            [1, 1, 1, 1]
+        ];
         const toProcessRequest = (frame: Float32Array[]): ProcessRequest => {
             return {
                 handle: 1,
@@ -35,8 +39,64 @@ describe("Serialise.ProcessRequest()", () => {
         for (let frame of framedBuffers) {
             JSON.parse(Serialise.ProcessRequest(toProcessRequest(frame)))
                 .params.processInput.inputBuffers[0]
-                .should.eql(expectedBase64[index++])
+                .should.eql(expectedBase64[index]);
+            JSON.parse(Serialise.ProcessRequest(toProcessRequest(frame), false))
+                .params.processInput.inputBuffers[0]
+                .should.eql(expected[index++]);
         }
+    });
+});
+
+describe("Deserialise.ProcessRequest()", () => {
+    const expected: ProcessRequest = {
+        handle: 2,
+        processInput: {
+            timestamp: {s: 0, n: 0},
+            inputBuffers: [
+                new Float32Array([0, 0, 0, 0]),
+                new Float32Array([1, 1, 1, 1])
+            ]
+        }
+    };
+    const base64Request: any = {
+        id: 1,
+        method: "process",
+        params: {
+            handle: 2,
+            processInput: {
+                timestamp: {s: 0, n: 0},
+                inputBuffers: [
+                    "AAAAAAAAAAAAAAAAAAAAAA==",
+                    "AACAPwAAgD8AAIA/AACAPw=="
+                ]
+            }
+        }
+    };
+    const arrayRequest: any = {
+        id: 1,
+        method: "process",
+        params: {
+            handle: 2,
+            processInput: {
+                timestamp: {s: 0, n: 0},
+                inputBuffers: [
+                    [0, 0, 0, 0],
+                    [1, 1, 1, 1]
+                ]
+            }
+        }
+    };
+    it("can parse base-64 process request, straight from an object", () => {
+        Deserialise.ProcessRequest(base64Request).should.eql(expected);
+    });
+    it("can parse base-64 process request, straight from a JSON string", () => {
+        Deserialise.ProcessRequest(JSON.stringify(base64Request)).should.eql(expected);
+    });
+    it("can parse a process request (array), straight from an object", () => {
+        Deserialise.ProcessRequest(arrayRequest).should.eql(expected);
+    });
+    it("can parse process requests (array), straight from a JSON string", () => {
+        Deserialise.ProcessRequest(JSON.stringify(arrayRequest)).should.eql(expected);
     });
 });
 
@@ -120,7 +180,35 @@ describe("Serialise.ProcessResponse()", () => {
                }
            }
        };
+       const expectedBase64: any = {
+           method: "process",
+           result: {
+               handle: 1,
+               features: {
+                   "values-n-stamps": [
+                       {
+                           timestamp: {s: 0, n: 0},
+                           featureValues: "AAAAAAAAAAAAAAAAAAAAAA=="
+                       },
+                       {
+                           timestamp: {s: 0, n: 500000000},
+                           featureValues: "AACAPwAAgD8AAIA/AACAPw=="
+                       },
+                       {
+                           timestamp: {s: 1, n: 0},
+                           featureValues: "AAAAQAAAAEAAAABAAAAAQA=="
+                       },
+                       {
+                           timestamp: {s: 1, n: 500000000},
+                           featureValues: "AABAQAAAQEAAAEBAAABAQA=="
+                       }
+                   ]
+               }
+           }
+       };
+
        JSON.parse(Serialise.ProcessResponse(toSerialise, false)).should.eql(expected);
+       JSON.parse(Serialise.ProcessResponse(toSerialise)).should.eql(expectedBase64);
     });
 });
 
