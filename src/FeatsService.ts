@@ -47,8 +47,13 @@ export class FeatsSynchronousService implements SynchronousService {
     }
 
     list(request: ListRequest): ListResponse {
+        const factories: PluginFactory[] = [...this.factories.values()];
+        const available: PluginFactory[] = request.from ?
+            factories.filter(plugin => {
+                return request.from.includes(plugin.metadata.key.split(":")[0]);
+            }) : factories;
         return {
-            available: [...this.factories.values()].map(plugin => plugin.metadata)
+            available: available.map(plugin => plugin.metadata)
         };
     }
 
@@ -121,9 +126,9 @@ export class FeatsSynchronousService implements SynchronousService {
 
     finish(request: FinishRequest): FinishResponse {
         const handle: ExtractorHandle = request.handle;
-        if (!this.configured.has(handle))
-            throw new Error("Invalid plugin handle, or plugin not configured.");
-        const plugin: Plugin = this.configured.get(handle);
+        if (!this.loaded.has(handle) && !this.configured.has(handle))
+            throw new Error("Invalid plugin handle.");
+        const plugin: Plugin = this.configured.get(handle) || this.loaded.get(handle);
         const features: FeatureSet = plugin.extractor.finish();
         this.loaded.delete(handle);
         this.configured.delete(handle);

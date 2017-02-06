@@ -6,7 +6,8 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
     LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service
+    ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service,
+    FinishRequest
 } from "../src/Piper";
 import {
     PluginFactory,
@@ -20,6 +21,10 @@ import {
 } from "./fixtures/FeatureExtractorStub";
 import {FeatureSet} from "../src/Feature";
 import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
+import {
+    FrequencyDomainExtractorStub,
+    FrequencyMetaDataStub, PassThroughExtractor
+} from "./fixtures/FrequencyDomainExtractorStub";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -29,12 +34,37 @@ describe("FeatsService", () => {
     const plugins: PluginFactory[] = [];
     const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
     plugins.push({extractor: factory, metadata: metadata});
+    plugins.push({
+        extractor: () => new FrequencyDomainExtractorStub(),
+        metadata: FrequencyMetaDataStub
+    });
+    plugins.push({
+        extractor: () => new PassThroughExtractor(),
+        metadata: PassThroughExtractor.getMetaData()
+    });
 
     describe("List request handling", () => {
         it("Resolves to a response whose content body is {available: StaticData[]}", () => {
             const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             return service.list({}).then(response => {
-                response.should.eql({available: [metadata]});
+                response.should.eql({
+                    available: [
+                        metadata,
+                        FrequencyMetaDataStub,
+                        PassThroughExtractor.getMetaData()
+                    ]
+                });
+            });
+        });
+        it("Can filter extractors belonging only to given libraries", () => {
+            const service: FeatsService = new FeatsService(fftFactory, ...plugins);
+            return service.list({from: ['stub']}).then(response => {
+               response.should.eql({
+                   available: [
+                       metadata,
+                       PassThroughExtractor.getMetaData()
+                   ]
+               });
             });
         });
     });
@@ -108,6 +138,8 @@ describe("FeatsService", () => {
             const expectedResponse: ConfigurationResponse = {
                 handle: 1,
                 outputList: MetaDataStub.basicOutputInfo.map(basic => {
+                    const sampleType: number = basic.identifier === "finish" ?
+                        2 : 0;
                     return {
                         basic: basic,
                         configured: {
@@ -115,7 +147,7 @@ describe("FeatsService", () => {
                             binNames: [],
                             hasDuration: false,
                             sampleRate: 0,
-                            sampleType: 0
+                            sampleType: sampleType
                         }
                     }
                 })
@@ -133,18 +165,29 @@ describe("FeatsService", () => {
 
     describe("Process and Finish request handling", () => {
         const service: FeatsService = new FeatsService(fftFactory, ...plugins);
-        const config: (key: string) => Promise<ConfigurationResponse> = (key) => {
+        const load: (key: string) => Promise<LoadResponse> = (key) => {
             return service.load({
                 key: key,
                 inputSampleRate: 16,
                 adapterFlags: [AdapterFlags.AdaptAllSafe]
-            }).then(loadResponse => {
+            });
+        };
+        const config: (key: string) => Promise<ConfigurationResponse> = (key) => {
+            return load(key).then(loadResponse => {
                 return service.configure({
                     handle: loadResponse.handle,
                     configuration: {blockSize: 8, channelCount: 1, stepSize: 8}
                 })
             });
         };
+
+        it("cleans up a loaded extractor", () => {
+            return load("stub:sum").then(response => {
+                return service.finish({
+                    handle: response.handle
+                });
+            }).then(response => response.features.get("finish")).should.eventually.exist;
+        });
 
         it("Rejects when the wrong number of channels are supplied", () => {
             return config("stub:sum").then(response => {
@@ -203,8 +246,8 @@ describe("FeatsService", () => {
             return config("stub:sum")
                 .then(response => service.finish({handle: response.handle}))
                 .then(response => {
-                    // feature set should be empty
-                    if (!response.features.size.should.eql(0)) {
+                    // feature set should have one feature (the stub returns a single number from finish)
+                    if (!response.features.size.should.eql(1)) {
                         return Promise.reject("Finish did not return expected FeatureSet."); // did not pass
                     }
                     // assert that finish can't be called again, i.e. cleared up

@@ -1,6 +1,6 @@
 {
   "name": "piper",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Piper is a protocol for driving audio feature extractors. This library provides ways of implementing clients and servers in JavaScript for the Piper protocol.",
   "main": "Piper.js",
   "typings": "Piper.d.ts",
@@ -9,7 +9,7 @@
     "timings": "mocha perf/*.ts --require ts-node/register",
     "profile": "npm run timings && node --prof-process $(ls -1tr isolate*.log | tail -1) > profile.txt",
     "build-browser": "npm run build && browserify dist/ts/Piper.js  -t babelify --standalone Piper -o ./dist/piper.js && cp src/fft/KissFft.js ./dist",
-    "build": "tsc && cp src/fft/KissFft.js dist/ts/fft",
+    "build": "tsc && cp src/fft/KissFft*.js dist/ts/fft",
     "clean": "rm -rf fft *.js *.js.map *.d.ts dist extractors",
     "prepublish": "npm run build-browser && cp -r dist/ts/* .",
     "postinstall": "npm run build-browser && cp -r dist/ts/* ."

@@ -2,7 +2,7 @@ import {
     Configuration, ConfiguredOutputs, FeatureExtractor, ProcessInput, StaticData, InputDomain, OutputIdentifier,
     ConfiguredOutputDescriptor, SampleType
 } from "../../src/FeatureExtractor";
-import {FeatureSet} from "../../src/Feature";
+import {FeatureSet, Feature} from "../../src/Feature";
 
 export class FeatureExtractorStub implements FeatureExtractor {
     private cumulativeSum: number;
@@ -21,7 +21,12 @@ export class FeatureExtractorStub implements FeatureExtractor {
         return new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
             ["sum", descriptor],
             ["cumsum", descriptor],
-            ["conditional", descriptor]
+            ["conditional", descriptor],
+            ["finish", {
+                binCount: 1,
+                sampleType: SampleType.VariableSampleRate,
+                hasDuration: false
+            }]
         ]);
     }
 
@@ -42,7 +47,11 @@ export class FeatureExtractorStub implements FeatureExtractor {
     }
 
     finish(): FeatureSet {
-        return new Map();
+        const feature: Feature = {
+            featureValues: new Float32Array([1969]),
+            timestamp: {s: 0, n: 0}
+        };
+        return new Map([["finish", [feature]]]);
     }
 }
 
@@ -67,6 +76,11 @@ export const MetaDataStub: StaticData = {
             description: "An output which is only included sometimes",
             identifier: "conditional",
             name: "Conditional number"
+        },
+        {
+            description: "An output which returns features in the finish call",
+            identifier: "finish",
+            name: "Final number"
         }
     ],
     inputDomain: InputDomain.TimeDomain,

@@ -91,85 +91,112 @@ export namespace Filters {
 }
 
 export namespace Serialise {
-    export function ListRequest(request: ListRequest): string {
-        return toTransport({method: "list", params: request});
+    export function ListRequest(request: ListRequest, tag?: Tag): string {
+        return toTransport({method: "list", params: request}, tag);
     }
 
-    export function ListResponse(response: ListResponse): string {
-        return toTransport({method: "list", result: toWireListResponse(response)});
+    export function ListResponse(response: ListResponse, tag?: Tag): string {
+        return toTransport(
+            {method: "list", result: toWireListResponse(response)},
+            tag
+        );
     }
 
-    export function LoadRequest(request: LoadRequest): string {
-        return toTransport({method: "load", params: toWireLoadRequest(request)});
+    export function LoadRequest(request: LoadRequest, tag?: Tag): string {
+        return toTransport(
+            {method: "load", params: toWireLoadRequest(request)},
+            tag
+        );
     }
 
-    export function LoadResponse(response: LoadResponse): string {
-        return toTransport({method: "load", result: toWireLoadResponse(response)});
+    export function LoadResponse(response: LoadResponse, tag?: Tag): string {
+        return toTransport(
+            {method: "load", result: toWireLoadResponse(response)},
+            tag
+        );
     }
 
-    export function ConfigurationRequest(request: ConfigurationRequest): string {
-        return toTransport({method: "configure", params: toWireConfigurationRequest(request)});
+    export function ConfigurationRequest(request: ConfigurationRequest, tag?: Tag): string {
+        return toTransport(
+            {method: "configure", params: toWireConfigurationRequest(request)},
+            tag
+        );
     }
 
-    export function ConfigurationResponse(response: ConfigurationResponse): string {
-        return toTransport({method: "configure", result: toWireConfigurationResponse(response)});
+    export function ConfigurationResponse(response: ConfigurationResponse, tag?: Tag): string {
+        return toTransport(
+            {method: "configure", result: toWireConfigurationResponse(response)},
+            tag
+        );
     }
 
-    export function ProcessRequest(request: ProcessRequest, asBase64: boolean = true): string {
-        return toTransport({method: "process", params: toWireProcessRequest(request, asBase64)});
+    export function ProcessRequest(request: ProcessRequest, asBase64: boolean = true, tag?: Tag): string {
+        return toTransport(
+            {method: "process", params: toWireProcessRequest(request, asBase64)},
+            tag
+        );
     }
 
-    export function ProcessResponse(response: ProcessResponse): string {
-        return toTransport({method: "process", result: toWireProcessResponse(response)});
+    export function ProcessResponse(response: ProcessResponse, asBase64: boolean = true, tag?: Tag): string {
+        return toTransport(
+            {method: "process", result: toWireProcessResponse(response, asBase64)},
+            tag
+        );
     }
 
-    export function FinishRequest(request: FinishRequest): string {
-        return toTransport({method: "finish", params: request});
+    export function FinishRequest(request: FinishRequest, tag?: Tag): string {
+        return toTransport(
+            {method: "finish", params: request},
+            tag
+        );
     }
 
-    export function FinishResponse(response: FinishResponse): string {
-        return toTransport({method: "finish", result: toWireProcessResponse(response as ProcessResponse)});
+    export function FinishResponse(response: FinishResponse, asBase64: boolean = true, tag?: Tag): string {
+        return toTransport(
+            {method: "finish", result: toWireProcessResponse(response as ProcessResponse, asBase64)},
+            tag
+        );
     }
 }
 
 export namespace Deserialise {
-    export function ListRequest(request: string): ListRequest {
-        return toTransport({})
+    export function ListRequest(request: SerialisedJson): ListRequest {
+        return toListRequest(fromTransport(request))
     }
 
-    export function ListResponse(response: string): ListResponse {
+    export function ListResponse(response: SerialisedJson): ListResponse {
         return toListResponse(fromTransport(response));
     }
 
-    export function LoadRequest(request: string): LoadRequest {
+    export function LoadRequest(request: SerialisedJson): LoadRequest {
         return toLoadRequest(fromTransport(request));
     }
 
-    export function LoadResponse(response: string): LoadResponse {
+    export function LoadResponse(response: SerialisedJson): LoadResponse {
         return toLoadResponse(fromTransport(response));
     }
 
-    export function ConfigurationRequest(request: string): ConfigurationRequest {
+    export function ConfigurationRequest(request: SerialisedJson): ConfigurationRequest {
         return toConfigurationRequest(fromTransport(request));
     }
 
-    export function ConfigurationResponse(response: string): ConfigurationResponse {
+    export function ConfigurationResponse(response: SerialisedJson): ConfigurationResponse {
         return toConfigurationResponse(fromTransport(response));
     }
 
-    export function ProcessRequest(request: string): ProcessRequest {
+    export function ProcessRequest(request: SerialisedJson): ProcessRequest {
         return toProcessRequest(fromTransport(request));
     }
 
-    export function ProcessResponse(response: string): ProcessResponse {
+    export function ProcessResponse(response: SerialisedJson): ProcessResponse {
         return toProcessResponse(fromTransport(response));
     }
 
-    export function FinishRequest(request: string): FinishRequest {
+    export function FinishRequest(request: SerialisedJson): FinishRequest {
         return fromTransport(request);
     }
 
-    export function FinishResponse(response: string): FinishResponse {
+    export function FinishResponse(response: SerialisedJson): FinishResponse {
         return ProcessResponse(response);
     }
 }
@@ -194,6 +221,8 @@ interface WireProcessResponse {
     features: WireFeatureSet
 }
 
+type WireFinishResponse = WireProcessResponse;
+
 interface WireProcessInput {
     timestamp: Timestamp;
     inputBuffers: number[][] | string[];
@@ -203,6 +232,8 @@ interface WireProcessRequest {
     handle: ExtractorHandle;
     processInput: WireProcessInput;
 }
+
+type WireFinishRequest = FinishRequest;
 
 interface WireStaticData {
     key: string;
@@ -218,6 +249,8 @@ interface WireStaticData {
     inputDomain: string;
     basicOutputInfo: BasicDescriptor[];
 }
+
+type WireListRequest = ListRequest;
 
 interface WireListResponse {
     available: WireStaticData[];
@@ -272,8 +305,23 @@ interface WireOutputDescriptor {
 
 type WireOutputList = WireOutputDescriptor[];
 
-function toTransport(obj: any): string {
-    return JSON.stringify(obj);
+export type Tag = number | string;
+
+function toTransport(obj: any, tag?: Tag): string {
+    const value: any = tag != null ? Object.assign({}, obj, {id: tag}) : obj;
+    return JSON.stringify(value);
+}
+
+type RpcMethod = "list" | "load"  | "configure" | "process" | "finish";
+
+interface RpcRequest {
+    id: number;
+    method: RpcMethod;
+    params: WireListRequest
+        | WireLoadRequest
+        | WireConfigurationRequest
+        | WireProcessRequest
+        | WireFinishRequest;
 }
 
 interface ResponseError {
@@ -282,16 +330,19 @@ interface ResponseError {
 }
 
 interface RpcResponse {
-    method: string;
+    method: RpcMethod;
     result?: any;
     error?: ResponseError;
 }
 
-function fromTransport(buffer: string): any {
-    const response: RpcResponse = JSON.parse(buffer);
+export type SerialisedJson = string | {};
+
+function fromTransport(buffer: SerialisedJson): any {
+    const response: any = typeof buffer === 'string' ?
+        JSON.parse(buffer) : buffer;
 
     if (response.error) throw new Error(response.error.message);
-    return response.result;
+    return response.result || response.params;
 }
 
 function toWireListResponse(response: ListResponse): WireListResponse {
@@ -300,6 +351,10 @@ function toWireListResponse(response: ListResponse): WireListResponse {
             inputDomain: InputDomain[data.inputDomain]
         }))
     };
+}
+
+function toListRequest(request: WireListRequest): ListRequest {
+    return request;
 }
 
 function toListResponse(response: WireListResponse): ListResponse {
@@ -392,52 +447,88 @@ function toConfiguration(config: WireConfiguration): Configuration {
 }
 
 function toWireProcessRequest(request: ProcessRequest, asBase64?: boolean): WireProcessRequest {
+    const nChannels: number = request.processInput.inputBuffers.length;
+    const inputBuffers: string[] | number[][] =
+        new Array(nChannels);
+    if (asBase64) {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = toBase64(request.processInput.inputBuffers[i]);
+    } else {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = Array.from(request.processInput.inputBuffers[i]);
+    }
     return {
         handle: request.handle,
         processInput: {
             timestamp: request.processInput.timestamp,
-            inputBuffers: asBase64 ?
-                request.processInput.inputBuffers.map(toBase64) :
-                request.processInput.inputBuffers.map(channel => [...channel])
+            inputBuffers: inputBuffers
         }
     }
 }
 
 function toProcessRequest(request: WireProcessRequest): ProcessRequest {
+    const hasBase64InputBuffer: boolean =
+        typeof request.processInput.inputBuffers[0] === "string";
+    const nChannels: number = request.processInput.inputBuffers.length;
+    let inputBuffers: Float32Array[] = new Array(nChannels);
+    const wireBuffers: string[] | number[][] = request.processInput.inputBuffers;
+    if (hasBase64InputBuffer) {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = fromBase64((wireBuffers as string[])[i]);
+    } else {
+        for (let i = 0; i < nChannels; ++i)
+            inputBuffers[i] = new Float32Array((wireBuffers as number[][])[i]);
+    }
     return {
         handle: request.handle,
-        processInput: Object.assign({}, request, {
-            inputBuffers: (typeof request.processInput.inputBuffers[0]) === "string"
-                ? (request.processInput.inputBuffers as string[]).map(fromBase64)
-                : (request.processInput.inputBuffers as number[][]).map(channel => new Float32Array(channel))
-        } as ProcessInput)
-    }; //TODO write test
+        processInput: {
+            timestamp: request.processInput.timestamp,
+            inputBuffers: inputBuffers
+        }
+    };
 }
 
-function toWireProcessResponse(response: ProcessResponse): WireProcessResponse {
-    // TODO write test
+function toWireProcessResponse(response: ProcessResponse, asBase64: boolean): WireProcessResponse {
+    let wireFeatureSet: WireFeatureSet = {};
+    const keys: string[] = Array.from(response.features.keys());
+
+    for (let i = 0, nKeys = keys.length; i < nKeys; ++i) {
+        const featureList: FeatureList = response.features.get(keys[i]);
+        const nFeatures: number = featureList.length;
+        wireFeatureSet[keys[i]] = new Array(nFeatures);
+        const wireFeatureList = wireFeatureSet[keys[i]];
+        for (let j = 0; j < nFeatures; ++j) {
+            const feature: Feature = featureList[j];
+            const hasFeatureValues = response.features != null &&
+                feature.featureValues != null;
+
+            let wireFeature: WireFeature = {};
+            if (hasFeatureValues) {
+                if (asBase64) {
+                    wireFeature = {
+                        featureValues: toBase64(feature.featureValues)
+                    };
+                } else {
+                    wireFeature =  {
+                        featureValues: Array.from(feature.featureValues)
+                    }
+                }
+            }
+            wireFeatureList[j] = Object.assign({}, feature, wireFeature);
+        }
+    }
     return {
         handle: response.handle,
-        features: [...response.features.entries()].reduce((set, pair) => {
-            const [key, featureList]: [string, FeatureList] = pair;
-            return Object.assign(set, {
-                [key]: featureList.map((feature: Feature) => Object.assign({}, feature as any,
-                    (response.features != null ?
-                    {
-                        featureValues: this.asBase64 ? toBase64(feature.featureValues) : [...feature.featureValues]
-                    } : {}) as any
-                ))
-            })
-        }, {})
+        features: wireFeatureSet
     };
 }
 
 function toProcessResponse(response: WireProcessResponse): ProcessResponse {
     const features: FeatureSet = new Map();
     const wireFeatures: WireFeatureSet = response.features;
-    Object.keys(wireFeatures).forEach(key => {
-        return features.set(key, convertWireFeatureList(wireFeatures[key]));
-    });
+    const keys: string[] = Object.keys(wireFeatures);
+    for (let i = 0, nKeys = keys.length; i < nKeys; ++i)
+        features.set(keys[i], convertWireFeatureList(wireFeatures[keys[i]]))
     return {
         handle: response.handle,
         features: features
@@ -445,7 +536,11 @@ function toProcessResponse(response: WireProcessResponse): ProcessResponse {
 }
 
 function convertWireFeatureList(wfeatures: WireFeatureList): FeatureList {
-    return wfeatures.map(convertWireFeature);
+    const nFeatures: number = wfeatures.length;
+    let features: FeatureList = new Array(nFeatures);
+    for (let i = 0; i < nFeatures; ++i)
+        features[i] = convertWireFeature(wfeatures[i]);
+    return features;
 }
 
 function convertWireFeature(wfeature: WireFeature): Feature {
