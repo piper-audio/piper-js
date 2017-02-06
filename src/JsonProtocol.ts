@@ -354,7 +354,7 @@ function toWireListResponse(response: ListResponse): WireListResponse {
 }
 
 function toListRequest(request: WireListRequest): ListRequest {
-    return {}; // TODO actual parsing
+    return request;
 }
 
 function toListResponse(response: WireListResponse): ListResponse {
