@@ -21,6 +21,10 @@ import {
 } from "./fixtures/FeatureExtractorStub";
 import {FeatureSet} from "../src/Feature";
 import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
+import {
+    FrequencyDomainExtractorStub,
+    FrequencyMetaDataStub, PassThroughExtractor
+} from "./fixtures/FrequencyDomainExtractorStub";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -30,12 +34,26 @@ describe("FeatsService", () => {
     const plugins: PluginFactory[] = [];
     const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
     plugins.push({extractor: factory, metadata: metadata});
+    plugins.push({
+        extractor: () => new FrequencyDomainExtractorStub(),
+        metadata: FrequencyMetaDataStub
+    });
+    plugins.push({
+        extractor: () => new PassThroughExtractor(),
+        metadata: PassThroughExtractor.getMetaData()
+    });
 
     describe("List request handling", () => {
         it("Resolves to a response whose content body is {available: StaticData[]}", () => {
             const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             return service.list({}).then(response => {
-                response.should.eql({available: [metadata]});
+                response.should.eql({
+                    available: [
+                        metadata,
+                        FrequencyMetaDataStub,
+                        PassThroughExtractor.getMetaData()
+                    ]
+                });
             });
         });
     });
