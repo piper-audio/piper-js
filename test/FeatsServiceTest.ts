@@ -56,6 +56,17 @@ describe("FeatsService", () => {
                 });
             });
         });
+        it("Can filter extractors belonging only to given libraries", () => {
+            const service: FeatsService = new FeatsService(fftFactory, ...plugins);
+            return service.list({from: ['stub']}).then(response => {
+               response.should.eql({
+                   available: [
+                       metadata,
+                       PassThroughExtractor.getMetaData()
+                   ]
+               });
+            });
+        });
     });
 
     describe("Load request handling", () => {
