@@ -101,10 +101,14 @@ export class FeatsSynchronousService implements SynchronousService {
         const outputList: OutputList = plugin.metadata.basicOutputInfo.map(basic => {
             return {
                 basic: basic,
-                configured: Object.assign({binNames: [], sampleRate: 0}, outputs.get(basic.identifier))
+                configured: Object.assign({binNames: [], sampleRate: 0}, outputs.outputs.get(basic.identifier))
             };
         });
-        return {handle: request.handle, outputList: outputList};
+        return {
+            handle: request.handle,
+            outputList: outputList,
+            framing: outputs.framing
+        };
     }
 
     // TODO what about FrequencyDomain input?, or channel count mis-match?

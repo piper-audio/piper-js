@@ -20,27 +20,36 @@ export default class ZeroCrossings implements FeatureExtractor {
     }
 
     configure(configuration: Configuration): ConfiguredOutputs {
-        return new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
-            ["counts", {
-                binCount: 1,
-                quantizeStep: 1.0,
-                sampleType: SampleType.OneSamplePerStep,
-                hasDuration: false,
-                unit: "crossings"
-            }],
-            ["crossings", {
-                binCount: 0,
-                quantizeStep: 1,
-                sampleType: SampleType.VariableSampleRate,
-                sampleRate: this.inputSampleRate,
-                hasDuration: false,
-                unit: "",
-            }]
-        ])
+        return {
+            outputs: new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
+                ["counts", {
+                    binCount: 1,
+                    quantizeStep: 1.0,
+                    sampleType: SampleType.OneSamplePerStep,
+                    hasDuration: false,
+                    unit: "crossings"
+                }],
+                ["crossings", {
+                    binCount: 0,
+                    quantizeStep: 1,
+                    sampleType: SampleType.VariableSampleRate,
+                    sampleRate: this.inputSampleRate,
+                    hasDuration: false,
+                    unit: "",
+                }]
+            ]),
+            framing: configuration.framing
+        }
     }
 
     getDefaultConfiguration(): Configuration {
-        return {channelCount: 1, blockSize: 0, stepSize: 0};
+        return {
+            channelCount: 1,
+            framing: {
+                blockSize: 0,
+                stepSize: 0
+            }
+        };
     }
 
     process(block: ProcessInput): FeatureSet {

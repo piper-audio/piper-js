@@ -70,9 +70,11 @@ describe("EmscriptenProxyTest", () => {
         return client.configure({
             handle: response.handle,
             configuration: {
-                blockSize: 8,
                 channelCount: 1,
-                stepSize: 8
+                framing: {
+                    blockSize: 8,
+                    stepSize: 8
+                }
             }
         });
     };
@@ -178,7 +180,13 @@ describe("EmscriptenFeatureExtractor", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
-        return (extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4})
+        return (extractor.configure({
+            channelCount: 1,
+            framing: {
+                stepSize: 2,
+                blockSize: 4
+            }
+        })
         instanceof Map).should.be.true;
     });
 
@@ -186,7 +194,13 @@ describe("EmscriptenFeatureExtractor", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
-        extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
+        extractor.configure({
+            channelCount: 1,
+            framing: {
+                stepSize: 2,
+                blockSize: 4
+            }
+        });
         return extractor.process({
             timestamp: {n: 0, s: 0},
             inputBuffers: [new Float32Array([1, 1, 1, 1])]
@@ -197,7 +211,13 @@ describe("EmscriptenFeatureExtractor", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
-        extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
+        extractor.configure({
+            channelCount: 1,
+            framing: {
+                stepSize: 2,
+                blockSize: 4
+            }
+        });
         extractor.finish().has("curve-fsr").should.be.true;
         // calling finish again should throw as the internal handle is now invalid
         chai.expect(() => extractor.finish()).to.throw(Error);

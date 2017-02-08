@@ -11,7 +11,8 @@ import {
     Filters, Serialise, Deserialise
 } from "./JsonProtocol";
 import {
-    ConfiguredOutputs, Configuration, ProcessInput, FeatureExtractor, AdapterFlags
+    ConfiguredOutputs, Configuration, ProcessInput, FeatureExtractor,
+    AdapterFlags, ConfiguredOutputDescriptor
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
@@ -60,10 +61,13 @@ export class EmscriptenFeatureExtractor implements FeatureExtractor {
                 configuration: configuration
             }))
         );
-        return new Map(
-            response.outputList
-                .map(output => [output.basic.identifier, output.configured]) as any
-        ) as ConfiguredOutputs;
+        return {
+            outputs: new Map(
+                response.outputList
+                    .map(output => [output.basic.identifier, output.configured]) as any
+            ) as Map<string, ConfiguredOutputDescriptor>,
+            framing: response.framing
+        };
     }
 
     getDefaultConfiguration(): Configuration {

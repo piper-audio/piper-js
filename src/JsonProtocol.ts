@@ -30,7 +30,7 @@ import {
     BasicDescriptor,
     ParameterDescriptor,
     ValueExtents,
-    Configuration, StaticData, ProcessInput
+    Configuration, StaticData, ProcessInput, Framing
 } from "./FeatureExtractor";
 
 export namespace Filters {
@@ -266,9 +266,9 @@ type WireParameters = {[key: string]: number};
 
 interface WireConfiguration {
     channelCount: number;
-    stepSize: number;
-    blockSize: number;
-    parameterValues?: WireParameters
+    framing: Framing;
+    parameterValues?: WireParameters;
+
 }
 
 interface WireConfigurationRequest {
@@ -279,6 +279,7 @@ interface WireConfigurationRequest {
 interface WireConfigurationResponse {
     handle: ExtractorHandle;
     outputList: WireOutputList;
+    framing: Framing;
 }
 
 interface WireLoadResponse {
@@ -431,7 +432,7 @@ function toConfigurationResponse(response: WireConfigurationResponse): Configura
 
 function toWireConfiguration(config: Configuration): WireConfiguration {
     return config.parameterValues == null
-        ? {channelCount: config.channelCount, stepSize: config.stepSize, blockSize: config.blockSize}
+        ? {channelCount: config.channelCount, framing: config.framing}
         : Object.assign({}, config, {
         parameterValues: [...config.parameterValues.entries()]
             .reduce((obj, pair) => Object.assign(obj, {[pair[0]]: pair[1]}), {})
@@ -440,7 +441,7 @@ function toWireConfiguration(config: Configuration): WireConfiguration {
 
 function toConfiguration(config: WireConfiguration): Configuration {
     return config.parameterValues == null
-        ? {channelCount: config.channelCount, stepSize: config.stepSize, blockSize: config.blockSize}
+        ? {channelCount: config.channelCount, framing: config.framing}
         : Object.assign({}, config, {
         parameterValues: new Map(Object.keys(config.parameterValues).map(key => [key, config.parameterValues[key]]) as any)
     });

@@ -102,14 +102,16 @@ interface OptionalConfiguration {
 
 function determineConfiguration(defaultConfig: Configuration,
                                 overrides?: OptionalConfiguration): Configuration {
-    let blockSize: number = overrides.blockSize || defaultConfig.blockSize || 1024;
-    let stepSize: number = overrides.stepSize || defaultConfig.stepSize || blockSize;
+    let blockSize: number = overrides.blockSize || defaultConfig.framing.blockSize || 1024;
+    let stepSize: number = overrides.stepSize || defaultConfig.framing.stepSize || blockSize;
     let channelCount: number = overrides.channelCount || defaultConfig.channelCount || 1; // TODO is 1 okay?
 
     let config: Configuration = {
         channelCount: channelCount,
-        blockSize: blockSize,
-        stepSize: stepSize
+        framing: {
+            blockSize: blockSize,
+            stepSize: stepSize
+        }
     };
 
     if (overrides.parameterValues && overrides.parameterValues.size > 0)
@@ -257,19 +259,19 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
     );
 
     const stream: AudioStream = createAudioStreamCallback(
-        config.blockSize,
-        config.stepSize,
+        config.framing.blockSize,
+        config.framing.stepSize,
         streamFormat
     );
-    outputId = outputId ? outputId : outputs.keys().next().value;
+    outputId = outputId ? outputId : outputs.outputs.keys().next().value;
 
-    if (!outputs.has(outputId)) throw Error("Invalid output identifier.");
+    if (!outputs.outputs.has(outputId)) throw Error("Invalid output identifier.");
 
-    const descriptor: ConfiguredOutputDescriptor = outputs.get(outputId);
+    const descriptor: ConfiguredOutputDescriptor = outputs.outputs.get(outputId);
     const lazyOutputs = processConfiguredExtractor(
         stream.frames,
         stream.format.sampleRate,
-        config.stepSize,
+        config.framing.stepSize,
         extractor,
         [outputId]
     );
@@ -277,7 +279,7 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
         lazyOutputs,
         outputId,
         stream.format.sampleRate,
-        config.stepSize,
+        config.framing.stepSize,
         descriptor
     );
 }
@@ -305,23 +307,23 @@ export function* process(createAudioStreamCallback: CreateAudioStreamFunction,
     );
 
     const stream: AudioStream = createAudioStreamCallback(
-        config.blockSize,
-        config.stepSize,
+        config.framing.blockSize,
+        config.framing.stepSize,
         streamFormat
     );
-    outputId = outputId ? outputId : outputs.keys().next().value;
-    const descriptor: ConfiguredOutputDescriptor = outputs.get(outputId);
+    outputId = outputId ? outputId : outputs.outputs.keys().next().value;
+    const descriptor: ConfiguredOutputDescriptor = outputs.outputs.get(outputId);
     const lazyOutputs = processConfiguredExtractor(
         stream.frames,
         stream.format.sampleRate,
-        config.stepSize,
+        config.framing.stepSize,
         extractor,
         [outputId]
     );
 
     const adjuster: FeatureTimeAdjuster = createFeatureTimeAdjuster(
         descriptor,
-        getFeatureStepDuration(stream.format.sampleRate, config.stepSize, descriptor)
+        getFeatureStepDuration(stream.format.sampleRate, config.framing.stepSize, descriptor)
     );
 
     for (let output of lazyOutputs) {
@@ -408,8 +410,8 @@ export function loadAndConfigure(request: SimpleRequest,
                 handle: res.handle,
                 inputSampleRate: request.audioFormat.sampleRate,
                 configuredOutputId: outputId,
-                configuredBlockSize: config.blockSize,
-                configuredStepSize: config.stepSize,
+                configuredBlockSize: config.framing.blockSize,
+                configuredStepSize: config.framing.stepSize,
                 outputDescriptor: res.outputList
                     .find(output => output.basic.identifier === outputId)
             }

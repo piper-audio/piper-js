@@ -47,8 +47,10 @@ describe("PiperClient", () => {
             .then(response => client.configure({
                 handle: response.handle,
                 configuration: {
-                    blockSize: blockSize,
-                    stepSize: stepSize,
+                    framing: {
+                        blockSize: blockSize,
+                        stepSize: stepSize,
+                    },
                     channelCount: 1
                 }
             }))

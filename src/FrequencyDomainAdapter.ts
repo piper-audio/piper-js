@@ -37,10 +37,10 @@ export class FrequencyDomainAdapter implements FeatureExtractor {
     }
 
     configure(configuration: Configuration): ConfiguredOutputs {
-        this.fft = this.fftFactory(configuration.blockSize); // TODO verify power of 2?
+        this.fft = this.fftFactory(configuration.framing.blockSize); // TODO verify power of 2?
         this.adjuster = this.adjustmentMethod === ProcessInputAdjustmentMethod.Buffer
                         ? new ProcessInputBuffersAdjuster(configuration)
-                        : new ProcessInputTimestampAdjuster(configuration.blockSize, this.sampleRate);
+                        : new ProcessInputTimestampAdjuster(configuration.framing.blockSize, this.sampleRate);
         return this.wrapped.configure(configuration);
     }
 

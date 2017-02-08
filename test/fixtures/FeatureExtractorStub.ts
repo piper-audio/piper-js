@@ -18,20 +18,29 @@ export class FeatureExtractorStub implements FeatureExtractor {
             sampleType: SampleType.OneSamplePerStep,
             hasDuration: false
         };
-        return new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
-            ["sum", descriptor],
-            ["cumsum", descriptor],
-            ["conditional", descriptor],
-            ["finish", {
-                binCount: 1,
-                sampleType: SampleType.VariableSampleRate,
-                hasDuration: false
-            }]
-        ]);
+        return {
+            outputs: new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
+                ["sum", descriptor],
+                ["cumsum", descriptor],
+                ["conditional", descriptor],
+                ["finish", {
+                    binCount: 1,
+                    sampleType: SampleType.VariableSampleRate,
+                    hasDuration: false
+                }]
+            ]),
+            framing: configuration.framing
+        };
     }
 
     getDefaultConfiguration(): Configuration {
-        return {channelCount: 1, blockSize: 0, stepSize: 0};
+        return {
+            channelCount: 1,
+            framing: {
+                blockSize: 0,
+                stepSize: 0
+            }
+        };
     }
 
     process(block: ProcessInput): FeatureSet {
