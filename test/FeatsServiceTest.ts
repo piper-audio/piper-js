@@ -7,7 +7,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import {
     LoadResponse, ConfigurationResponse,
     ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service,
-    FinishRequest
+    FinishRequest, ListResponse
 } from "../src/Piper";
 import {
     PluginFactory,
@@ -66,6 +66,18 @@ describe("FeatsService", () => {
                    ]
                });
             });
+        });
+        it("Interprets {} and an empty from field in a ListRequest identically", () => {
+            const service: FeatsService = new FeatsService(fftFactory, ...plugins);
+            const allAvailable: ListResponse = {
+                available: [
+                    metadata,
+                    FrequencyMetaDataStub,
+                    PassThroughExtractor.getMetaData()
+                ]
+            };
+            return Promise.all([service.list({}), service.list({from: []})])
+            .should.eventually.eql([allAvailable, allAvailable]);
         });
     });
 
