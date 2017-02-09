@@ -53,7 +53,7 @@ export class FeatsSynchronousService implements SynchronousService {
 
     list(request: ListRequest): ListResponse {
         const factories: PluginFactory[] = [...this.factories.values()];
-        const available: PluginFactory[] = request.from ?
+        const available: PluginFactory[] = request.from && request.from.length ?
             factories.filter(plugin => {
                 return request.from.includes(plugin.metadata.key.split(":")[0]);
             }) : factories;
