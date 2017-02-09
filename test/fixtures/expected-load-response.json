@@ -1,9 +1,11 @@
 {
   "defaultConfiguration": {
-    "blockSize": 0,
     "channelCount": 1,
     "parameterValues": {},
-    "stepSize": 0
+    "framing": {
+      "blockSize": 1024,
+      "stepSize": 1024
+    }
   },
   "handle": 1,
   "staticData": {
