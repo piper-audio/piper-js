@@ -81,7 +81,16 @@ describe("EmscriptenProxyTest", () => {
 
     it("Can configure a loaded plugin", () => {
         const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
-        let expectedResponse = loadFixture("expected-configuration-response");
+        let expectedResponse = Object.assign(
+            {},
+            loadFixture("expected-configuration-response"),
+            {
+                framing: {
+                    blockSize: 8,
+                    stepSize: 8
+                }
+            }
+        );
         expectedResponse.outputList.forEach((output: any) => output.configured.sampleType = SampleType[output.configured.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });
@@ -171,23 +180,27 @@ describe("EmscriptenFeatureExtractor", () => {
         const config = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         ).getDefaultConfiguration();
-        return (config.hasOwnProperty("blockSize")
+        return (config.framing.hasOwnProperty("blockSize")
         && config.hasOwnProperty("channelCount")
-        && config.hasOwnProperty("stepSize")).should.be.true;
+        && config.framing.hasOwnProperty("stepSize")).should.be.true;
     });
 
     it("Should be configurable", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
-        return (extractor.configure({
+        const res = extractor.configure({
             channelCount: 1,
             framing: {
                 stepSize: 2,
                 blockSize: 4
             }
-        })
-        instanceof Map).should.be.true;
+        });
+        (res.outputs instanceof Map).should.be.true;
+        res.framing.should.eql({
+            stepSize: 2,
+            blockSize: 4
+        });
     });
 
     it("Should process a block", () => {
