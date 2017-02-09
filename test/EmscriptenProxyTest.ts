@@ -70,16 +70,27 @@ describe("EmscriptenProxyTest", () => {
         return client.configure({
             handle: response.handle,
             configuration: {
-                blockSize: 8,
                 channelCount: 1,
-                stepSize: 8
+                framing: {
+                    blockSize: 8,
+                    stepSize: 8
+                }
             }
         });
     };
 
     it("Can configure a loaded plugin", () => {
         const configResponse: Promise<ConfigurationResponse> = loadResponse.then(config);
-        let expectedResponse = loadFixture("expected-configuration-response");
+        let expectedResponse = Object.assign(
+            {},
+            loadFixture("expected-configuration-response"),
+            {
+                framing: {
+                    blockSize: 8,
+                    stepSize: 8
+                }
+            }
+        );
         expectedResponse.outputList.forEach((output: any) => output.configured.sampleType = SampleType[output.configured.sampleType]);
         return configResponse.should.eventually.deep.equal(expectedResponse);
     });
@@ -169,24 +180,40 @@ describe("EmscriptenFeatureExtractor", () => {
         const config = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         ).getDefaultConfiguration();
-        return (config.hasOwnProperty("blockSize")
+        return (config.framing.hasOwnProperty("blockSize")
         && config.hasOwnProperty("channelCount")
-        && config.hasOwnProperty("stepSize")).should.be.true;
+        && config.framing.hasOwnProperty("stepSize")).should.be.true;
     });
 
     it("Should be configurable", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
-        return (extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4})
-        instanceof Map).should.be.true;
+        const res = extractor.configure({
+            channelCount: 1,
+            framing: {
+                stepSize: 2,
+                blockSize: 4
+            }
+        });
+        (res.outputs instanceof Map).should.be.true;
+        res.framing.should.eql({
+            stepSize: 2,
+            blockSize: 4
+        });
     });
 
     it("Should process a block", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
-        extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
+        extractor.configure({
+            channelCount: 1,
+            framing: {
+                stepSize: 2,
+                blockSize: 4
+            }
+        });
         return extractor.process({
             timestamp: {n: 0, s: 0},
             inputBuffers: [new Float32Array([1, 1, 1, 1])]
@@ -197,7 +224,13 @@ describe("EmscriptenFeatureExtractor", () => {
         const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
-        extractor.configure({channelCount: 1, stepSize: 2, blockSize: 4});
+        extractor.configure({
+            channelCount: 1,
+            framing: {
+                stepSize: 2,
+                blockSize: 4
+            }
+        });
         extractor.finish().has("curve-fsr").should.be.true;
         // calling finish again should throw as the internal handle is now invalid
         chai.expect(() => extractor.finish()).to.throw(Error);

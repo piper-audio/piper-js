@@ -14,8 +14,10 @@ describe("ProcessInputBuffersAdjuster", () => {
     const sampleRate: number = 16;
     const config: Configuration = {
         channelCount: 2,
-        blockSize: 4,
-        stepSize: 2
+        framing: {
+            blockSize: 4,
+            stepSize: 2
+        }
     };
 
     describe("returns a new, shifted, ProcessInput", () => {
@@ -52,7 +54,7 @@ describe("ProcessInputBuffersAdjuster", () => {
 
         it("Shifts remaining buffers back by half", () => {
             const adjuster: ProcessInputAdjuster = new ProcessInputBuffersAdjuster(config);
-            const stepSizeSeconds: number = config.stepSize / sampleRate;
+            const stepSizeSeconds: number = config.framing.stepSize / sampleRate;
             // write all blocks out manually
             adjuster.adjust({
                 timestamp: {s: 0, n: 0},

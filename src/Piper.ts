@@ -1,7 +1,10 @@
 /**
  * Created by lucast on 30/08/2016.
  */
-import {StaticData, Configuration, OutputList, ProcessInput, AdapterFlags} from "./FeatureExtractor";
+import {
+    StaticData, Configuration, OutputList, ProcessInput, AdapterFlags,
+    Framing
+} from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
 
 // Types used in the application
@@ -36,6 +39,7 @@ export interface ConfigurationRequest {
 export interface ConfigurationResponse {
     handle: ExtractorHandle;
     outputList: OutputList;
+    framing: Framing;
 }
 
 export interface ProcessRequest {

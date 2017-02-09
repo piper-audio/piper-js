@@ -15,8 +15,8 @@ export class ProcessInputBuffersAdjuster implements ProcessInputAdjuster {
     private stepSize: number;
 
     constructor(config: Configuration) {
-        this.blockSize = config.blockSize;
-        this.stepSize = config.stepSize;
+        this.blockSize = config.framing.blockSize;
+        this.stepSize = config.framing.stepSize;
         this.offset = Math.floor(0.5 * this.blockSize);
         this.buffers = [...Array(config.channelCount)].map(
             () => new Float32Array(this.blockSize + this.offset)

@@ -1,7 +1,7 @@
 
 
 import {
-    FeatureExtractor, ConfiguredOutputs,
+    FeatureExtractor, ConfigurationResponse,
     Configuration, ConfiguredOutputDescriptor, OutputIdentifier, SampleType,
     ProcessInput, StaticData, InputDomain
 } from "../../src/FeatureExtractor";
@@ -13,20 +13,23 @@ export class FrequencyDomainExtractorStub implements FeatureExtractor {
         this.binCount = 0;
     }
 
-    configure(configuration: Configuration): ConfiguredOutputs {
-        this.binCount = 1 + 0.5 * configuration.blockSize;
+    configure(configuration: Configuration): ConfigurationResponse {
+        this.binCount = 1 + 0.5 * configuration.framing.blockSize;
         const descriptor: ConfiguredOutputDescriptor = {
             binCount: this.binCount,
             sampleType: SampleType.OneSamplePerStep,
             hasDuration: false
         };
-        return new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
-            ["spectrum", descriptor]
-        ]);
+        return {
+            outputs: new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
+                ["spectrum", descriptor]
+            ]),
+            framing: configuration.framing
+        }
     }
 
     getDefaultConfiguration(): Configuration {
-        return {channelCount: 1, blockSize: 0, stepSize: 0};
+        return {channelCount: 1, framing: {blockSize: 0, stepSize: 0}};
     }
 
     process(block: ProcessInput): FeatureSet {
@@ -92,18 +95,21 @@ export class PassThroughExtractor implements FeatureExtractor {
         };
     }
 
-    configure(configuration: Configuration): ConfiguredOutputs {
-        return new Map<string, ConfiguredOutputDescriptor>([
-            ["passthrough", {
-                binCount: configuration.blockSize + 2,
-                sampleType: SampleType.OneSamplePerStep,
-                hasDuration: false
-            }]
-        ]);
+    configure(configuration: Configuration): ConfigurationResponse {
+        return {
+            outputs: new Map<string, ConfiguredOutputDescriptor>([
+                ["passthrough", {
+                    binCount: configuration.framing.blockSize + 2,
+                    sampleType: SampleType.OneSamplePerStep,
+                    hasDuration: false
+                }]
+            ]),
+            framing: configuration.framing
+        };
     }
 
     getDefaultConfiguration(): Configuration {
-        return {channelCount: 1, blockSize: 4, stepSize: 2};
+        return {channelCount: 1, framing: {blockSize: 4, stepSize: 2}};
     }
 
     process(block: ProcessInput): FeatureSet {

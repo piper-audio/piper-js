@@ -83,9 +83,11 @@ describe("FeatsService", () => {
         it("Resolves to a response where the content body is a LoadResponse", () => {
             const expectedResponse: LoadResponse = {
                 defaultConfiguration: {
-                    blockSize: 0,
                     channelCount: 1,
-                    stepSize: 0
+                    framing: {
+                        blockSize: 0,
+                        stepSize: 0
+                    }
                 },
                 handle: 1,
                 staticData: MetaDataStub
@@ -103,9 +105,11 @@ describe("FeatsService", () => {
 
     describe("Configure request handling", () => {
         const config: Configuration = {
-            blockSize: 8,
             channelCount: 1,
-            stepSize: 8
+            framing: {
+                blockSize: 8,
+                stepSize: 8
+            }
         };
         const configRequest: ConfigurationRequest = {
             handle: 1,
@@ -150,7 +154,8 @@ describe("FeatsService", () => {
                             sampleType: sampleType
                         }
                     }
-                })
+                }),
+                framing: config.framing
             };
             const service: FeatsService = new FeatsService(fftFactory, ...plugins);
             return service.load(loadRequest).then(response => {
@@ -176,7 +181,13 @@ describe("FeatsService", () => {
             return load(key).then(loadResponse => {
                 return service.configure({
                     handle: loadResponse.handle,
-                    configuration: {blockSize: 8, channelCount: 1, stepSize: 8}
+                    configuration: {
+                        channelCount: 1,
+                        framing: {
+                            blockSize: 8,
+                            stepSize: 8
+                        }
+                    }
                 })
             });
         };

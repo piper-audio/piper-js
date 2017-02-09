@@ -55,7 +55,7 @@ export class PiperClient implements Service {
                 this.handleToConfiguration.set(response.handle, request.configuration);
                 for (let output of response.outputList) {
                     this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                        output.configured, request.configuration.stepSize / this.handleToSampleRate.get(request.handle))
+                        output.configured, request.configuration.framing.stepSize / this.handleToSampleRate.get(request.handle))
                     );
                 }
                 return response;
@@ -107,7 +107,7 @@ export class PiperClient implements Service {
 
                 if (this.isFrequencyDomainExtractor(handle)) {
                     const offset = this.handleToConfiguration.get(handle)
-                            .blockSize * 0.5 / this.handleToSampleRate.get(handle);
+                            .framing.blockSize * 0.5 / this.handleToSampleRate.get(handle);
                     feature.timestamp = fromSeconds(toSeconds(feature.timestamp) + offset);
                 }
             });

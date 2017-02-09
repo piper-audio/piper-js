@@ -162,8 +162,10 @@ describe("processConfiguredExtractor()", function () {
 
         extractor.configure({
             channelCount: 1,
-            stepSize: stepSize,
-            blockSize: blockSize
+            framing: {
+                stepSize: stepSize,
+                blockSize: blockSize
+            }
         });
 
         const features = processConfiguredExtractor(

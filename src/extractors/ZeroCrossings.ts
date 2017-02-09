@@ -2,7 +2,7 @@
  * Created by lucas on 25/08/2016.
  */
 import {
-    FeatureExtractor, ConfiguredOutputs,
+    FeatureExtractor, ConfigurationResponse,
     Configuration, OutputIdentifier, ConfiguredOutputDescriptor, SampleType,
     ProcessInput
 } from "../FeatureExtractor";
@@ -19,28 +19,37 @@ export default class ZeroCrossings implements FeatureExtractor {
         this.previousSample = 0;
     }
 
-    configure(configuration: Configuration): ConfiguredOutputs {
-        return new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
-            ["counts", {
-                binCount: 1,
-                quantizeStep: 1.0,
-                sampleType: SampleType.OneSamplePerStep,
-                hasDuration: false,
-                unit: "crossings"
-            }],
-            ["crossings", {
-                binCount: 0,
-                quantizeStep: 1,
-                sampleType: SampleType.VariableSampleRate,
-                sampleRate: this.inputSampleRate,
-                hasDuration: false,
-                unit: "",
-            }]
-        ])
+    configure(configuration: Configuration): ConfigurationResponse {
+        return {
+            outputs: new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
+                ["counts", {
+                    binCount: 1,
+                    quantizeStep: 1.0,
+                    sampleType: SampleType.OneSamplePerStep,
+                    hasDuration: false,
+                    unit: "crossings"
+                }],
+                ["crossings", {
+                    binCount: 0,
+                    quantizeStep: 1,
+                    sampleType: SampleType.VariableSampleRate,
+                    sampleRate: this.inputSampleRate,
+                    hasDuration: false,
+                    unit: "",
+                }]
+            ]),
+            framing: configuration.framing
+        }
     }
 
     getDefaultConfiguration(): Configuration {
-        return {channelCount: 1, blockSize: 0, stepSize: 0};
+        return {
+            channelCount: 1,
+            framing: {
+                blockSize: 0,
+                stepSize: 0
+            }
+        };
     }
 
     process(block: ProcessInput): FeatureSet {
