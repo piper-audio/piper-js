@@ -11,7 +11,7 @@ import {
     Filters, Serialise, Deserialise
 } from "./JsonProtocol";
 import {
-    ConfiguredOutputs, Configuration, ProcessInput, FeatureExtractor,
+    ConfigurationResponse as Configured, Configuration, ProcessInput, FeatureExtractor,
     AdapterFlags, ConfiguredOutputDescriptor
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
@@ -54,7 +54,7 @@ export class EmscriptenFeatureExtractor implements FeatureExtractor {
         this.handle = response.handle;
     }
 
-    configure(configuration: Configuration): ConfiguredOutputs {
+    configure(configuration: Configuration): Configured {
         const response: ConfigurationResponse = Deserialise.ConfigurationResponse(
             jsonRequest(this.module, Serialise.ConfigurationRequest({
                 handle: this.handle,

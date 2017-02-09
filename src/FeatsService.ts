@@ -2,8 +2,13 @@
  * Created by lucast on 19/09/2016.
  */
 import {
-    FeatureExtractor, Configuration, ConfiguredOutputs, OutputList, StaticData,
-    InputDomain, AdapterFlags
+    FeatureExtractor,
+    Configuration,
+    ConfigurationResponse as Configured,
+    OutputList,
+    StaticData,
+    InputDomain,
+    AdapterFlags
 } from "./FeatureExtractor";
 import {
     Service, LoadRequest, LoadResponse, ConfigurationRequest,
@@ -96,18 +101,18 @@ export class FeatsSynchronousService implements SynchronousService {
 
         const plugin: Plugin = this.loaded.get(request.handle);
         // TODO this is probably where the error handling for channel mismatch should be...
-        const outputs: ConfiguredOutputs = plugin.extractor.configure(request.configuration);
+        const response: Configured = plugin.extractor.configure(request.configuration);
         this.configured.set(request.handle, plugin);
         const outputList: OutputList = plugin.metadata.basicOutputInfo.map(basic => {
             return {
                 basic: basic,
-                configured: Object.assign({binNames: [], sampleRate: 0}, outputs.outputs.get(basic.identifier))
+                configured: Object.assign({binNames: [], sampleRate: 0}, response.outputs.get(basic.identifier))
             };
         });
         return {
             handle: request.handle,
             outputList: outputList,
-            framing: outputs.framing
+            framing: response.framing
         };
     }
 

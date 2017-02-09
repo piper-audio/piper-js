@@ -1,5 +1,5 @@
 import {
-    Configuration, ConfiguredOutputs, FeatureExtractor, ProcessInput, StaticData, InputDomain, OutputIdentifier,
+    Configuration, ConfigurationResponse, FeatureExtractor, ProcessInput, StaticData, InputDomain, OutputIdentifier,
     ConfiguredOutputDescriptor, SampleType
 } from "../../src/FeatureExtractor";
 import {FeatureSet, Feature} from "../../src/Feature";
@@ -12,7 +12,7 @@ export class FeatureExtractorStub implements FeatureExtractor {
         this.includeConditionalOutput = includeConditionalOutput;
     }
 
-    configure(configuration: Configuration): ConfiguredOutputs {
+    configure(configuration: Configuration): ConfigurationResponse {
         const descriptor: ConfiguredOutputDescriptor = {
             binCount: 1,
             sampleType: SampleType.OneSamplePerStep,

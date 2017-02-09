@@ -5,7 +5,7 @@ import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
 
 export interface FeatureExtractor {
-    configure(configuration: Configuration): ConfiguredOutputs;
+    configure(configuration: Configuration): ConfigurationResponse;
     getDefaultConfiguration(): Configuration;
     process(block: ProcessInput): FeatureSet;
     finish(): FeatureSet;
@@ -80,7 +80,7 @@ export interface ConfiguredOutputDescriptor {
     hasDuration: boolean;
 }
 
-export interface ConfiguredOutputs {
+export interface ConfigurationResponse {
     outputs: Map<OutputIdentifier, ConfiguredOutputDescriptor>;
     framing: Framing;
 }

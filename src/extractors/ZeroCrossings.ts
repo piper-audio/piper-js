@@ -2,7 +2,7 @@
  * Created by lucas on 25/08/2016.
  */
 import {
-    FeatureExtractor, ConfiguredOutputs,
+    FeatureExtractor, ConfigurationResponse,
     Configuration, OutputIdentifier, ConfiguredOutputDescriptor, SampleType,
     ProcessInput
 } from "../FeatureExtractor";
@@ -19,7 +19,7 @@ export default class ZeroCrossings implements FeatureExtractor {
         this.previousSample = 0;
     }
 
-    configure(configuration: Configuration): ConfiguredOutputs {
+    configure(configuration: Configuration): ConfigurationResponse {
         return {
             outputs: new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
                 ["counts", {
