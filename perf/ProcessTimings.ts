@@ -30,8 +30,7 @@ describe('ProcessTimings', () => {
             adapterFlags : [AdapterFlags.AdaptAllSafe]
         }).then(response => {
             const phandle : number = response.handle;
-            let stepSize : number = response.defaultConfiguration.stepSize;
-            let blockSize : number = response.defaultConfiguration.blockSize;
+            let {stepSize, blockSize} = response.defaultConfiguration.framing;
 	    if (blockSize === 0) {
 		blockSize = 1024;
 		stepSize = blockSize;
@@ -39,8 +38,10 @@ describe('ProcessTimings', () => {
             server.configure({
                 handle : phandle,
                 configuration : {
-                    blockSize : blockSize,
-                    stepSize : stepSize,
+                    framing: {
+                        blockSize : blockSize,
+                        stepSize : stepSize
+                    },
                     channelCount : 1
                 }
             }).then(response => {
