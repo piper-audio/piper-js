@@ -14,7 +14,7 @@
     "prepublish": "npm run build-browser && cp -r dist/ts/* .",
     "postinstall": "npm run build-browser && cp -r dist/ts/* .",
     "cover": "nyc npm t",
-    "coveralls": "npm run cover && cat ./coverage/lcov.info | coveralls"
+    "coveralls": "npm run clean && npm run cover && cat ./coverage/lcov.info | coveralls"
   },
   "bin": {
     "piper-bundle": "bin/build-module.js"
