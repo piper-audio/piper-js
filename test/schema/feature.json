@@ -1,20 +1,20 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/feature#",
+    "id": "http://vamp-plugins.org/piper/json/schema/feature#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a single feature returned by a feature extractor",
     "type": "object",
     "properties": {
 	"timestamp": {
-	    "$ref": "http://vamp-plugins.org/json/schema/realtime#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/realtime#"
 	},
 	"duration": {
-	    "$ref": "http://vamp-plugins.org/json/schema/realtime#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/realtime#"
 	},
 	"label": {
 	    "type": "string"
 	},
 	"featureValues": {
-            "$ref": "http://vamp-plugins.org/json/schema/serialisedarray#"
+            "$ref": "http://vamp-plugins.org/piper/json/schema/serialisedarray#"
 	}
     },
     "additionalProperties": false

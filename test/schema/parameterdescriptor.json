@@ -1,17 +1,17 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/parameterdescriptor#",
+    "id": "http://vamp-plugins.org/piper/json/schema/parameterdescriptor#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a metadata about an adjustable parameter of a feature extractor",
     "type": "object",
     "properties": {
 	"basic": {
-	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/basic#"
 	},
 	"unit": {
 	    "type": "string"
 	},
 	"extents": {
-	    "$ref": "http://vamp-plugins.org/json/schema/valueextents#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/valueextents#"
 	},
 	"defaultValue": {
 	    "type": "number"

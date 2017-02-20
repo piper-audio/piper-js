@@ -1,5 +1,5 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/configurationrequest#",
+    "id": "http://vamp-plugins.org/piper/json/schema/configurationrequest#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a request to configure a feature extractor; may be served in the params field of a configure-method rpcrequest",
     "type": "object",
@@ -8,7 +8,7 @@
 	    "type": "number"
 	},
 	"configuration": {
-	    "$ref": "http://vamp-plugins.org/json/schema/configuration#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/configuration#"
 	}
     },
     "required": [ "handle", "configuration" ],

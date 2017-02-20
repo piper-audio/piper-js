@@ -1,5 +1,5 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/realtime#",
+    "id": "http://vamp-plugins.org/piper/json/schema/realtime#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a timestamp given in seconds and nanoseconds",
     "type": "object",

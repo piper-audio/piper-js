@@ -14,7 +14,7 @@
       }
     ],
     "category": [],
-    "copyright": "Code copyright 2006 Dan Stowell; method from SuperCollider.  Freely redistributable (BSD license)",
+    "rights": "Code copyright 2006 Dan Stowell; method from SuperCollider.  Freely redistributable (BSD license)",
     "inputDomain": "TimeDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,
@@ -87,7 +87,7 @@
       }
     ],
     "category": [],
-    "copyright": "Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)",
+    "rights": "Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,
@@ -159,7 +159,7 @@
       }
     ],
     "category": [],
-    "copyright": "Code copyright 2006 Queen Mary, University of London, after Dan Barry et al 2005.  Freely redistributable (BSD license)",
+    "rights": "Code copyright 2006 Queen Mary, University of London, after Dan Barry et al 2005.  Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,
@@ -212,7 +212,7 @@
       }
     ],
     "category": [],
-    "copyright": "Freely redistributable (BSD license)",
+    "rights": "Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,
@@ -241,7 +241,7 @@
       }
     ],
     "category": [],
-    "copyright": "Freely redistributable (BSD license)",
+    "rights": "Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,
@@ -270,7 +270,7 @@
       }
     ],
     "category": [],
-    "copyright": "Freely redistributable (BSD license)",
+    "rights": "Freely redistributable (BSD license)",
     "inputDomain": "TimeDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,

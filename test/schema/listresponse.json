@@ -1,12 +1,12 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/listresponse#",
+    "id": "http://vamp-plugins.org/piper/json/schema/listresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a response to a request to list available feature extractors; may be served in the result field of a list-method rpcresponse",
     "type": "object",
     "properties": {
 	"available": {
             "type": "array",
-            "items": { "$ref": "http://vamp-plugins.org/json/schema/extractorstaticdata#" }
+            "items": { "$ref": "http://vamp-plugins.org/piper/json/schema/extractorstaticdata#" }
 	}
     },
     "required": [ "available" ],

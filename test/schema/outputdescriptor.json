@@ -1,14 +1,14 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/outputdescriptor#",
+    "id": "http://vamp-plugins.org/piper/json/schema/outputdescriptor#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for an output descriptor belonging to a feature extractor",
     "type": "object",
     "properties": {
 	"basic": {
-	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/basic#"
 	},
 	"configured": {
-	    "$ref": "http://vamp-plugins.org/json/schema/configuredoutputdescriptor#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/configuredoutputdescriptor#"
 	}
     },
     "required": [ "basic", "configured" ],

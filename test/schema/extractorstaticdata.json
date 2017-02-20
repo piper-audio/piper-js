@@ -1,5 +1,5 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/pluginstaticdata#",
+    "id": "http://vamp-plugins.org/piper/json/schema/extractorstaticdata#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for the static metadata associated with a feature extractor",
     "type": "object",
@@ -8,12 +8,12 @@
 	    "type": "string"
 	},
 	"basic": {
-	    "$ref": "http://vamp-plugins.org/json/schema/basic#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/basic#"
 	},
 	"maker": {
 	    "type": "string"
 	},
-	"copyright": {
+	"rights": {
 	    "type": "string"
 	},
 	"version": {
@@ -31,18 +31,18 @@
 	},
 	"parameters": {
 	    "type": "array",
-	    "items": { "$ref": "http://vamp-plugins.org/json/schema/parameterdescriptor#" }
+	    "items": { "$ref": "http://vamp-plugins.org/piper/json/schema/parameterdescriptor#" }
 	},
 	"programs": {
 	    "type": "array",
 	    "items": { "type": "string" }
 	},
 	"inputDomain": {
-	    "$ref": "http://vamp-plugins.org/json/schema/enums#/definitions/input_domain"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/enums#/definitions/input_domain"
 	},
 	"basicOutputInfo": {
 	    "type": "array",
-	    "items": { "$ref": "http://vamp-plugins.org/json/schema/basic#" }
+	    "items": { "$ref": "http://vamp-plugins.org/piper/json/schema/basic#" }
 	}
     },
     "required": [ "key", "basic", "version",

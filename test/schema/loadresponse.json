@@ -1,19 +1,20 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/loadresponse#",
+    "id": "http://vamp-plugins.org/piper/json/schema/loadresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "schema for a response to a request to load a feature extractor; may be served in the result field of a load-method rpcresponse",
+    "description": "schema for a successful response to a request to load a feature extractor; may be served in the result field of a load-method rpcresponse",
     "type": "object",
     "properties": {
 	"handle": {
 	    "type": "number"
 	},
 	"staticData": {
-	    "$ref": "http://vamp-plugins.org/json/schema/extractorstaticdata#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/extractorstaticdata#"
 	},
 	"defaultConfiguration": {
-	    "$ref": "http://vamp-plugins.org/json/schema/configuration#"
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/configuration#"
 	}
     },
+    "required": [ "handle", "staticData", "defaultConfiguration" ],
     "additionalProperties": false
 }
 
