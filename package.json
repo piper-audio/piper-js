@@ -12,7 +12,9 @@
     "build": "tsc && cp src/fft/KissFft*.js dist/ts/fft",
     "clean": "rm -rf fft *.js *.js.map *.d.ts dist extractors",
     "prepublish": "npm run build-browser && cp -r dist/ts/* .",
-    "postinstall": "npm run build-browser && cp -r dist/ts/* ."
+    "postinstall": "npm run build-browser && cp -r dist/ts/* .",
+    "cover": "nyc npm t",
+    "coveralls": "npm run clean && npm run cover && cat ./coverage/lcov.info | coveralls"
   },
   "bin": {
     "piper-bundle": "bin/build-module.js"
@@ -53,8 +55,10 @@
     "babel-cli": "^6.14.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
+    "coveralls": "^2.11.16",
     "mocha": "^3.1.0",
-    "ts-node": "^1.3.0",
+    "nyc": "^10.1.2",
+    "ts-node": "^2.1.0",
     "tv4": "^1.2.7"
   }
 }
