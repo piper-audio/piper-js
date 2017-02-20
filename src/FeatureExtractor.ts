@@ -56,7 +56,7 @@ export interface StaticData {
     key: string;
     basic: BasicDescriptor;
     maker?: string;
-    copyright?: string;
+    rights?: string;
     version: number;
     category?: string[];
     minChannelCount: number;
@@ -102,7 +102,8 @@ export interface Framing {
 export interface Configuration {
     channelCount: number;
     framing: Framing;
-    parameterValues?: Parameters
+    parameterValues?: Parameters;
+    currentProgram?: string;
 }
 
 export interface ProcessInput {

@@ -1,5 +1,5 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/pluginconfiguration#",
+    "id": "http://vamp-plugins.org/piper/json/schema/configuration#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a bundle of configuration data capturing the setup of a feature extractor",
     "type": "object",
@@ -19,14 +19,11 @@
 	"channelCount": {
 	    "type": "integer"
 	},
-	"stepSize": {
-	    "type": "integer"
-	},
-	"blockSize": {
-	    "type": "integer"
-	}
+        "framing": {
+	    "$ref": "http://vamp-plugins.org/piper/json/schema/framing#"
+        }
     },
-    "required": [ "channelCount", "stepSize", "blockSize" ],
+    "required": [ "channelCount", "framing" ],
     "additionalProperties": false
 }
 

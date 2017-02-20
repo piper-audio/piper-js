@@ -239,7 +239,7 @@ interface WireStaticData {
     key: string;
     basic: BasicDescriptor;
     maker?: string;
-    copyright?: string;
+    rights?: string;
     version: number;
     category?: string[];
     minChannelCount: number;
@@ -268,7 +268,7 @@ interface WireConfiguration {
     channelCount: number;
     framing: Framing;
     parameterValues?: WireParameters;
-
+    currentProgram?: string;
 }
 
 interface WireConfigurationRequest {

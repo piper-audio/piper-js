@@ -1,5 +1,5 @@
 {
-  "id": "http://vamp-plugins.org/json/schema/configuredoutputdescriptor#",
+  "id": "http://vamp-plugins.org/piper/json/schema/configuredoutputdescriptor#",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "schema for the non-static metadata fields of an output descriptor belonging to a feature extractor",
   "type": "object",
@@ -27,7 +27,7 @@
     "type": "number"
   },
   "sampleType": {
-    "$ref": "http://vamp-plugins.org/json/schema/enums#/definitions/sample_type"
+    "$ref": "http://vamp-plugins.org/piper/json/schema/enums#/definitions/sample_type"
   },
   "sampleRate": {
     "type": "number"

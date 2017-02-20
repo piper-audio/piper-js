@@ -33,5 +33,9 @@
         "unit": ""
       }
     }
-  ]
+  ],
+  "framing": {
+    "stepSize": 0,
+    "blockSize": 0
+  }
 }

@@ -27,7 +27,7 @@
       }
     ],
     "category": [],
-    "copyright": "Freely redistributable (BSD license)",
+    "rights": "Freely redistributable (BSD license)",
     "inputDomain": "TimeDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,

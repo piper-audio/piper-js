@@ -1,5 +1,5 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/rpcrequest#",
+    "id": "http://vamp-plugins.org/piper/json/schema/rpcrequest#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a serialised request compatible with JSON-RPC",
     "type": "object",
@@ -9,11 +9,11 @@
 	},
 	"params": {
             "anyOf": [
-                { "$ref": "http://vamp-plugins.org/json/schema/listrequest#" },
-                { "$ref": "http://vamp-plugins.org/json/schema/loadrequest#" },
-                { "$ref": "http://vamp-plugins.org/json/schema/configurationrequest#" },
-                { "$ref": "http://vamp-plugins.org/json/schema/processrequest#" },
-                { "$ref": "http://vamp-plugins.org/json/schema/finishrequest#" }
+                { "$ref": "http://vamp-plugins.org/piper/json/schema/listrequest#" },
+                { "$ref": "http://vamp-plugins.org/piper/json/schema/loadrequest#" },
+                { "$ref": "http://vamp-plugins.org/piper/json/schema/configurationrequest#" },
+                { "$ref": "http://vamp-plugins.org/piper/json/schema/processrequest#" },
+                { "$ref": "http://vamp-plugins.org/piper/json/schema/finishrequest#" }
             ]                
 	},
         "id": {

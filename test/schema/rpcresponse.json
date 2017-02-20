@@ -1,5 +1,5 @@
 {
-    "id": "http://vamp-plugins.org/json/schema/rpcresponse#",
+    "id": "http://vamp-plugins.org/piper/json/schema/rpcresponse#",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "schema for a serialised response to an RPC request; compatible with JSON-RPC, except that the method name must be included here as well as in the request",
     "type": "object",
@@ -10,11 +10,11 @@
 	    },
 	    "result": {
                 "anyOf": [
-                    { "$ref": "http://vamp-plugins.org/json/schema/listresponse#" },
-                    { "$ref": "http://vamp-plugins.org/json/schema/loadresponse#" },
-                    { "$ref": "http://vamp-plugins.org/json/schema/configurationresponse#" },
-                    { "$ref": "http://vamp-plugins.org/json/schema/processresponse#" },
-                    { "$ref": "http://vamp-plugins.org/json/schema/finishresponse#" }
+                    { "$ref": "http://vamp-plugins.org/piper/json/schema/listresponse#" },
+                    { "$ref": "http://vamp-plugins.org/piper/json/schema/loadresponse#" },
+                    { "$ref": "http://vamp-plugins.org/piper/json/schema/configurationresponse#" },
+                    { "$ref": "http://vamp-plugins.org/piper/json/schema/processresponse#" },
+                    { "$ref": "http://vamp-plugins.org/piper/json/schema/finishresponse#" }
                 ]                
 	    },
             "id": {
@@ -35,7 +35,7 @@
 	        "type": "string"
 	    },
 	    "error": {
-                "$ref": "http://vamp-plugins.org/json/schema/error#"
+                "$ref": "http://vamp-plugins.org/piper/json/schema/error#"
 	    },
             "id": {
                 "anyOf": [

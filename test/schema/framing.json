@@ -1,0 +1,16 @@
+{
+    "id": "http://vamp-plugins.org/piper/json/schema/framing#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for step size and block size used when framing audio sample data",
+    "type": "object",
+    "properties": {
+	"stepSize": {
+	    "type": "integer"
+	},
+	"blockSize": {
+	    "type": "integer"
+	}
+    },
+    "required": [ "stepSize", "blockSize" ],
+    "additionalProperties": false
+}
