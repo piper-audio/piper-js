@@ -26,48 +26,23 @@ describe("FixtureSchema", () => {
 		"utf8"));
     };
 
-    const vampSchemaBase = "http://vamp-plugins.org/json/schema/";
+    const vampSchemaBase = "http://vamp-plugins.org/piper/json/schema/";
     const vampSchemaFileBase = __dirname + "/schema/";
 
     const loadSchema = () => {
-        const vampSchema = [
-            "basic",
-            "configuration",
-            "configurationrequest",
-            "configurationresponse",
-            "configuredoutputdescriptor",
-            "enums",
-            "error",
-            "extractorstaticdata",
-            "feature",
-            "featureset",
-            "finishrequest",
-            "finishresponse",
-            "listrequest",
-            "listresponse",
-            "loadrequest",
-            "loadresponse",
-            "outputdescriptor",
-            "parameterdescriptor",
-            "processinput",
-            "processrequest",
-            "processresponse",
-            "realtime",
-            "rpcrequest",
-            "rpcresponse",
-            "serialisedarray",
-            "valueextents"
-        ];
-        vampSchema.map(name => {
-            tv4.addSchema(JSON.parse(
-                fs.readFileSync(
-                    vampSchemaFileBase + name + ".json",
-                    "utf8")));
+        fs.readdirSync(vampSchemaFileBase)
+            .filter(filename => filename.endsWith(".json"))
+            .map(filename => filename.split(".json")[0])
+            .forEach(name => {
+                tv4.addSchema(JSON.parse(
+                    fs.readFileSync(
+                        vampSchemaFileBase + name + ".json",
+                        "utf8")));
         });
     };
 
-    const preload = loadSchema();
-    
+    loadSchema();
+
     const configurationResponse =
         loadFixture("expected-configuration-response") as ConfigurationResponse;
 
@@ -82,27 +57,26 @@ describe("FixtureSchema", () => {
 	    + " and schema path " + e.schemaPath;
     };
 
+    const throwIfInvalid = (json: any, path: string) => {
+        if (!tv4.validate(json, path) || tv4.missing.length) {
+            const error = tv4.error ? report(tv4.error) : "Missing $refs";
+            throw new Error(error);
+        }
+    };
+
     it("Validates configuration response", function(done) {
-        if (!tv4.validate(configurationResponse,
-		          vampSchemaBase + "configurationresponse#")) {
-            throw new Error(report(tv4.error));
-        } 
+        throwIfInvalid(configurationResponse,
+		          vampSchemaBase + "configurationresponse#");
         done();
     });
-    
+
     it("Validates load response", function(done) {
-        if (!tv4.validate(loadResponse,
-		          vampSchemaBase + "loadresponse#")) {
-            throw new Error(report(tv4.error));
-        }
+        throwIfInvalid(loadResponse, vampSchemaBase + "loadresponse#");
         done();
     });
-    
+
     it("Validates list response", function(done) {
-        if (!tv4.validate(listResponse,
-		          vampSchemaBase + "listresponse#")) {
-            throw new Error(report(tv4.error));
-        }
+        throwIfInvalid(listResponse, vampSchemaBase + "listresponse#");
         done();
     });
 });
