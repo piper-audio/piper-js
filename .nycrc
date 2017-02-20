@@ -10,7 +10,9 @@
     "ext",
     "plugins",
     "perf",
-    "src/**/*.d.ts"
+    "*.d.ts",
+    "src/**/*.d.ts",
+    "src/*.d.ts"
   ],
   "extension": [
     ".ts"
