@@ -56,7 +56,7 @@ export interface StaticData {
     key: string;
     basic: BasicDescriptor;
     maker?: string;
-    copyright?: string;
+    rights?: string;
     version: number;
     category?: string[];
     minChannelCount: number;
