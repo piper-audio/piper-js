@@ -102,7 +102,8 @@ export interface Framing {
 export interface Configuration {
     channelCount: number;
     framing: Framing;
-    parameterValues?: Parameters
+    parameterValues?: Parameters;
+    currentProgram?: string;
 }
 
 export interface ProcessInput {

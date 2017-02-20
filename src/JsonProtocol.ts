@@ -268,7 +268,7 @@ interface WireConfiguration {
     channelCount: number;
     framing: Framing;
     parameterValues?: WireParameters;
-
+    currentProgram?: string;
 }
 
 interface WireConfigurationRequest {
