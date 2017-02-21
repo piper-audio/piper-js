@@ -77,7 +77,7 @@ export interface SynchronousService {
 }
 
 // exports for library consumption
-export {EmscriptenProxy} from "./EmscriptenProxy";
+export {PiperVampService} from "./PiperVampService";
 export * from "./JsonProtocol";
 export {FeatureExtractorService} from "./FeatureExtractorService";
 export {PiperClient} from "./PiperClient";

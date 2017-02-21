@@ -17,8 +17,8 @@ import {
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {fromSeconds, fromFrames} from "../src/Timestamp"
 import {
-    EmscriptenFeatureExtractor
-} from "../src/EmscriptenProxy";
+    PiperVampFeatureExtractor
+} from "../src/PiperVampService";
 import VampTestPluginModule from '../ext/VampTestPluginModule';
 import {Feature, FeatureList} from "../src/Feature";
 import {
@@ -72,7 +72,7 @@ function createStreamCallback(numberOfChannels: number,
 
 const createExtractorCallback: CreateFeatureExtractorFunction
     = (sampleRate, key) => {
-    return new EmscriptenFeatureExtractor(
+    return new PiperVampFeatureExtractor(
         VampTestPluginModule(),
         sampleRate,
         key
@@ -156,7 +156,7 @@ describe("processConfiguredExtractor()", function () {
         const sampleRate: number = 16;
         const frames = segment(blockSize, stepSize, [data]);
 
-        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
             VampTestPluginModule(),
             sampleRate,
             "vamp-test-plugin:vamp-test-plugin"

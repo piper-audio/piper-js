@@ -36,7 +36,7 @@ export enum Allocator {
     ALLOC_NONE
 }
 
-export class EmscriptenFeatureExtractor implements FeatureExtractor {
+export class PiperVampFeatureExtractor implements FeatureExtractor {
     private module: EmscriptenModule;
     private handle: ExtractorHandle;
     private defaultConfig: Configuration;
@@ -128,7 +128,7 @@ export class PiperVampSynchronousService implements SynchronousService {
     }
 }
 
-export class EmscriptenProxy extends FakeAsyncService {
+export class PiperVampService extends FakeAsyncService {
     constructor(module: EmscriptenModule) {
         super(new PiperVampSynchronousService(module));
     }

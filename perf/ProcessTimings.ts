@@ -5,7 +5,7 @@ import {AdapterFlags, ProcessInput} from "../src/FeatureExtractor";
 import {fromFrames} from "../src/Timestamp";
 import {batchProcess} from "../src/HigherLevelUtilities";
 import VampExamplePlugins from "../ext/VampExamplePluginsModule";
-import {EmscriptenProxy} from "../src/EmscriptenProxy";
+import {PiperVampService} from "../src/PiperVampService";
 import {PiperClient} from "../src/PiperClient";
 
 chai.should();
@@ -14,7 +14,7 @@ chai.use(chaiAsPromised);
 describe('ProcessTimings', () => {
 
     const server = new PiperClient(
-        new EmscriptenProxy(VampExamplePlugins()));
+        new PiperVampService(VampExamplePlugins()));
 
     const iterations = 1000;
     

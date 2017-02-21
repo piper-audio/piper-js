@@ -2,7 +2,7 @@
  * Created by lucast on 18/10/16.
  */
 import { KissFft } from "./KissFftModule";
-import {EmscriptenModule} from "../EmscriptenProxy";
+import {EmscriptenModule} from "../PiperVampService";
 
 export interface RealFft {
     forward(real: Float32Array): Float32Array;

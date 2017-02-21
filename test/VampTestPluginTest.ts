@@ -2,7 +2,7 @@
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import {EmscriptenProxy} from "../src/EmscriptenProxy";
+import {PiperVampService} from "../src/PiperVampService";
 import VampTestPlugin from '../ext/VampTestPluginModule';
 import {AdapterFlags} from "../src/FeatureExtractor";
 import {LoadResponse, LoadRequest} from "../src/Piper";
@@ -11,7 +11,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 describe('VampTestPlugin', () => {
-    const client = new EmscriptenProxy(VampTestPlugin());
+    const client = new PiperVampService(VampTestPlugin());
 
     const loadResponse: Promise<LoadResponse> =
         client.list({}).then((resp) => {

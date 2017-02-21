@@ -10,14 +10,14 @@ import {Timestamp} from "../src/Timestamp";
 import {batchProcess} from "../src/HigherLevelUtilities";
 import VampExamplePlugins from "../ext/VampExamplePluginsModule";
 import {
-    EmscriptenProxy,
-    EmscriptenFeatureExtractor
-} from "../src/EmscriptenProxy";
+    PiperVampService,
+    PiperVampFeatureExtractor
+} from "../src/PiperVampService";
 import fs = require("fs");
 import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain, FeatureExtractor} from "../src/FeatureExtractor";
 import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
 import {PiperClient} from "../src/PiperClient";
-import {EmscriptenModule} from "../src/EmscriptenProxy";
+import {EmscriptenModule} from "../src/PiperVampService";
 import VampTestPluginModule from "../ext/VampTestPluginModule";
 import {
     createEmscriptenCleanerWithNodeGlobal,
@@ -28,9 +28,9 @@ chai.should();
 chai.use(chaiAsPromised);
 const cleaner: EmscriptenListenerCleaner = createEmscriptenCleanerWithNodeGlobal();
 
-describe("EmscriptenProxyTest", () => {
+describe("PiperVampServiceTest", () => {
     afterEach(() => cleaner.clean());
-    const client: Service = new PiperClient(new EmscriptenProxy(VampExamplePlugins()));
+    const client: Service = new PiperClient(new PiperVampService(VampExamplePlugins()));
 
     const loadFixture = (name : string) => {
         // avoid sharing things through use of require
@@ -156,28 +156,28 @@ describe("EmscriptenProxyTest", () => {
     });
 });
 
-describe("EmscriptenFeatureExtractor", () => {
+describe("PiperVampFeatureExtractor", () => {
     afterEach(() => cleaner.clean());
     it("Can construct a plugin with a valid key", () => {
         const module: EmscriptenModule = VampTestPluginModule();
-        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
             module, 16, "vamp-test-plugin:vamp-test-plugin"
         );
         return extractor.should.exist;
     });
 
     it("Throws on construction with invalid key", () => {
-        chai.expect(() => new EmscriptenFeatureExtractor(
+        chai.expect(() => new PiperVampFeatureExtractor(
             VampTestPluginModule(), 16, "invalid-key",
         )).to.throw(Error);
     });
 
     it("Uses the first available extractor when no key is provided", () => {
-        return new EmscriptenFeatureExtractor(VampTestPluginModule(), 16).should.exist;
+        return new PiperVampFeatureExtractor(VampTestPluginModule(), 16).should.exist;
     });
 
     it("Should provide a default configuration", () => {
-        const config = new EmscriptenFeatureExtractor(
+        const config = new PiperVampFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         ).getDefaultConfiguration();
         return (config.framing.hasOwnProperty("blockSize")
@@ -186,7 +186,7 @@ describe("EmscriptenFeatureExtractor", () => {
     });
 
     it("Should be configurable", () => {
-        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         const res = extractor.configure({
@@ -204,7 +204,7 @@ describe("EmscriptenFeatureExtractor", () => {
     });
 
     it("Should process a block", () => {
-        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         extractor.configure({
@@ -221,7 +221,7 @@ describe("EmscriptenFeatureExtractor", () => {
     });
 
     it("should return remaining features and clear up", () => {
-        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
+        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         extractor.configure({
