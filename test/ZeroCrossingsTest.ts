@@ -37,6 +37,7 @@ describe('ZeroCrossings', () => {
 
             [1,2,4,5,7].forEach((frame, index) => fromFrames(frame, 16)
                 .should.eql(features.get("crossings")[index].timestamp));
+            [...zc.finish().keys()].should.eql([]);
         });
 
         it('Should keep the last sample from the previous block and thus cross once', () => {
@@ -47,6 +48,18 @@ describe('ZeroCrossings', () => {
             let features: FeatureSet = zc.process(block);
             features.get("counts").should.deep.equal([{featureValues: new Float32Array([1])}]);
             features.get("crossings").length.should.equal(1);
+            [...zc.finish().keys()].should.eql([]);
+        });
+
+        it("should configure the extractor with the desired framing", () => {
+            const zc = new ZeroCrossings(16);
+            zc.configure({
+                channelCount: 1,
+                framing: {
+                    stepSize: 8,
+                    blockSize: 8
+                }
+            }).framing.should.eql({stepSize: 8, blockSize: 8});
         });
     })
 });

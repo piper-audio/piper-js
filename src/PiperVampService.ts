@@ -3,18 +3,19 @@
  */
 import {
     ProcessRequest,
-    ServiceFunc, Service, ListRequest, ListResponse, LoadResponse, LoadRequest,
+    Service, ListRequest, ListResponse, LoadResponse, LoadRequest,
     ConfigurationRequest, ConfigurationResponse, ProcessResponse,
-    FinishResponse, FinishRequest, compose, ExtractorHandle
+    FinishResponse, FinishRequest, ExtractorHandle, SynchronousService
 } from "./Piper";
 import {
-    Filters, Serialise, Deserialise
+    Serialise, Deserialise
 } from "./JsonProtocol";
 import {
     ConfigurationResponse as Configured, Configuration, ProcessInput, FeatureExtractor,
     AdapterFlags, ConfiguredOutputDescriptor
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
+import {FakeAsyncService} from "./FeatureExtractorService";
 
 export interface EmscriptenModule {
     cwrap(ident: string, returnType: string, argTypes: string[]): Function;
@@ -35,7 +36,7 @@ export enum Allocator {
     ALLOC_NONE
 }
 
-export class EmscriptenFeatureExtractor implements FeatureExtractor {
+export class PiperVampFeatureExtractor implements FeatureExtractor {
     private module: EmscriptenModule;
     private handle: ExtractorHandle;
     private defaultConfig: Configuration;
@@ -91,50 +92,45 @@ export class EmscriptenFeatureExtractor implements FeatureExtractor {
     }
 }
 
-export class EmscriptenProxy implements Service {
+export class PiperVampSynchronousService implements SynchronousService {
     private module: EmscriptenModule;
 
     constructor(module: EmscriptenModule) {
         this.module = module;
     }
 
-    list(request: ListRequest): Promise<ListResponse> {
-        return compose(
-            Filters.deserialiseJsonListResponse, compose(
-                Filters.serialiseJsonListRequest, emscriptenService(this.module)
-            )
-        )(request);
+    list(request: ListRequest): ListResponse {
+        return Deserialise.ListResponse(
+            jsonRequest(this.module, Serialise.ListRequest(request))
+        );
     }
 
-    load(request: LoadRequest): Promise<LoadResponse> {
-        return compose(
-            Filters.deserialiseJsonLoadResponse, compose(
-                Filters.serialiseJsonLoadRequest, emscriptenService(this.module)
-            )
-        )(request);
+    load(request: LoadRequest): LoadResponse {
+        return Deserialise.LoadResponse(
+            jsonRequest(this.module, Serialise.LoadRequest(request))
+        );
     }
 
-    configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
-        return compose(
-            Filters.deserialiseJsonConfigurationResponse, compose(
-                Filters.serialiseJsonConfigurationRequest, emscriptenService(this.module)
-            )
-        )(request);
+    configure(request: ConfigurationRequest): ConfigurationResponse {
+        return Deserialise.ConfigurationResponse(
+            jsonRequest(this.module, Serialise.ConfigurationRequest(request))
+        );
     }
 
-    process(request: ProcessRequest): Promise<ProcessResponse> {
-        return compose(
-            Filters.deserialiseJsonProcessResponse,
-            emscriptenProcess(this.module)
-        )(request);
+    process(request: ProcessRequest): ProcessResponse {
+        return Deserialise.ProcessResponse(rawProcess(this.module, request));
     }
 
-    finish(request: FinishRequest): Promise<FinishResponse> {
-        return compose(
-            Filters.deserialiseJsonFinishResponse, compose(
-                Filters.serialiseJsonFinishRequest, emscriptenService(this.module)
-            )
-        )(request);
+    finish(request: FinishRequest): ProcessResponse {
+        return Deserialise.FinishResponse(
+            jsonRequest(this.module, Serialise.FinishRequest(request))
+        );
+    }
+}
+
+export class PiperVampService extends FakeAsyncService {
+    constructor(module: EmscriptenModule) {
+        super(new PiperVampSynchronousService(module));
     }
 }
 
@@ -208,17 +204,3 @@ function rawProcess(emscripten: EmscriptenModule, request: ProcessRequest): stri
     freeJson(emscripten, responseJson);
     return jsonString;
 }
-
-function emscriptenService(emscripten: EmscriptenModule)
-: ServiceFunc<string, string> {
-    return (request: string): Promise<string> => {
-        return Promise.resolve(jsonRequest(emscripten, request));
-    }
-}
-
-const emscriptenProcess
-    : (emscripten: EmscriptenModule) => ServiceFunc<ProcessRequest, string>
-    = (emscripten: EmscriptenModule) =>
-    (request: ProcessRequest): Promise<string> => {
-        return Promise.resolve(rawProcess(emscripten, request));
-    };

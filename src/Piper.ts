@@ -76,34 +76,10 @@ export interface SynchronousService {
     finish(request: FinishRequest): FinishResponse;
 }
 
-export type ServiceFunc<Request, Response> = (req: Request) => Promise<Response>;
-export type ListService = ServiceFunc<ListRequest, ListResponse>;
-export type LoadService = ServiceFunc<LoadRequest, LoadResponse>;
-export type ConfigurationService = ServiceFunc<ConfigurationRequest, ConfigurationResponse>;
-export type ProcessService = ServiceFunc<ProcessRequest, ProcessResponse>;
-export type FinishService = ServiceFunc<FinishRequest, FinishResponse>;
-
-export type Filter<ReqIn, RepOut, ReqOut, RepIn>
-    = (request: ReqIn, service: ServiceFunc<ReqOut, RepIn>) => Promise<RepOut>;
-
-export type SimpleFilter<Req, Res> = Filter<Req, Res, Req, Res>;
-
-export function compose<ReqIn, RepOut, ReqOut, RepIn>
-(filter: Filter<ReqIn, RepOut, ReqOut, RepIn>,
- service: ServiceFunc<ReqOut, RepIn>): ServiceFunc<ReqIn, RepOut> {
-    return (request: ReqIn) => filter(request, service);
-}
-
-export function composeSimple<Req, Rep>
-(filter: SimpleFilter<Req, Rep>,
- service: ServiceFunc<Req, Rep>): ServiceFunc<Req, Rep> {
-    return (request: Req) => filter(request, service);
-}
-
 // exports for library consumption
-export {EmscriptenProxy} from "./EmscriptenProxy";
+export {PiperVampService} from "./PiperVampService";
 export * from "./JsonProtocol";
-export {FeatsService} from "./FeatsService";
+export {FeatureExtractorService} from "./FeatureExtractorService";
 export {PiperClient} from "./PiperClient";
 export {segment, process, collect} from "./HigherLevelUtilities";
 export * from "./FeatureExtractor";

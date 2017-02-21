@@ -11,4 +11,4 @@ export interface Feature {
 }
 
 export type FeatureList = Feature[];
-export type FeatureSet = Map<string, FeatureList>
+export type FeatureSet = Map<string, FeatureList>;

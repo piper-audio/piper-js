@@ -14,9 +14,7 @@ import {
     ConfigurationRequest,
     FinishRequest,
     FinishResponse,
-    ListRequest,
-    Filter,
-    ServiceFunc
+    ListRequest
 } from "./Piper";
 import {
     Feature,
@@ -32,63 +30,6 @@ import {
     ValueExtents,
     Configuration, StaticData, ProcessInput, Framing
 } from "./FeatureExtractor";
-
-export namespace Filters {
-    export const serialiseJsonListRequest
-        : Filter<ListRequest, string, string, string>
-        = (request: ListRequest, next: ServiceFunc<string, string>)
-        : Promise<string> => next(Serialise.ListRequest(request));
-
-    export const serialiseJsonLoadRequest
-        : Filter<LoadRequest, string, string, string>
-        = (request: LoadRequest, next: ServiceFunc<string, string>)
-        : Promise<string> => next(Serialise.LoadRequest(request));
-
-    export const serialiseJsonConfigurationRequest
-        : Filter<ConfigurationRequest, string, string, string>
-        = (request: ConfigurationRequest, next: ServiceFunc<string, string>)
-        : Promise<string> => next(Serialise.ConfigurationRequest(request));
-
-    export const serialiseJsonProcessRequest
-        : Filter<ProcessRequest, string, string, string>
-        = (request: ProcessRequest, next: ServiceFunc<string, string>)
-        : Promise<string> => next(Serialise.ProcessRequest(request));
-
-    export const serialiseJsonFinishRequest
-        : Filter<FinishRequest, string, string, string>
-        = (request: FinishRequest, next: ServiceFunc<string, string>)
-        : Promise<string> => next(Serialise.FinishRequest(request));
-
-    export const deserialiseJsonListResponse
-        : Filter<ListRequest, ListResponse, ListRequest, string>
-        = (request: ListRequest, service: ServiceFunc<ListRequest, string>)
-        : Promise<ListResponse> =>
-        service(request).then(Deserialise.ListResponse);
-
-    export const deserialiseJsonLoadResponse
-        : Filter<LoadRequest, LoadResponse, LoadRequest, string>
-        = (request: LoadRequest, service: ServiceFunc<LoadRequest, string>)
-        : Promise<LoadResponse> =>
-        service(request).then(Deserialise.LoadResponse);
-
-    export const deserialiseJsonConfigurationResponse
-        : Filter<ConfigurationRequest, ConfigurationResponse, ConfigurationRequest, string>
-        = (request: ConfigurationRequest, service: ServiceFunc<ConfigurationRequest, string>)
-        : Promise<ConfigurationResponse> =>
-        service(request).then(Deserialise.ConfigurationResponse);
-
-    export const deserialiseJsonProcessResponse
-        : Filter<ProcessRequest, ProcessResponse, ProcessRequest, string>
-        = (request: ProcessRequest, service: ServiceFunc<ProcessRequest, string>)
-        : Promise<ProcessResponse> =>
-        service(request).then(Deserialise.ProcessResponse);
-
-    export const deserialiseJsonFinishResponse
-        : Filter<FinishRequest, FinishResponse, FinishRequest, string>
-        = (request: FinishRequest, service: ServiceFunc<FinishRequest, string>)
-        : Promise<FinishResponse> =>
-        service(request).then(Deserialise.FinishResponse);
-}
 
 export namespace Serialise {
     export function ListRequest(request: ListRequest, tag?: Tag): string {
