@@ -125,5 +125,6 @@ describe("FrequencyDomainAdapter", () => {
                 chai.assert.approximately(actual, expected, 0.1e-14);
             })
         });
+        [...extractor.finish().keys()].should.eql([]);
     });
 });
