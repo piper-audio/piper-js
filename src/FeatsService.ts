@@ -153,12 +153,11 @@ export class FeatsSynchronousService implements SynchronousService {
         });
     }
 }
+export class FakeAsyncService implements Service {
+    protected service: SynchronousService;
 
-export class FeatsService implements Service {
-    private service: FeatsSynchronousService;
-
-    constructor(fftFactory: RealFftFactory, ...factories: PluginFactory[]) {
-        this.service = new FeatsSynchronousService(fftFactory, ...factories);
+    constructor(service: SynchronousService) {
+        this.service = service;
     }
 
     list(request: ListRequest): Promise<ListResponse> {
@@ -181,7 +180,7 @@ export class FeatsService implements Service {
         return this.request(request, (req: any) => this.service.finish(req));
     }
 
-    private request(request: any, handler: Function): Promise<any> {
+    protected request(request: any, handler: Function): Promise<any> {
         return new Promise((res, rej) => {
             try {
                 res(handler(request));
@@ -189,5 +188,12 @@ export class FeatsService implements Service {
                 rej(err);
             }
         });
+    }
+}
+
+
+export class FeatsService extends FakeAsyncService {
+    constructor(fftFactory: RealFftFactory, ...factories: PluginFactory[]) {
+        super(new FeatsSynchronousService(fftFactory, ...factories));
     }
 }
