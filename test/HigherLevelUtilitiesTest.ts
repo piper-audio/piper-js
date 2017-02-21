@@ -26,7 +26,9 @@ import {
     createEmscriptenCleanerWithNodeGlobal
 } from "./TestUtilities";
 import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
-import {FeatureExtractorFactory, FeatsService} from "../src/FeatsService";
+import {
+    FeatureExtractorService,
+} from "../src/FeatureExtractorService";
 import {
     FrequencyDomainExtractorStub,
     FrequencyMetaDataStub
@@ -395,12 +397,10 @@ describe("collect()", function () {
 
 describe("PiperSimpleClient", () => {
     const fftInitCallback: RealFftFactory = (size: number) => new KissRealFft(size);
-    const freqStubInitCallback: FeatureExtractorFactory = sr => new FrequencyDomainExtractorStub();
-    const timeStubInitCallback: FeatureExtractorFactory = sr => new FeatureExtractorStub();
-    const service = new FeatsService(
+    const service = new FeatureExtractorService(
         fftInitCallback,
-        {extractor: freqStubInitCallback, metadata: FrequencyMetaDataStub},
-        {extractor: timeStubInitCallback, metadata: MetaDataStub}
+        {create: sr => new FrequencyDomainExtractorStub(), metadata: FrequencyMetaDataStub},
+        {create: sr => new FeatureExtractorStub(), metadata: MetaDataStub}
     );
     const client = new PiperSimpleClient(service);
     const sampleRate: number = 16;

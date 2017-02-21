@@ -15,7 +15,7 @@ import {
     AdapterFlags, ConfiguredOutputDescriptor
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
-import {FakeAsyncService} from "./FeatsService";
+import {FakeAsyncService} from "./FeatureExtractorService";
 
 export interface EmscriptenModule {
     cwrap(ident: string, returnType: string, argTypes: string[]): Function;

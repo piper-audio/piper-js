@@ -7,7 +7,9 @@ import {
     FrequencyMetaDataStub,
     FrequencyDomainExtractorStub
 } from "./fixtures/FrequencyDomainExtractorStub";
-import {FeatsService, FeatureExtractorFactory} from "../src/FeatsService";
+import {
+    FeatureExtractorService
+} from "../src/FeatureExtractorService";
 import {KissRealFft, RealFftFactory} from "../src/fft/RealFft";
 import {PiperClient} from "../src/PiperClient";
 import {AdapterFlags} from "../src/FeatureExtractor";
@@ -23,17 +25,15 @@ chai.use(chaiAsPromised);
 
 describe("PiperClient", () => {
     const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
-    const freqStubInitCallback: FeatureExtractorFactory = sr => new FrequencyDomainExtractorStub();
-    const timeStubInitCallback: FeatureExtractorFactory = sr => new FeatureExtractorStub();
     const sampleRate: number = 16;
     const blockSize: number = 8;
     const stepSize: number = 4;
 
     it("should shift the timestamp for features returned from freq. domain extractors loaded with AdaptInputDomain by half the black size", () => {
-        const service = new FeatsService(
+        const service = new FeatureExtractorService(
             fftFactory,
-            {extractor: freqStubInitCallback, metadata: FrequencyMetaDataStub},
-            {extractor: timeStubInitCallback, metadata: MetaDataStub}
+            {create: (sr: number) => new FrequencyDomainExtractorStub(), metadata: FrequencyMetaDataStub},
+            {create: (sr: number) => new FeatureExtractorStub(), metadata: MetaDataStub}
         );
 
         const client = new PiperClient(service);

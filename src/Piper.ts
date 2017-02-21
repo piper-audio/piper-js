@@ -79,7 +79,7 @@ export interface SynchronousService {
 // exports for library consumption
 export {EmscriptenProxy} from "./EmscriptenProxy";
 export * from "./JsonProtocol";
-export {FeatsService} from "./FeatsService";
+export {FeatureExtractorService} from "./FeatureExtractorService";
 export {PiperClient} from "./PiperClient";
 export {segment, process, collect} from "./HigherLevelUtilities";
 export * from "./FeatureExtractor";

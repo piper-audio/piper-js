@@ -23,28 +23,26 @@ import {
 } from "./FrequencyDomainAdapter";
 import {RealFftFactory} from "./fft/RealFft";
 
-export type FeatureExtractorFactory = (sampleRate: number) => FeatureExtractor;
-
-export interface PluginFactory { // TODO rename, this is part of our identity crisis
-    extractor: FeatureExtractorFactory;
+export interface FeatureExtractorFactory {
+    create: (sampleRate: number) => FeatureExtractor;
     metadata: StaticData;
 }
 
-export interface Plugin {
+export interface DescribedFeatureExtractor {
     extractor: FeatureExtractor;
     metadata: StaticData;
 }
 
-export class FeatsSynchronousService implements SynchronousService {
-    private factories: Map<string, PluginFactory>;
-    private loaded: Map<number, Plugin>;
-    private configured: Map<number, Plugin>;
+export class FeatureExtractorSynchronousService implements SynchronousService {
+    private factories: Map<string, FeatureExtractorFactory>;
+    private loaded: Map<number, DescribedFeatureExtractor>;
+    private configured: Map<number, DescribedFeatureExtractor>;
     private countingHandle: number;
     private fftFactory: RealFftFactory;
 
-    constructor(fftFactory: RealFftFactory, ...factories: PluginFactory[]) {
-        FeatsSynchronousService.sanitiseStaticData(factories);
-        this.factories = new Map(factories.map(plugin => [plugin.metadata.key, plugin] as [string, PluginFactory]));
+    constructor(fftFactory: RealFftFactory, ...factories: FeatureExtractorFactory[]) {
+        FeatureExtractorSynchronousService.sanitiseStaticData(factories);
+        this.factories = new Map(factories.map(plugin => [plugin.metadata.key, plugin] as [string, FeatureExtractorFactory]));
         this.loaded = new Map();
         this.configured = new Map();
         this.countingHandle = 0;
@@ -52,8 +50,8 @@ export class FeatsSynchronousService implements SynchronousService {
     }
 
     list(request: ListRequest): ListResponse {
-        const factories: PluginFactory[] = [...this.factories.values()];
-        const available: PluginFactory[] = request.from && request.from.length ?
+        const factories: FeatureExtractorFactory[] = [...this.factories.values()];
+        const available: FeatureExtractorFactory[] = request.from && request.from.length ?
             factories.filter(plugin => {
                 return request.from.includes(plugin.metadata.key.split(":")[0]);
             }) : factories;
@@ -73,17 +71,17 @@ export class FeatsSynchronousService implements SynchronousService {
                 || request.adapterFlags.includes(AdapterFlags.AdaptInputDomain)
             );
 
-        const factory: PluginFactory = this.factories.get(request.key);
+        const factory: FeatureExtractorFactory = this.factories.get(request.key);
         const metadata: StaticData = factory.metadata;
         const extractor: FeatureExtractor =
             metadata.inputDomain === InputDomain.FrequencyDomain && isInputDomainAdapted
                 ? new FrequencyDomainAdapter(
-                    factory.extractor(request.inputSampleRate),
+                    factory.create(request.inputSampleRate),
                     this.fftFactory,
                     request.inputSampleRate,
                     ProcessInputAdjustmentMethod.Timestamp
                 )
-                : factory.extractor(request.inputSampleRate);
+                : factory.create(request.inputSampleRate);
         this.loaded.set(++this.countingHandle, {extractor: extractor, metadata: metadata}); // TODO should the first assigned handle be 1 or 0? currently 1
 
         const defaultConfiguration: Configuration = extractor.getDefaultConfiguration();
@@ -97,9 +95,9 @@ export class FeatsSynchronousService implements SynchronousService {
 
     configure(request: ConfigurationRequest): ConfigurationResponse {
         if (!this.loaded.has(request.handle)) throw new Error("Invalid plugin handle");
-        if (this.configured.has(request.handle)) throw new Error("PluginFactory is already configured");
+        if (this.configured.has(request.handle)) throw new Error("FeatureExtractorFactory is already configured");
 
-        const plugin: Plugin = this.loaded.get(request.handle);
+        const plugin: DescribedFeatureExtractor = this.loaded.get(request.handle);
         // TODO this is probably where the error handling for channel mismatch should be...
         const response: Configured = plugin.extractor.configure(request.configuration);
         this.configured.set(request.handle, plugin);
@@ -122,7 +120,7 @@ export class FeatsSynchronousService implements SynchronousService {
         if (!this.configured.has(request.handle))
             throw new Error("Invalid plugin handle, or plugin not configured.");
 
-        const plugin: Plugin = this.configured.get(request.handle);
+        const plugin: DescribedFeatureExtractor = this.configured.get(request.handle);
         const numberOfInputs: number = request.processInput.inputBuffers.length;
         const metadata: StaticData = plugin.metadata;
 
@@ -137,14 +135,14 @@ export class FeatsSynchronousService implements SynchronousService {
         const handle: ExtractorHandle = request.handle;
         if (!this.loaded.has(handle) && !this.configured.has(handle))
             throw new Error("Invalid plugin handle.");
-        const plugin: Plugin = this.configured.get(handle) || this.loaded.get(handle);
+        const plugin: DescribedFeatureExtractor = this.configured.get(handle) || this.loaded.get(handle);
         const features: FeatureSet = plugin.extractor.finish();
         this.loaded.delete(handle);
         this.configured.delete(handle);
         return {handle: handle, features: features};
     }
 
-    private static sanitiseStaticData(factories: PluginFactory[]): void {
+    private static sanitiseStaticData(factories: FeatureExtractorFactory[]): void {
         // TODO this is to parse the InputDomain field as Enums, and really belongs in the compiling code
         factories.forEach(plugin => {
             if (typeof plugin.metadata.inputDomain === "string") {
@@ -192,8 +190,8 @@ export class FakeAsyncService implements Service {
 }
 
 
-export class FeatsService extends FakeAsyncService {
-    constructor(fftFactory: RealFftFactory, ...factories: PluginFactory[]) {
-        super(new FeatsSynchronousService(fftFactory, ...factories));
+export class FeatureExtractorService extends FakeAsyncService {
+    constructor(fftFactory: RealFftFactory, ...factories: FeatureExtractorFactory[]) {
+        super(new FeatureExtractorSynchronousService(fftFactory, ...factories));
     }
 }
