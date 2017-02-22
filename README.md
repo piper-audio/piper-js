@@ -2,7 +2,7 @@
 # piper-js
 
 [![Build Status](https://travis-ci.org/piper-audio/piper-js.svg?branch=master)](https://travis-ci.org/piper-audio/piper-js)
-[![Coverage Status](https://coveralls.io/repos/github/LucasThompson/piper-js/badge.svg?branch=master)](https://coveralls.io/github/LucasThompson/piper-js?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/piper-audio/piper-js/badge.svg?branch=master)](https://coveralls.io/github/piper-audio/piper-js?branch=master)
 
 A small library, written in TypeScript, for building audio applications
 using the Piper feature extraction protocol.
