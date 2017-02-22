@@ -7,6 +7,8 @@
 A small library, written in TypeScript, for building audio applications
 using the Piper feature extraction protocol.
 
+_This is pre-1.0 code and the API may change at any time_
+
 ## Contents
 
  * Classes for integrating a Piper Client into a web application
