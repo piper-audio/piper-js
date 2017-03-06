@@ -358,7 +358,12 @@ function concatFeatures(running: FeatureSet, nextBlock: Promise<FeatureSet>): Pr
 }
 
 function createOrConcat(data: FeatureList, key: string, map: FeatureSet) {
-    map.has(key) ? map.set(key, map.get(key).concat(data)) : map.set(key, data);
+    if (map.has(key)) {
+        const a = map.get(key);
+        a.push.apply(a, data);
+    } else {
+        map.set(key, data);
+    }
 }
 
 export interface SimpleConfigurationResponse {
