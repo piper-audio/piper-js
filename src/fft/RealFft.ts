@@ -76,7 +76,6 @@ export class KissRealFft implements RealFft {
 
     dispose(): void {
         this.kissFFTModule._free(this.realPtr);
-        this.kissFFTModule._free(this.complexPtr);
         this.kiss_fftr_free(this.forwardConfig);
         this.kiss_fftr_free(this.inverseConfig);
     }
