@@ -78,7 +78,7 @@ export interface SimpleService {
 
 export function* segment(blockSize: number,
                          stepSize: number,
-                         audioData: AudioData): IterableIterator<AudioData> {
+                         audioData: AudioData): FramedAudio {
     let nStep: number = 0;
     const nSteps: number = audioData[0].length / stepSize;
     while (nStep < nSteps) {
@@ -90,6 +90,19 @@ export function* segment(blockSize: number,
                 ? channelData.subarray(start, stop)
                 : Float32Array.of(...block, ...new Float32Array(blockSize - block.length));
         })
+    }
+}
+
+export function* toProcessInputStream(stream: AudioStream,
+                                      stepSize: number)
+: IterableIterator<ProcessInput> {
+    let nFrame: number = 0;
+    for (let frame of stream.frames) {
+        yield {
+            timestamp: fromFrames(nFrame, stream.format.sampleRate),
+            inputBuffers: frame
+        };
+        nFrame += stepSize;
     }
 }
 
@@ -194,7 +207,7 @@ export function reshape(outputs: Iterable<Output>,
     );
 
     // TODO switch suggests that matrix and list could be types, dynamically dispatch to a .data() method or similar
-    // TODO adjust timestamps for vector and matrix
+    // TODO adjust timestamps for vector and matrix?
     switch(shape) {
         case "vector":
             return {
@@ -244,7 +257,9 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
                         outputId?: OutputIdentifier,
                         params?: Parameters,
                         args: KeyValueObject = {}): FeatureCollection {
-    // TODO reduce duplication with process - only issue stopping calling process directly here for lazyOutputs is that ConfigurationResponse and Configuration are needed
+    // TODO reduce duplication with process -
+    // only issue stopping calling process directly here for
+    // lazyOutputs is that ConfigurationResponse and Configuration are needed
     const extractor = createFeatureExtractorCallback(
         streamFormat.sampleRate,
         extractorKey
@@ -292,7 +307,8 @@ export function* process(createAudioStreamCallback: CreateAudioStreamFunction,
                          params?: Parameters,
                          args: KeyValueObject = {}): IterableIterator<Feature> {
     // TODO needs wrapping to handle input domain, channel and buffer adapter?
-    // this is going to happen automatically in piper-vamp / emscripten extractors - Perhaps it should happen in the factory
+    // this is going to happen automatically in piper-vamp /
+    // emscripten extractors - Perhaps it should happen in the factory
     const extractor = createFeatureExtractorCallback(
         streamFormat.sampleRate,
         extractorKey
@@ -454,16 +470,6 @@ export class PiperSimpleClient implements SimpleService {
         // TODO implement something better than batchProcess?
         return (res: SimpleConfigurationResponse) => {
             // TODO refactor parts of processConfiguredExtractor for use here / reduce dup
-            const toProcessInputStream = function*(stream: AudioStream): IterableIterator<ProcessInput> {
-                let nFrame: number = 0;
-                for (let frame of stream.frames) {
-                    yield {
-                        timestamp: fromFrames(nFrame, stream.format.sampleRate),
-                        inputBuffers: frame
-                    };
-                    nFrame += res.configuredStepSize;
-                }
-            };
 
             const blocks = toProcessInputStream({
                 frames: segment(
@@ -472,7 +478,7 @@ export class PiperSimpleClient implements SimpleService {
                     request.audioData
                 ),
                 format: request.audioFormat
-            });
+            }, res.configuredStepSize);
 
             return batchProcess(
                 blocks,
