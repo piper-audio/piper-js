@@ -23,6 +23,11 @@ export class FeatureExtractorStub implements FeatureExtractor {
                 ["sum", descriptor],
                 ["cumsum", descriptor],
                 ["conditional", descriptor],
+                ["passthrough", {
+                    binCount: configuration.framing.stepSize,
+                    sampleType: SampleType.OneSamplePerStep,
+                    hasDuration: false
+                }],
                 ["finish", {
                     binCount: 1,
                     sampleType: SampleType.VariableSampleRate,
@@ -51,6 +56,9 @@ export class FeatureExtractorStub implements FeatureExtractor {
             outputs.set("conditional", [{featureValues: new Float32Array([666])}]);
 
         outputs.set("sum", [{featureValues: new Float32Array([sum])}]);
+        outputs.set("passthrough", [{featureValues: Float32Array.from(
+            block.inputBuffers[0]
+        )}]);
         outputs.set("cumsum", [{featureValues: new Float32Array([this.cumulativeSum])}]);
         return outputs;
     }
@@ -80,6 +88,11 @@ export const MetaDataStub: StaticData = {
             description: "The cumulative sum over all input blocks",
             identifier: "cumsum",
             name: "Cumulative Sum"
+        },
+        {
+            description: "The first channel as provided to process",
+            identifier: "passthrough",
+            name: "Pass-Through"
         },
         {
             description: "An output which is only included sometimes",
