@@ -4,11 +4,14 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
-    AudioStreamFormat,
-    SimpleResponse
+    AudioStreamFormat
 } from "../src/HigherLevelUtilities";
 import {Observable} from "rxjs";
-import {PiperStreamingService, StreamingService} from "../src/StreamingService";
+import {
+    PiperStreamingService,
+    StreamingService,
+    StreamingResponse
+} from "../src/StreamingService";
 import {KissRealFft} from "../src/fft/RealFft";
 import {
     FeatureExtractorFactory,
@@ -65,7 +68,7 @@ describe("StreamingService", () => {
     };
 
     it("Notifies observers after each process call", (done: MochaDone) => {
-        const processStream: Observable<SimpleResponse> = service.process({
+        const processStream: Observable<StreamingResponse> = service.process({
             audioData: samples,
             audioFormat: streamFormat,
             key: "stub:sum",
@@ -102,7 +105,7 @@ describe("StreamingService", () => {
     });
 
     it("Notifies observers after each collect call (matrix)", done => {
-        const collectStream: Observable<SimpleResponse> = service.collect({
+        const collectStream: Observable<StreamingResponse> = service.collect({
             audioData: samples,
             audioFormat: streamFormat,
             key: "stub:sum",
@@ -138,7 +141,7 @@ describe("StreamingService", () => {
     });
 
     it("Notifies observers after each collect call (vector)", done => {
-        const collectStream: Observable<SimpleResponse> = service.collect({
+        const collectStream: Observable<StreamingResponse> = service.collect({
             audioData: samples,
             audioFormat: streamFormat,
             key: "stub:sum",
@@ -175,7 +178,7 @@ describe("StreamingService", () => {
     });
 
     it("Notifies observers of features extracted from finish method", done => {
-        const collectStream: Observable<SimpleResponse> = service.collect({
+        const collectStream: Observable<StreamingResponse> = service.collect({
             audioData: samples,
             audioFormat: streamFormat,
             key: "stub:sum",
@@ -215,7 +218,7 @@ describe("StreamingService", () => {
     });
 
     it("Notifies observers of errors", done => {
-        const collectStream: Observable<SimpleResponse> = service.collect({
+        const collectStream: Observable<StreamingResponse> = service.collect({
             audioData: samples,
             audioFormat: streamFormat,
             key: "stub:sum",
@@ -232,4 +235,42 @@ describe("StreamingService", () => {
             () => {}
         );
     });
+
+    it("Contains progress info when audio length known up front", done => {
+        const samples = [
+            Float32Array.from([
+                -1, -1, -1, -1,
+                0,  0,  0,  0,
+                1,  1,  1,  1,
+                1 /* Force an extra block*/
+            ])
+        ];
+        const streamFormat: AudioStreamFormat = {
+            channelCount: samples.length,
+            sampleRate: 4,
+            length: samples[0].length
+        };
+        const collectStream: Observable<StreamingResponse> = service.collect({
+            audioData: samples,
+            audioFormat: streamFormat,
+            key: "stub:sum",
+            outputId: "passthrough",
+            blockSize: blockSize,
+            stepSize: stepSize
+        });
+        let nBlocksProcessed = 0;
+        const nBlocksToProcess = Math.ceil(samples[0].length / stepSize) + 1;
+        collectStream.subscribe(
+            response => {
+                try {
+                    response.processedBlockCount.should.eql(nBlocksProcessed++);
+                    response.totalBlockCount.should.eql(nBlocksToProcess);
+                } catch (e) {
+                    done(e);
+                }
+            },
+            done,
+            done
+        );
+    })
 });

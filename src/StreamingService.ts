@@ -7,6 +7,7 @@ import {
     Service
 } from "./Piper";
 import {
+    FeatureCollection,
     loadAndConfigure,
     reshape,
     segment,
@@ -19,10 +20,17 @@ import {Observable, Observer} from "rxjs";
 import {PiperClient} from "./PiperClient";
 import {FeatureList, FeatureSet} from "./Feature";
 
+export interface StreamingProgress {
+    processedBlockCount: number;
+    totalBlockCount?: number;
+}
+
+export type StreamingResponse = SimpleResponse & StreamingProgress;
+
 export interface StreamingService {
     list(request: ListRequest): Promise<ListResponse>;
-    process(request: SimpleRequest): Observable<SimpleResponse>;
-    collect(request: SimpleRequest): Observable<SimpleResponse>;
+    process(request: SimpleRequest): Observable<StreamingResponse>;
+    collect(request: SimpleRequest): Observable<StreamingResponse>;
 }
 
 type FeaturesExtractedHandler = (features: FeatureSet) => void;
@@ -104,54 +112,63 @@ export class PiperStreamingService implements StreamingService {
         return this.client.list(request);
     }
 
-    process(request: SimpleRequest): Observable<SimpleResponse> {
-        return Observable.fromPromise(loadAndConfigure(
-            request,
-            this.client
-        )).flatMap((config: SimpleConfigurationResponse) => {
-            return streamFeatures(request, this.client, config)
-                .map<FeatureSet, SimpleResponse>(features => {
-                    const output: FeatureList = features.get(
-                            config.configuredOutputId
-                        ) || [];
-                    return {
-                        features: {
-                            shape: "list",
-                            data: output
-                        },
-                        outputDescriptor: config.outputDescriptor
-                    };
-                })
+    process(request: SimpleRequest): Observable<StreamingResponse> {
+        return this.createResponseObservable(request, (output) => {
+            return {
+                shape: "list",
+                data: output
+            };
         });
     }
 
-    collect(request: SimpleRequest): Observable<SimpleResponse> {
+    // TODO reduce dupe with above process
+    collect(request: SimpleRequest): Observable<StreamingResponse> {
+        return this.createResponseObservable(request, (output, config) => {
+            return reshape(/*
+                 TODO reduce dupe - this is from HigherLevelUtils
+                 */
+                output.map(feature => {
+                    return {
+                        [config.configuredOutputId]: feature
+                    }
+                }), // map FeatureList to {outputId: Feature}[]
+                config.configuredOutputId,
+                config.inputSampleRate,
+                config.configuredStepSize,
+                config.outputDescriptor.configured,
+                false
+            )
+        });
+    }
+
+    private createResponseObservable(request: SimpleRequest,
+                                     mapToFeatureCollection: (
+                                         output: FeatureList,
+                                         config: SimpleConfigurationResponse
+                                     ) => FeatureCollection)
+    : Observable<StreamingResponse> {
         return Observable.fromPromise(loadAndConfigure(
             request,
             this.client
         )).flatMap((config: SimpleConfigurationResponse) => {
             return streamFeatures(request, this.client, config)
-                .map<FeatureSet, SimpleResponse>(features => {
+                .map<FeatureSet, StreamingResponse>((features, i) => {
                     const output: FeatureList = features.get(
                             config.configuredOutputId
                         ) || [];
-                    return {
-                        features: reshape(/*
-                             TODO reduce dupe - this is from HigherLevelUtils
-                             */
-                            output.map(feature => {
-                                return {
-                                    [config.configuredOutputId]: feature
-                                }
-                            }), // map FeatureList to {outputId: Feature}[]
-                            config.configuredOutputId,
-                            config.inputSampleRate,
-                            config.configuredStepSize,
-                            config.outputDescriptor.configured,
-                            false
-                        ),
+                    const nSamples: number | null = request.audioFormat.length;
+                    const progress: StreamingProgress = nSamples != null ?
+                        {
+                            processedBlockCount: i,
+                            totalBlockCount: Math.ceil(
+                                nSamples / config.configuredStepSize
+                            ) + 1 /* Plus one for finish block */
+                        } : {processedBlockCount: i};
+                    const partialResponse: SimpleResponse = {
+                        features: mapToFeatureCollection(output, config),
                         outputDescriptor: config.outputDescriptor
                     };
+                    return Object.assign({}, progress, partialResponse);
                 })
         });
     }
