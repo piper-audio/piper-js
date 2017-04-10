@@ -25,6 +25,7 @@ export type FramedAudio = IterableIterator<AudioData>;
 export interface AudioStreamFormat {
     channelCount: number;
     sampleRate: number;
+    length?: number;
 }
 
 export interface AudioStream {
