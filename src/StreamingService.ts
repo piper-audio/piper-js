@@ -113,25 +113,21 @@ export class PiperStreamingService implements StreamingService {
     }
 
     process(request: SimpleRequest): Observable<StreamingResponse> {
-        return this.createResponseObservable(request, (output) => {
-            return {
+        return this.createResponseObservable(
+            request,
+            (output) => ({
                 shape: "list",
                 data: output
-            };
-        });
+            })
+        );
     }
 
     // TODO reduce dupe with above process
     collect(request: SimpleRequest): Observable<StreamingResponse> {
         return this.createResponseObservable(request, (output, config) => {
-            return reshape(/*
-                 TODO reduce dupe - this is from HigherLevelUtils
-                 */
-                output.map(feature => {
-                    return {
-                        [config.configuredOutputId]: feature
-                    }
-                }), // map FeatureList to {outputId: Feature}[]
+            return reshape(
+                // map FeatureList to {outputId: Feature}[]
+                output.map(feature => ({[config.configuredOutputId]: feature})),
                 config.configuredOutputId,
                 config.inputSampleRate,
                 config.configuredStepSize,
