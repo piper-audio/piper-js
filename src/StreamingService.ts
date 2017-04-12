@@ -80,7 +80,6 @@ async function segmentAndExtractAsync(request: SimpleRequest,
     // This highlights this method only works for returning a single output.
     // This is actually intended, but might not be sensible
     if (response.features.has(request.outputId)) {
-        if (response.features)
         onFeaturesExtracted(response.features);
     }
     onComplete();
