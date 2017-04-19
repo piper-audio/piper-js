@@ -254,7 +254,7 @@ function toTransport(obj: any, tag?: Tag): string {
     return JSON.stringify(value);
 }
 
-type RpcMethod = "list" | "load"  | "configure" | "process" | "finish";
+export type RpcMethod = "list" | "load"  | "configure" | "process" | "finish";
 
 interface RpcRequest {
     id: number;
