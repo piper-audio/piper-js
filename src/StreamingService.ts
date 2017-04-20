@@ -72,16 +72,7 @@ async function segmentAndExtractAsync(request: SimpleRequest,
     const response = await service.finish({
         handle: config.handle
     });
-
-    // TODO this probably isn't quite correct.
-    // The intent here is to only emit features from the finish call if
-    // there actually are any.
-    //
-    // This highlights this method only works for returning a single output.
-    // This is actually intended, but might not be sensible
-    if (response.features.has(request.outputId)) {
-        onFeaturesExtracted(response.features);
-    }
+    onFeaturesExtracted(response.features);
     onComplete();
 }
 
