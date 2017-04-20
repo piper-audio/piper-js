@@ -145,11 +145,11 @@ export class PiperStreamingService implements StreamingService {
                     const nSamples: number | null = request.audioFormat.length;
                     const progress: StreamingProgress = nSamples != null ?
                         {
-                            processedBlockCount: i,
+                            processedBlockCount: i + 1,
                             totalBlockCount: Math.ceil(
                                 nSamples / config.configuredStepSize
                             ) + 1 /* Plus one for finish block */
-                        } : {processedBlockCount: i};
+                        } : {processedBlockCount: i + 1};
                     const partialResponse: SimpleResponse = {
                         features: mapToFeatureCollection(output, config),
                         outputDescriptor: config.outputDescriptor
