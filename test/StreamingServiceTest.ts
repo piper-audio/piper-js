@@ -52,7 +52,7 @@ describe("StreamingService", () => {
     );
     const blockSize: number = 4;
     const stepSize: number = 2;
-    const nBlocksToProcess = samples[0].length / stepSize;
+    const nBlocksToProcess = (samples[0].length / stepSize) + 1; //+1 for finish
     const getInputBlockAtStep = (nBlocksProcessed: number): Float32Array => {
         let expected = samples[0].subarray(
             nBlocksProcessed * stepSize,
@@ -82,13 +82,13 @@ describe("StreamingService", () => {
             (response) => {
                 const features = (response.features.data as FeatureList);
                 const expected = getInputBlockAtStep(nBlocksProcessed);
-                if (features.length) {
-                    try {
+                try {
+                    if (features.length) {
                         features[0].featureValues.should.eql(expected);
-                        ++nBlocksProcessed;
-                    } catch (e) {
-                        done(e);
                     }
+                    ++nBlocksProcessed;
+                } catch (e) {
+                    done(e);
                 }
             },
             (err) => done(err),
@@ -121,7 +121,9 @@ describe("StreamingService", () => {
                 const expected = getInputBlockAtStep(nBlocksProcessed);
                 try {
                     response.features.shape.should.eql("matrix");
-                    features[0].should.eql(expected);
+                    if (features[0]) {
+                        features[0].should.eql(expected);
+                    }
                     ++nBlocksProcessed;
                 } catch (e) {
                     done(e);
@@ -158,7 +160,9 @@ describe("StreamingService", () => {
                 const expected = expectedSums[nBlocksProcessed];
                 try {
                     response.features.shape.should.eql("vector");
-                    features[0].should.eql(expected);
+                    if (features[0]) {
+                        features[0].should.eql(expected);
+                    }
                     ++nBlocksProcessed;
                 } catch (e) {
                     done(e);
@@ -193,13 +197,13 @@ describe("StreamingService", () => {
                 const features = response.features.data as FeatureList;
                 try {
                     response.features.shape.should.eql("list");
+                    nBlocksProcessed = response.processedBlockCount;
                     if (nBlocksProcessed < nBlocksToProcess) {
                         features.length.should.eql(0);
                     } else {
                         features.length.should.eql(1);
                         features[0].featureValues[0].should.eql(1969);
                     }
-                    ++nBlocksProcessed;
                 } catch (e) {
                     done(e);
                 }
@@ -208,7 +212,7 @@ describe("StreamingService", () => {
             () => {
                 subscription.unsubscribe();
                 try {
-                    nBlocksProcessed.should.eql(nBlocksToProcess + 1);
+                    nBlocksProcessed.should.eql(nBlocksToProcess);
                     done();
                 } catch (e) {
                     done(e);
@@ -263,14 +267,21 @@ describe("StreamingService", () => {
         collectStream.subscribe(
             response => {
                 try {
-                    response.processedBlockCount.should.eql(nBlocksProcessed++);
+                    response.processedBlockCount.should.eql(++nBlocksProcessed);
                     response.totalBlockCount.should.eql(nBlocksToProcess);
                 } catch (e) {
                     done(e);
                 }
             },
             done,
-            done
+            () => {
+                try {
+                    nBlocksProcessed.should.eql(nBlocksToProcess);
+                    done();
+                } catch (e) {
+                    done(e);
+                }
+            }
         );
     })
 });
