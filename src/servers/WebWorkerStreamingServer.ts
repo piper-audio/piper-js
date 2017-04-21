@@ -23,7 +23,11 @@ export class WebWorkerStreamingServer {
                 service: StreamingService) {
         this.service = service;
         this.scope = workerScope;
-        this.scope.onmessage = (e: MessageEvent) => this.handleRequest(e.data);
+        const onMessageToWrap: (ev: MessageEvent) => any = this.scope.onmessage;
+        this.scope.onmessage = (e: MessageEvent) => {
+            this.handleRequest(e.data);
+            onMessageToWrap(e);
+        };
     }
 
     private handleRequest(request: RequestMessage<any>): void {

@@ -124,6 +124,27 @@ function verifyExpectations(message: RequestMessage<any>,
 }
 
 describe("WebWorkerStreamingServer", () => {
+    it("leaves existing worker onmessage intact", done => {
+        const service = new MockService();
+        const workerScope = new StubWorkerScope((ev) => {
+            try {
+                chai.expect(ev.data.id).to.eql("stub");
+                done();
+            } catch (e) {
+                done(e);
+            }
+        });
+        workerScope.onmessage = (ev) => {
+            ev.data.id = "stub";
+        };
+        new WebWorkerStreamingServer(workerScope, service);
+        workerScope.sendMessage({
+            id: "0",
+            method: "list",
+            params: {from: []}
+        });
+    });
+
     it("Correctly routes list requests", done => {
         const message: RequestMessage<ListRequest> = {
             id: "0",
