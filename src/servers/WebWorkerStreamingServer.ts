@@ -25,8 +25,10 @@ export class WebWorkerStreamingServer {
         this.scope = workerScope;
         const onMessageToWrap: (ev: MessageEvent) => any = this.scope.onmessage;
         this.scope.onmessage = (e: MessageEvent) => {
+            if (onMessageToWrap) {
+                onMessageToWrap(e);
+            }
             this.handleRequest(e.data);
-            onMessageToWrap(e);
         };
     }
 
