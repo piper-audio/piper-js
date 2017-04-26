@@ -63,20 +63,6 @@ export class WebWorkerStreamingClient implements StreamingService {
 
     private createFeatureStream(request: SimpleRequest,
                                 method: WebMethod): Observable<SimpleResponse> {
-        // is it possible to know when to complete the stream?
-        // the worker would need to send some form of finish response....
-
-        // surely, then, this should be using the lower level piper api?
-        // but i've hidden the use of that in StreamingService (server side)...
-
-        // does it matter if I use a different protocol internally?
-        // I could actually just send a finish response with empty features.
-
-        // This raises that there isn't really any good reason
-        // why I chose to emit the features in the same way
-        // for finish response as process responses in StreamingService
-
-        // it seems I may have conceptualised this wrong?
         const id: RequestId = this.idProvider.next().value;
 
         return this.createThrowingObserver<SimpleRequest>({
