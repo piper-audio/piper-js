@@ -12,6 +12,7 @@
     "perf",
     "*.d.ts",
     "src/**/*.d.ts",
+    "test/**/*.d.ts",
     "src/*.d.ts"
   ],
   "extension": [
