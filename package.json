@@ -8,11 +8,10 @@
     "test": "mocha test/*Test.ts --require ts-node/register",
     "timings": "mocha perf/*.ts --require ts-node/register",
     "profile": "npm run timings && node --prof-process $(ls -1tr isolate*.log | tail -1) > profile.txt",
-    "build-browser": "npm run build && browserify dist/ts/Piper.js  -t babelify --standalone Piper -o ./dist/piper.js && cp src/fft/KissFft.js ./dist",
-    "build": "tsc && cp src/fft/KissFft*.js dist/ts/fft",
-    "clean": "rm -rf fft *.js *.js.map *.d.ts dist extractors",
-    "prepublish": "npm run build-browser && cp -r dist/ts/* .",
-    "postinstall": "npm run build-browser && cp -r dist/ts/* .",
+    "build": "tsc && cp src/fft/KissFft*.js dist/ts/src/fft",
+    "clean": "rm -rf fft *.js *.js.map *.d.ts dist extractors client-stubs fft protocols servers",
+    "prepublish": "npm run build && cp -r dist/ts/src/* .",
+    "postinstall": "npm run prepublish",
     "cover": "nyc npm t",
     "coveralls": "npm run clean && npm run cover && cat ./coverage/lcov.info | coveralls"
   },
@@ -32,12 +31,7 @@
   "homepage": "https://bitbucket.org/LTDSP/piper-js#readme",
   "dependencies": {
     "@types/base64-js": "^1.1.4",
-    "babel-cli": "^6.14.0",
-    "babel-plugin-transform-runtime": "^6.15.0",
-    "babel-preset-es2015": "^6.14.0",
-    "babelify": "^7.3.0",
     "base64-js": "^1.2.0",
-    "browserify": "^13.1.0",
     "rxjs": "^5.2.0"
   },
   "devDependencies": {
