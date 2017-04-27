@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/LTDSP/piper-js.git"
+    "url": "git+ssh://git@github.com:piper-audio/piper-js.git"
   },
   "keywords": [
     "feature-extraction",
@@ -29,7 +29,7 @@
   ],
   "author": "Lucas Thompson",
   "license": "GPL-2.0",
-  "homepage": "https://bitbucket.org/LTDSP/piper-js#readme",
+  "homepage": "https://github.com/piper-audio/piper-js",
   "dependencies": {
     "@types/base64-js": "^1.1.4",
     "base64-js": "^1.2.0",
