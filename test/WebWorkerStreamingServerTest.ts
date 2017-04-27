@@ -3,6 +3,7 @@ import {ListRequest, ListResponse} from "../src/Piper";
 import {SimpleRequest, SimpleResponse} from "../src/HigherLevelUtilities";
 import {Observable} from "rxjs/Observable";
 import "rxjs/add/observable/of";
+import "rxjs/add/observable/throw";
 import * as chai from "chai";
 import {
     DedicatedWorkerGlobalScope,
@@ -112,7 +113,7 @@ class StubWorkerScope implements DedicatedWorkerGlobalScope {
     }
 }
 
-type ExpectationHandler = (serviceMock: StreamingService & Mock,
+type ExpectationHandler = (service: StreamingService & Mock,
                            done: MochaDone) => (e: any) => void;
 function verifyExpectations(message: RequestMessage<any>,
                             testHandler: ExpectationHandler,
@@ -265,5 +266,67 @@ describe("WebWorkerStreamingServer", () => {
 
     it("Correctly routes collect requests", done => {
         testStreamingMethod("collect", done);
+    });
+
+    it("Forwards errors thrown by the service as error responses", done => {
+        const throwingService: StreamingService = {
+            list: (req) => Promise.reject("Go directly to jail."),
+            process: (req) => Observable.throw("Do not pass go."),
+            collect: (req) => Observable.throw("Do not collect $200.")
+        };
+        type ExtractMethod = "process" | "collect";
+        const getSimpleRequestMessage =
+            (method: ExtractMethod): RequestMessage<SimpleRequest> => ({
+                id: "0",
+                method: method,
+                params: {
+                    audioData: [new Float32Array(12)],
+                    audioFormat: {
+                        channelCount: 1,
+                        sampleRate: 4,
+                        length: 12,
+                    },
+                    key: "stub"
+                }
+            });
+        let expectedResponseMap: any = {
+            list: "Go directly to jail.",
+            process: "Do not pass go.",
+            collect: "Do not collect $200."
+        };
+
+        const messages: any[] = [
+            {
+                id: "0",
+                method: "list",
+                params: {from: []}
+            },
+            {
+                id: "0",
+                method: "process",
+                params: getSimpleRequestMessage("process")
+            },
+            {
+                id: "0",
+                method: "collect",
+                params: getSimpleRequestMessage("collect")
+            }
+        ];
+
+        let nMessages = 0;
+        const expectations: any = (ev: MessageEvent) => {
+            const message: any = ev.data;
+            const expectedResponse = expectedResponseMap[message.method];
+            chai.expect(expectedResponse).to.exist;
+            chai.expect(message.error.message).to.eql(expectedResponse);
+            if (++nMessages === messages.length) {
+                done();
+            }
+        };
+        const workerScope = new StubWorkerScope(expectations);
+        new WebWorkerStreamingServer(workerScope, throwingService);
+        for (let message of messages) {
+            workerScope.sendMessage(message);
+        }
     });
 });
