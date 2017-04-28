@@ -283,5 +283,14 @@ describe("StreamingService", () => {
                 }
             }
         );
-    })
+    });
+
+    it("Forwards list requests", () => {
+       return service.list({}).then(res => {
+           res.available.length.should.eql(extractorsToCreate.length);
+           for (let i = 0; i < res.available.length; ++i) {
+               res.available[0].should.eql(extractorsToCreate[0].metadata);
+           }
+       })
+    });
 });
