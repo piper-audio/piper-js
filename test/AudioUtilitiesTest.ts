@@ -8,7 +8,13 @@ chai.use(chaiAsPromised);
 
 import {Feature, FeatureSet, FeatureList} from "../src/Feature";
 import {ProcessInput} from "../src/FeatureExtractor";
-import {lfo, generateSineWave, segmentAudioBuffer, AudioBufferStub} from "./AudioUtilities";
+import {
+    lfo,
+    generateSineWave,
+    segmentAudioBuffer,
+    AudioBufferStub,
+    AudioBuffer
+} from "./AudioUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
 import {batchProcess} from "../src/HigherLevelUtilities";

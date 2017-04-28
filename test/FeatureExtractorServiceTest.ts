@@ -158,10 +158,12 @@ describe("FeatureExtractionService", () => {
                 outputList: MetaDataStub.basicOutputInfo.map(basic => {
                     const sampleType: number = basic.identifier === "finish" ?
                         2 : 0;
+                    const binCount = basic.identifier === "passthrough" ?
+                        config.framing.blockSize : 1;
                     return {
                         basic: basic,
                         configured: {
-                            binCount: 1,
+                            binCount: binCount,
                             binNames: [],
                             hasDuration: false,
                             sampleRate: 0,
@@ -243,6 +245,11 @@ describe("FeatureExtractionService", () => {
             const expected: Map<string, FeatureSet> = new Map([
                 ["stub:sum", new Map([
                     ["sum", [{featureValues: new Float32Array([8])}]],
+                    ["passthrough", [
+                        {featureValues: new Float32Array(
+                            [1, 1, 1, 1, 1, 1, 1, 1]
+                        )}
+                    ]],
                     ["cumsum", [{featureValues: new Float32Array([8])}]]
                 ])]
             ]);
