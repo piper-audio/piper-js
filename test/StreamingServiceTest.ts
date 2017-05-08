@@ -4,7 +4,9 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
-    AudioStreamFormat
+    AudioStreamFormat,
+    VectorFeatures,
+    MatrixFeatures
 } from "../src/HigherLevelUtilities";
 import {Observable} from "rxjs";
 import {
@@ -80,7 +82,7 @@ describe("StreamingService", () => {
 
         const subscription = processStream.subscribe(
             (response) => {
-                const features = (response.features.data as FeatureList);
+                const features = (response.features.collected as FeatureList);
                 const expected = getInputBlockAtStep(nBlocksProcessed);
                 try {
                     if (features.length) {
@@ -117,12 +119,12 @@ describe("StreamingService", () => {
 
         const subscription = collectStream.subscribe(
             response => {
-                const features = response.features.data;
+                const features = response.features.collected as MatrixFeatures;
                 const expected = getInputBlockAtStep(nBlocksProcessed);
                 try {
                     response.features.shape.should.eql("matrix");
-                    if (features[0]) {
-                        features[0].should.eql(expected);
+                    if (features.data[0]) {
+                        features.data[0].should.eql(expected);
                     }
                     ++nBlocksProcessed;
                 } catch (e) {
@@ -156,12 +158,12 @@ describe("StreamingService", () => {
 
         const subscription = collectStream.subscribe(
             response => {
-                const features = response.features.data;
+                const features = response.features.collected as VectorFeatures;
                 const expected = expectedSums[nBlocksProcessed];
                 try {
                     response.features.shape.should.eql("vector");
-                    if (features[0]) {
-                        features[0].should.eql(expected);
+                    if (features.data[0]) {
+                        features.data[0].should.eql(expected);
                     }
                     ++nBlocksProcessed;
                 } catch (e) {
@@ -194,7 +196,7 @@ describe("StreamingService", () => {
 
         const subscription = collectStream.subscribe(
             response => {
-                const features = response.features.data as FeatureList;
+                const features = response.features.collected as FeatureList;
                 try {
                     response.features.shape.should.eql("list");
                     nBlocksProcessed = response.processedBlockCount;

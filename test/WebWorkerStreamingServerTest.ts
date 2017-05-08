@@ -65,7 +65,10 @@ class MockService implements StreamingService, Mock {
         const response: SimpleResponse = {
             features: {
                 shape: "vector",
-                data: Float32Array.of(1, 1, 1, 1),
+                collected: {
+		    stepDuration: 1,
+		    data: Float32Array.of(1, 1, 1, 1)
+		}
             },
             outputDescriptor: {
                 basic: {

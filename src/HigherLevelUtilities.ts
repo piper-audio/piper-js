@@ -33,16 +33,31 @@ export interface AudioStream {
     format: AudioStreamFormat;
 }
 
-export type FeatureCollectionShape = "matrix" | "vector" | "list";
-// TODO consider revising
-export interface FeatureCollection {
-    shape: FeatureCollectionShape;
-    data: FeatureList | Float32Array | Float32Array[];
+export interface VectorFeatures {
+    stepDuration: number;
+    data: Float32Array;
 }
 
-export interface FixedSpacedFeatures extends FeatureCollection {
+export interface MatrixFeatures {
     stepDuration: number;
+    data: Float32Array[];
 }
+
+export interface TrackFeature {
+    startTime: number;
+    stepDuration: number;
+    data: Float32Array;
+}
+
+export type TrackFeatures = TrackFeature[];
+
+export type FeatureCollectionShape = "matrix" | "vector" | "tracks" | "list";
+
+export type FeatureCollection = {
+    shape: FeatureCollectionShape;
+    collected: VectorFeatures | MatrixFeatures | TrackFeatures | FeatureList;
+}
+
 export type KeyValueObject = {[key: string]: any};
 export type CreateFeatureExtractorFunction = (sampleRate: number,
                                        key: string,
@@ -195,7 +210,7 @@ export function reshape(outputs: Iterable<Output>,
                         inputSampleRate: number,
                         stepSize: number,
                         descriptor: ConfiguredOutputDescriptor,
-                        adjustTimestamps: boolean = true): FeatureCollection | FixedSpacedFeatures {
+                        adjustTimestamps: boolean = true) : FeatureCollection {
     const shape: FeatureCollectionShape = deduceShape(descriptor);
     const stepDuration: number = getFeatureStepDuration(
         inputSampleRate,
@@ -209,23 +224,34 @@ export function reshape(outputs: Iterable<Output>,
 
     // TODO switch suggests that matrix and list could be types, dynamically dispatch to a .data() method or similar
     // TODO adjust timestamps for vector and matrix?
-    switch(shape) {
+    switch (shape) {
         case "vector":
             return {
-                shape: shape,
-                stepDuration: stepDuration,
-                data: new Float32Array([...outputs].map(output => output[id].featureValues[0]))
+                shape,
+                collected: {
+                    stepDuration,
+                    data: new Float32Array([...outputs].map(output => output[id].featureValues[0]))
+                }
             };
         case "matrix":
             return {
-                shape: shape,
-                stepDuration: stepDuration,
-                data: [...outputs].map(output => new Float32Array(output[id].featureValues))
+                shape,
+                collected: {
+                    stepDuration,
+                    data: [...outputs].map(output => new Float32Array(output[id].featureValues))
+                }
             };
+        case "tracks":
+            //!!! To do!
+            throw "Not implemented yet!";
+//            return {
+//                shape,
+//                collected: []
+//            };
         case "list":
             return {
-                shape: shape,
-                data: [...outputs].map(output => {
+                shape,
+                collected: [...outputs].map(output => {
                     const feature: Feature = output[id];
                     if (adjustTimestamps)
                         adjuster.adjust(feature);
@@ -257,7 +283,7 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
                         extractorKey: string,
                         outputId?: OutputIdentifier,
                         params?: Parameters,
-                        args: KeyValueObject = {}): FeatureCollection {
+                        args: KeyValueObject = {}) : FeatureCollection {
     // TODO reduce duplication with process -
     // only issue stopping calling process directly here for
     // lazyOutputs is that ConfigurationResponse and Configuration are needed
@@ -493,7 +519,7 @@ export class PiperSimpleClient implements SimpleService {
                 return forceList ? {
                     features: {
                         shape: "list",
-                        data: features
+                        collected: features
                     },
                     outputDescriptor: res.outputDescriptor
                 } : {

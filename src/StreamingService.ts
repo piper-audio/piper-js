@@ -107,7 +107,7 @@ export class PiperStreamingService implements StreamingService {
             request,
             (output) => ({
                 shape: "list",
-                data: output
+                collected: output
             })
         );
     }

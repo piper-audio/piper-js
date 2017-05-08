@@ -174,7 +174,7 @@ describe("WebWorkerStreamingClient", () => {
                     const response: StreamingResponse = {
                         features: {
                             shape: "list",
-                            data: data
+                            collected: data
                         },
                         outputDescriptor: {
                             basic: {
@@ -229,7 +229,7 @@ describe("WebWorkerStreamingClient", () => {
         }).scan((acc, val) => {
                 if (val.features) {
                     acc.push(
-                        (val.features.data[0] as Feature).featureValues[0]
+                        ((val.features.collected as FeatureList)[0] as Feature).featureValues[0]
                     );
                 }
                 return featureValues;
