@@ -7,7 +7,7 @@ import {
     SampleType, ProcessInput, AdapterFlags, OutputDescriptor
 } from "./FeatureExtractor";
 import {Feature, FeatureSet, FeatureList} from "./Feature";
-import {fromFrames} from "./Timestamp";
+import {fromFrames, toSeconds} from "./Timestamp";
 import {
     FeatureTimeAdjuster,
     createFeatureTimeAdjuster
@@ -205,6 +205,73 @@ function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionS
     return "matrix";
 }
 
+function reshapeVector(outputs: Iterable<Output>,
+		       id: OutputIdentifier,
+		       stepDuration: number,
+		       descriptor: ConfiguredOutputDescriptor) : FeatureCollection {
+
+    // Determine whether a purported vector output (fixed spacing, one
+    // bin per feature) should actually be returned as multiple
+    // tracks, because it has gaps between features or feature timings
+    // that overlap
+    
+    const tracks : TrackFeatures = [];
+    const whole : number[] = [];
+    let currentTrack : number[] = [];
+    let currentStartTime = 0;
+    let n = -1;
+
+    const features = [...outputs].map(output => output[id]);
+
+    for (let i = 0; i < features.length; ++i) {
+
+	const f = features[i];
+	n = n + 1;
+	whole.push(f.featureValues[0]);
+
+	if (descriptor.sampleType == SampleType.FixedSampleRate &&
+	    typeof(f.timestamp) !== 'undefined') {
+	    const m = Math.round(toSeconds(f.timestamp) / stepDuration);
+	    if (m !== n) {
+		if (currentTrack.length > 0) {
+		    tracks.push({
+			startTime: currentStartTime,
+			stepDuration,
+			data: new Float32Array(currentTrack)
+		    });
+		    currentTrack = [];
+		    n = m;
+		}
+		currentStartTime = m * stepDuration;
+	    }
+	}
+
+	currentTrack.push(f.featureValues[0]);
+    }
+
+    if (tracks.length > 0) {
+	if (currentTrack.length > 0) {
+	    tracks.push({
+		startTime: currentStartTime,
+		stepDuration,
+		data: new Float32Array(currentTrack)
+	    });
+	}
+	return {
+	    shape: "tracks",
+	    collected: tracks
+	};
+    } else {
+	return {
+	    shape: "vector",
+	    collected: {
+		stepDuration,
+		data: new Float32Array(whole)
+	    }
+	}
+    }
+}
+
 export function reshape(outputs: Iterable<Output>,
                         id: OutputIdentifier,
                         inputSampleRate: number,
@@ -222,17 +289,12 @@ export function reshape(outputs: Iterable<Output>,
         stepDuration
     );
 
-    // TODO switch suggests that matrix and list could be types, dynamically dispatch to a .data() method or similar
-    // TODO adjust timestamps for vector and matrix?
     switch (shape) {
         case "vector":
-            return {
-                shape,
-                collected: {
-                    stepDuration,
-                    data: new Float32Array([...outputs].map(output => output[id].featureValues[0]))
-                }
-            };
+	    // NB this could return either "vector" or "tracks" shape,
+	    // depending on the feature data
+            return reshapeVector(outputs, id, stepDuration, descriptor);
+	
         case "matrix":
             return {
                 shape,
@@ -241,13 +303,6 @@ export function reshape(outputs: Iterable<Output>,
                     data: [...outputs].map(output => new Float32Array(output[id].featureValues))
                 }
             };
-        case "tracks":
-            //!!! To do!
-            throw "Not implemented yet!";
-//            return {
-//                shape,
-//                collected: []
-//            };
         case "list":
             return {
                 shape,
@@ -259,6 +314,9 @@ export function reshape(outputs: Iterable<Output>,
                 })
             };
         default:
+	    // Assumption here that deduceShape can't return "tracks",
+	    // because it can't tell the difference between vector and
+	    // tracks without looking at potentially all the data
             throw new Error("A valid shape could not be deduced.");
     }
 }
