@@ -139,7 +139,7 @@ describe('VampTestPlugin', () => {
         });
     });
 
-    it("returns expected collected features for fixed-sample-rate output", () => {
+    it("returns expected collected features for fixed-sample-rate vector output", () => {
         const blocks = 10;
         const request = makeRequest(blockSize * blocks, "curve-fsr");
         const expected: VectorFeatures = {
@@ -152,6 +152,28 @@ describe('VampTestPlugin', () => {
         client.collect(request).then(response => {
             expect(response.features.shape).eql("vector");
             const collected = response.features.collected as VectorFeatures;
+            expect(collected).eql(expected);
+        });
+    });
+    
+    it("returns expected collected features for fixed-sample-rate tracks output", () => {
+        const blocks = 10;
+        const request = makeRequest(blockSize * blocks, "curve-fsr-timed");
+        const expectedStarts = [ 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 4.0, 4.0 ];
+        const expectedValues = [ [ 0.0 ], [ 0.1 ], [ 0.2, 0.3 ],
+                                 [ 0.4 ], [ 0.5 ], [ 0.6, 0.7 ],
+                                 [ 0.8 ], [ 0.9 ] ];
+        const expected: TrackFeatures = [];
+        for (let i = 0; i < expectedStarts.length; ++i) {
+            expected.push({
+                startTime: expectedStarts[i],
+                stepDuration: 0.4,
+                data: new Float32Array(expectedValues[i])
+            });
+        }
+        client.collect(request).then(response => {
+            expect(response.features.shape).eql("tracks");
+            const collected = response.features.collected as TrackFeatures;
             expect(collected).eql(expected);
         });
     });
