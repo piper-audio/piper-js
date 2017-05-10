@@ -6,21 +6,15 @@ import {PiperVampService} from "../src/PiperVampService";
 import VampTestPlugin from '../ext/VampTestPluginModule';
 import {AdapterFlags} from "../src/FeatureExtractor";
 import {LoadResponse, LoadRequest} from "../src/Piper";
-import {fromSeconds, fromFrames} from "../src/Timestamp";
-import {Feature, FeatureList} from "../src/Feature";
+import {fromSeconds} from "../src/Timestamp";
+import {FeatureList} from "../src/Feature";
 
-//!!! todo review which of these are actually necessary
 import {
-    processConfiguredExtractor,
-    segment,
-    process,
-    collect,
-    AudioStreamFormat,
-    AudioData,
-    CreateFeatureExtractorFunction,
-    CreateAudioStreamFunction, PiperSimpleClient, FeatureCollection,
+    PiperSimpleClient,
     SimpleRequest,
-    VectorFeatures, MatrixFeatures, TrackFeatures
+    VectorFeatures,
+    MatrixFeatures,
+    TrackFeatures
 } from "../src/HigherLevelUtilities";
 
 var expect = chai.expect;
@@ -56,9 +50,9 @@ describe('VampTestPlugin', () => {
         });
 
     it("can load test plugin using service", () => {
-        loadResponse.then(resp => {
+        return loadResponse.then(resp => {
             expect(resp.handle).a('number');
-        })
+        });
     });
 
     const client = new PiperSimpleClient(service);
@@ -78,7 +72,7 @@ describe('VampTestPlugin', () => {
     
     it("can collect output at all using simple client", () => {
         const request = makeRequest(blockSize * 10, "input-timestamp");
-        client.collect(request).then(response => {
+        return client.collect(request).then(response => {
             expect(response.features).exist;
         });
     });
@@ -88,7 +82,7 @@ describe('VampTestPlugin', () => {
         const request = makeRequest(blockSize * blocks, "input-summary");
 
         request.parameterValues = new Map([["produce_output", 0]]);
-        client.collect(request).then(response => {
+        return client.collect(request).then(response => {
             expect(response.features.shape).eql("vector");
             const collected = response.features.collected as VectorFeatures;
             expect(collected.data).empty;
@@ -114,7 +108,7 @@ describe('VampTestPlugin', () => {
             // frame in the input buffer, for each block
             expected.data[i] = i * stepSize;
         }
-        client.collect(request).then(response => {
+        return client.collect(request).then(response => {
             expect(response.features.shape).eql("vector");
             const collected = response.features.collected as VectorFeatures;
             expect(collected).eql(expected);
@@ -124,7 +118,7 @@ describe('VampTestPlugin', () => {
     it("returns expected collected features for one-sample-per-step matrix output", () => {
         const blocks = 10;
         const request = makeRequest(blockSize * blocks, "grid-oss");
-        client.collect(request).then(response => {
+        return client.collect(request).then(response => {
             expect(response.features.shape).eql("matrix");
             const collected = response.features.collected as MatrixFeatures;
             expect(collected.stepDuration).eql(stepSize / rate);
@@ -149,7 +143,7 @@ describe('VampTestPlugin', () => {
         for (let i = 0; i < blocks; ++i) {
             expected.data[i] = i * 0.1;
         }
-        client.collect(request).then(response => {
+        return client.collect(request).then(response => {
             expect(response.features.shape).eql("vector");
             const collected = response.features.collected as VectorFeatures;
             expect(collected).eql(expected);
@@ -171,17 +165,16 @@ describe('VampTestPlugin', () => {
                 data: new Float32Array(expectedValues[i])
             });
         }
-        client.collect(request).then(response => {
+        return client.collect(request).then(response => {
             expect(response.features.shape).eql("tracks");
-            const collected = response.features.collected as TrackFeatures;
-            expect(collected).eql(expected);
+            expect(response.features.collected).eql(expected);
         });
     });
     
     it("returns expected collected features for variable-sample-rate output", () => {
         const blocks = 10;
         const request = makeRequest(blockSize * blocks, "curve-vsr");
-        client.collect(request).then(response => {
+        return client.collect(request).then(response => {
             expect(response.features.shape).eql("list");
             const collected = response.features.collected as FeatureList;
             expect(collected.length).eql(10);
