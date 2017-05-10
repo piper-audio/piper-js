@@ -33,15 +33,24 @@ export interface AudioStream {
     format: AudioStreamFormat;
 }
 
+//!!! should this have a startTime as well? then a TrackFeature and a VectorFeatures become one and the same, and we probably need a bit of judicious renaming
 export interface VectorFeatures {
     stepDuration: number;
     data: Float32Array;
 }
 
+//!!! this one does actually need a startTime, we have plugins that demand it
 export interface MatrixFeatures {
     stepDuration: number;
     data: Float32Array[];
 }
+
+//!!! also startTime and stepDuration here are values in seconds
+//!!! throughout, whereas elsewhere we use timestamps. we should
+//!!! probably settle on one, but which?
+
+//!!! and is Float32Array really sensible (rather than just number[])
+//!!! for feature values?
 
 export interface TrackFeature {
     startTime: number;
