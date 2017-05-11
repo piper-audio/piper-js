@@ -188,22 +188,21 @@ describe("StreamingService", () => {
 function toFeatureCollection(featureStream: Observable<StreamingResponse>,
                              onNext: Function): Promise<FeatureCollection> {
     interface InterimNonsense {
-        outputs: Output[],
+        features: FeatureList,
         config: StreamingConfiguration
     }
     return featureStream
         .reduce<StreamingResponse, InterimNonsense>((acc, val) => {
             onNext();
-            acc.outputs.push.apply(acc.outputs, val.features.map(feature => ({
-                [val.configuration.outputDescriptor.basic.identifier]: feature
-            })));
+            for (let i = 0, len = val.features.length; i < len; ++i) {
+                acc.features.push(val.features[i]);
+            }
             acc.config = val.configuration;
             return acc;
-        }, {outputs: [], config: null})
+        }, {features: [], config: null})
         .map<InterimNonsense, FeatureCollection>(val => {
             return reshape(
-                val.outputs,
-                val.config.outputDescriptor.basic.identifier,
+                val.features,
                 val.config.inputSampleRate,
                 val.config.framing.stepSize,
                 val.config.outputDescriptor.configured,
@@ -230,6 +229,7 @@ describe("Summarising streams", () => {
             try {
                 res.shape.should.eql("matrix");
                 nBlocksProcessed.should.eql(nBlocksToProcess);
+                features.data.length.should.be.greaterThan(0);
                 for (let i = 0; i < features.data.length; ++i) {
                     const expected = getInputBlockAtStep(i);
                     features.data[i].should.eql(expected);
@@ -259,6 +259,7 @@ describe("Summarising streams", () => {
             try {
                 res.shape.should.eql("vector");
                 nBlocksProcessed.should.eql(nBlocksToProcess);
+                features.data.length.should.be.greaterThan(0);
                 for (let i = 0; i < features.data.length; ++i) {
                     const expected = expectedSums[i];
                     features.data[i].should.eql(expected);
