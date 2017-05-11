@@ -52,7 +52,6 @@ export class WebWorkerStreamingServer {
                     .catch(err => this.sendError(request, err));
                 break;
             case "process":
-            case "collect":
                 this.createObservable(request);
                 break;
             default:
@@ -61,10 +60,7 @@ export class WebWorkerStreamingServer {
     }
 
     private createObservable(request: RequestMessage<any>): void {
-        const stream$ = request.method === "process" ?
-            this.service.process(request.params) :
-            this.service.collect(request.params);
-        stream$
+        this.service.process(request.params)
             .subscribe(
                 (response) => this.sendResponse(request, response),
                 (err) => this.sendError(request, err),

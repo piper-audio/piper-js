@@ -1,6 +1,6 @@
 import {StreamingResponse, StreamingService} from "../src/StreamingService";
 import {ListRequest, ListResponse} from "../src/Piper";
-import {SimpleRequest, SimpleResponse} from "../src/HigherLevelUtilities";
+import {SimpleRequest} from "../src/HigherLevelUtilities";
 import {Observable} from "rxjs/Observable";
 import "rxjs/add/observable/of";
 import "rxjs/add/observable/throw";
@@ -18,7 +18,7 @@ import {RequestMessage} from "../src/protocols/WebWorkerProtocol";
 
 interface Mock {
     wasCalledWith(request: ListRequest | SimpleRequest,
-                  method: "list" | "collect" | "process"): boolean;
+                  method: "list" | "process"): boolean;
 }
 
 class MockService implements StreamingService, Mock {
@@ -44,11 +44,6 @@ class MockService implements StreamingService, Mock {
         return this.createFakeObservable();
     }
 
-    collect(request: SimpleRequest): Observable<StreamingResponse> {
-        this.callLog.collect.push(request);
-        return this.createFakeObservable();
-    }
-
     wasCalledWith(request: ListRequest | SimpleRequest,
                   method: "list" | "collect" | "process"): boolean {
         return typeof this.callLog[method].find((val: any) => {
@@ -62,28 +57,31 @@ class MockService implements StreamingService, Mock {
     }
 
     private createFakeObservable(): Observable<StreamingResponse> {
-        const response: SimpleResponse = {
-            features: {
-                shape: "vector",
-                collected: {
-		    startTime: 0,
-		    stepDuration: 1,
-		    data: Float32Array.of(1, 1, 1, 1)
-		}
-            },
-            outputDescriptor: {
-                basic: {
-                    name: "fake feature",
-                    description: "nonsense!",
-                    identifier: "stub-stub-stub"
+        const response: StreamingResponse = {
+            features: [],
+            configuration: {
+                outputDescriptor: {
+                    basic: {
+                        name: "fake feature",
+                        description: "nonsense!",
+                        identifier: "stub-stub-stub"
+                    },
+                    configured: {
+                        binCount: 1,
+                        binNames: [],
+                        hasDuration: false,
+                        sampleRate: 0,
+                        sampleType: 0
+                    }
                 },
-                configured: {
-                    binCount: 1,
-                    binNames: [],
-                    hasDuration: false,
-                    sampleRate: 0,
-                    sampleType: 0
+                inputSampleRate: 0,
+                framing: {
+                    stepSize: 0,
+                    blockSize: 0
                 }
+            },
+            progress: {
+                processedBlockCount: 0
             }
         };
         let blocks = [];
@@ -218,7 +216,7 @@ describe("WebWorkerStreamingServer", () => {
         }
     });
 
-    const testStreamingMethod: (method: "process" | "collect",
+    const testStreamingMethod: (method: "process",
                                 done: MochaDone) => void =
         (method, done) => {
             const message: RequestMessage<SimpleRequest> = {
@@ -268,17 +266,12 @@ describe("WebWorkerStreamingServer", () => {
         testStreamingMethod("process", done);
     });
 
-    it("Correctly routes collect requests", done => {
-        testStreamingMethod("collect", done);
-    });
-
     it("Forwards errors thrown by the service as error responses", done => {
         const throwingService: StreamingService = {
             list: (req) => Promise.reject("Go directly to jail."),
-            process: (req) => Observable.throw("Do not pass go."),
-            collect: (req) => Observable.throw("Do not collect $200.")
+            process: (req) => Observable.throw("Do not pass go.")
         };
-        type ExtractMethod = "process" | "collect";
+        type ExtractMethod = "process";
         const getSimpleRequestMessage =
             (method: ExtractMethod): RequestMessage<SimpleRequest> => ({
                 id: "0",
@@ -295,8 +288,7 @@ describe("WebWorkerStreamingServer", () => {
             });
         let expectedResponseMap: any = {
             list: "Go directly to jail.",
-            process: "Do not pass go.",
-            collect: "Do not collect $200."
+            process: "Do not pass go."
         };
 
         const messages: any[] = [
@@ -309,11 +301,6 @@ describe("WebWorkerStreamingServer", () => {
                 id: "0",
                 method: "process",
                 params: getSimpleRequestMessage("process")
-            },
-            {
-                id: "0",
-                method: "collect",
-                params: getSimpleRequestMessage("collect")
             }
         ];
 
