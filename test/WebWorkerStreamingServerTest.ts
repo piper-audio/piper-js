@@ -66,6 +66,7 @@ class MockService implements StreamingService, Mock {
             features: {
                 shape: "vector",
                 collected: {
+		    startTime: 0,
 		    stepDuration: 1,
 		    data: Float32Array.of(1, 1, 1, 1)
 		}

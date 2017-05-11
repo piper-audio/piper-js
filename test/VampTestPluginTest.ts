@@ -20,7 +20,7 @@ import {
     CreateFeatureExtractorFunction,
     CreateAudioStreamFunction, PiperSimpleClient, FeatureCollection,
     SimpleRequest,
-    VectorFeatures, MatrixFeatures, TrackFeatures
+    VectorFeature, MatrixFeature, TracksFeature
 } from "../src/HigherLevelUtilities";
 
 var expect = chai.expect;
@@ -90,13 +90,13 @@ describe('VampTestPlugin', () => {
         request.parameterValues = new Map([["produce_output", 0]]);
         client.collect(request).then(response => {
             expect(response.features.shape).eql("vector");
-            const collected = response.features.collected as VectorFeatures;
+            const collected = response.features.collected as VectorFeature;
             expect(collected.data).empty;
             
             request.parameterValues.set("produce_output", 1);
             client.collect(request).then(response => {
                 expect(response.features.shape).eql("vector");
-                const collected = response.features.collected as VectorFeatures;
+                const collected = response.features.collected as VectorFeature;
                 expect(collected.data).not.empty;
             });
         });
@@ -105,7 +105,8 @@ describe('VampTestPlugin', () => {
     it("returns expected collected features for one-sample-per-step vector output", () => {
         const blocks = 10;
         const request = makeRequest(blockSize * blocks, "input-timestamp");
-        const expected: VectorFeatures = {
+        const expected: VectorFeature = {
+            startTime: 0,
             stepDuration: stepSize / rate,
             data: new Float32Array(blocks)
         };
@@ -116,7 +117,7 @@ describe('VampTestPlugin', () => {
         }
         client.collect(request).then(response => {
             expect(response.features.shape).eql("vector");
-            const collected = response.features.collected as VectorFeatures;
+            const collected = response.features.collected as VectorFeature;
             expect(collected).eql(expected);
         });
     });
@@ -126,7 +127,7 @@ describe('VampTestPlugin', () => {
         const request = makeRequest(blockSize * blocks, "grid-oss");
         client.collect(request).then(response => {
             expect(response.features.shape).eql("matrix");
-            const collected = response.features.collected as MatrixFeatures;
+            const collected = response.features.collected as MatrixFeature;
             expect(collected.stepDuration).eql(stepSize / rate);
             expect(collected.data.length).eql(10);
             for (let i = 0; i < 10; ++i) {
@@ -142,7 +143,8 @@ describe('VampTestPlugin', () => {
     it("returns expected collected features for fixed-sample-rate vector output", () => {
         const blocks = 10;
         const request = makeRequest(blockSize * blocks, "curve-fsr");
-        const expected: VectorFeatures = {
+        const expected: VectorFeature = {
+            startTime: 0,
             stepDuration: 0.4,
             data: new Float32Array(blocks)
         };
@@ -151,7 +153,7 @@ describe('VampTestPlugin', () => {
         }
         client.collect(request).then(response => {
             expect(response.features.shape).eql("vector");
-            const collected = response.features.collected as VectorFeatures;
+            const collected = response.features.collected as VectorFeature;
             expect(collected).eql(expected);
         });
     });
@@ -163,7 +165,7 @@ describe('VampTestPlugin', () => {
         const expectedValues = [ [ 0.0 ], [ 0.1 ], [ 0.2, 0.3 ],
                                  [ 0.4 ], [ 0.5 ], [ 0.6, 0.7 ],
                                  [ 0.8 ], [ 0.9 ] ];
-        const expected: TrackFeatures = [];
+        const expected: TracksFeature = [];
         for (let i = 0; i < expectedStarts.length; ++i) {
             expected.push({
                 startTime: expectedStarts[i],
@@ -173,7 +175,7 @@ describe('VampTestPlugin', () => {
         }
         client.collect(request).then(response => {
             expect(response.features.shape).eql("tracks");
-            const collected = response.features.collected as TrackFeatures;
+            const collected = response.features.collected as TracksFeature;
             expect(collected).eql(expected);
         });
     });

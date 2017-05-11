@@ -5,8 +5,8 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
     AudioStreamFormat,
-    VectorFeatures,
-    MatrixFeatures
+    VectorFeature,
+    MatrixFeature
 } from "../src/HigherLevelUtilities";
 import {Observable} from "rxjs";
 import {
@@ -119,7 +119,7 @@ describe("StreamingService", () => {
 
         const subscription = collectStream.subscribe(
             response => {
-                const features = response.features.collected as MatrixFeatures;
+                const features = response.features.collected as MatrixFeature;
                 const expected = getInputBlockAtStep(nBlocksProcessed);
                 try {
                     response.features.shape.should.eql("matrix");
@@ -158,7 +158,7 @@ describe("StreamingService", () => {
 
         const subscription = collectStream.subscribe(
             response => {
-                const features = response.features.collected as VectorFeatures;
+                const features = response.features.collected as VectorFeature;
                 const expected = expectedSums[nBlocksProcessed];
                 try {
                     response.features.shape.should.eql("vector");

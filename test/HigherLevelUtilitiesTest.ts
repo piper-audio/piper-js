@@ -12,7 +12,7 @@ import {
     CreateFeatureExtractorFunction,
     CreateAudioStreamFunction, PiperSimpleClient, FeatureCollection,
     SimpleRequest,
-    VectorFeatures, MatrixFeatures, TrackFeatures
+    VectorFeature, MatrixFeature, TracksFeature
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {fromSeconds, fromFrames} from "../src/Timestamp"
@@ -302,7 +302,7 @@ describe("collect()", function () {
         );
         result.shape.should.eql("vector");
         // TODO downcasting doesn't seem particularly desirable - but perhaps doesn't matter
-	const collected = result.collected as VectorFeatures;
+	const collected = result.collected as VectorFeature;
         Math.abs(collected.stepDuration - (blockSize / sampleRate))
             .should.be.approximately(0.0, delta);
 
@@ -320,7 +320,7 @@ describe("collect()", function () {
             new Map([["produce_output", 0]])
         );
         result.shape.should.equal("vector");
-	let collected = result.collected as VectorFeatures;
+	let collected = result.collected as VectorFeature;
         collected.data.length.should.equal(0);
         result = collect(
             createStreamCallback(1, 10 * blockSize),
@@ -330,7 +330,7 @@ describe("collect()", function () {
             "input-summary",
             new Map([["produce_output", 1]])
         );
-	collected = result.collected as VectorFeatures;
+	collected = result.collected as VectorFeature;
         collected.data.length.should.be.greaterThan(0);
     });
 
@@ -351,7 +351,7 @@ describe("collect()", function () {
             {blockSize: blockSize, stepSize: stepSize}
         );
         result.shape.should.equal("vector");
-	const collected = result.collected as VectorFeatures;
+	const collected = result.collected as VectorFeature;
         collected.data[0].should.equal(blockSize + 1); // because the first sample in the first block is 1
         collected.stepDuration.should.equal(stepSize / sampleRate);
     });
@@ -365,7 +365,7 @@ describe("collect()", function () {
             "grid-oss"
         );
         result.shape.should.equal("matrix");
-	const collected = result.collected as MatrixFeatures;
+	const collected = result.collected as MatrixFeature;
         collected.data.length.should.equal(10);
         Math.abs(collected.stepDuration - (blockSize) / sampleRate)
             .should.be.approximately(0.0, delta);
@@ -463,6 +463,7 @@ describe("PiperSimpleClient", () => {
         const expected: FeatureCollection = {
             shape: "vector",
 	    collected: {
+		startTime: 0,
 		stepDuration: stepSize / sampleRate,
 		data: new Float32Array([-4, -2, 0, 2, 4, 2])
 	    }
@@ -486,6 +487,7 @@ describe("PiperSimpleClient", () => {
         const expected: FeatureCollection = {
             shape: "vector",
 	    collected: {
+		startTime: 0,
 		stepDuration: stepSize / sampleRate,
 		data: new Float32Array([])
 	    }
