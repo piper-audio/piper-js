@@ -33,38 +33,32 @@ export interface AudioStream {
     format: AudioStreamFormat;
 }
 
-//!!! should this have a startTime as well? then a TrackFeature and a VectorFeatures become one and the same, and we probably need a bit of judicious renaming
-export interface VectorFeatures {
-    stepDuration: number;
-    data: Float32Array;
-}
+// Note, these interfaces represent time using a simple number, in
+// seconds. They don't use the Piper API Timestamp as the raw feature
+// does. That's only really there for protocol compatibility.
 
-//!!! this one does actually need a startTime, we have plugins that demand it
-export interface MatrixFeatures {
-    stepDuration: number;
-    data: Float32Array[];
-}
+//!!! question: is Float32Array really sensible (rather than just
+//!!! number[]) for feature values?
 
-//!!! also startTime and stepDuration here are values in seconds
-//!!! throughout, whereas elsewhere we use timestamps. we should
-//!!! probably settle on one, but which?
-
-//!!! and is Float32Array really sensible (rather than just number[])
-//!!! for feature values?
-
-export interface TrackFeature {
+export interface VectorFeature {
     startTime: number;
     stepDuration: number;
     data: Float32Array;
 }
 
-export type TrackFeatures = TrackFeature[];
+export interface MatrixFeature {
+    startTime: number;
+    stepDuration: number;
+    data: Float32Array[];
+}
+
+export type TracksFeature = VectorFeature[];
 
 export type FeatureCollectionShape = "matrix" | "vector" | "tracks" | "list";
 
 export type FeatureCollection = {
     shape: FeatureCollectionShape;
-    collected: VectorFeatures | MatrixFeatures | TrackFeatures | FeatureList;
+    collected: VectorFeature | MatrixFeature | TracksFeature | FeatureList;
 }
 
 export type KeyValueObject = {[key: string]: any};
@@ -224,8 +218,7 @@ function reshapeVector(outputs: Iterable<Output>,
     // tracks, because it has gaps between features or feature timings
     // that overlap
     
-    const tracks : TrackFeatures = [];
-    const whole : number[] = [];
+    const tracks : TracksFeature = [];
     let currentTrack : number[] = [];
     let currentStartTime = 0;
     let n = -1;
@@ -236,7 +229,6 @@ function reshapeVector(outputs: Iterable<Output>,
 
         const f = features[i];
         n = n + 1;
-        whole.push(f.featureValues[0]);
 
         if (descriptor.sampleType == SampleType.FixedSampleRate &&
             typeof(f.timestamp) !== 'undefined') {
@@ -274,10 +266,48 @@ function reshapeVector(outputs: Iterable<Output>,
         return {
             shape: "vector",
             collected: {
+                startTime: currentStartTime,
                 stepDuration,
-                data: new Float32Array(whole)
+                data: new Float32Array(currentTrack)
             }
         }
+    }
+}
+
+function reshapeMatrix(outputs: Iterable<Output>,
+                       id: OutputIdentifier,
+                       stepDuration: number,
+                       descriptor: ConfiguredOutputDescriptor) : FeatureCollection
+{
+    const outputArr = [...outputs];
+
+    if (outputArr.length === 0) {
+        return {
+            shape: "matrix",
+            collected: {
+                startTime: 0,
+                stepDuration,
+                data: []
+            }
+        }
+    } else {
+        const firstFeature : Feature = outputArr[0][id];
+        let startTime = 0;
+        if (descriptor.sampleType == SampleType.FixedSampleRate &&
+            typeof(firstFeature.timestamp) !== 'undefined') {
+            const m = Math.round(toSeconds(firstFeature.timestamp) /
+                                 stepDuration);
+            startTime = m * stepDuration;
+        }
+        return {
+            shape: "matrix",
+            collected: {
+                startTime,
+                stepDuration,
+                data: outputArr.map(output =>
+                                    new Float32Array(output[id].featureValues))
+            }
+        };
     }
 }
 
@@ -305,20 +335,16 @@ export function reshape(outputs: Iterable<Output>,
             return reshapeVector(outputs, id, stepDuration, descriptor);
         
         case "matrix":
-            return {
-                shape,
-                collected: {
-                    stepDuration,
-                    data: [...outputs].map(output => new Float32Array(output[id].featureValues))
-                }
-            };
+            return reshapeMatrix(outputs, id, stepDuration, descriptor);
+
         case "list":
             return {
                 shape,
                 collected: [...outputs].map(output => {
                     const feature: Feature = output[id];
-                    if (adjustTimestamps)
+                    if (adjustTimestamps) {
                         adjuster.adjust(feature);
+                    }
                     return feature;
                 })
             };
