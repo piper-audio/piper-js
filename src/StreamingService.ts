@@ -134,7 +134,7 @@ export class PiperStreamingService implements StreamingService {
                                 nSamples / config.configuredStepSize
                             ) + 1 /* Plus one for finish block */
                         } : {processedBlockCount: i + 1};
-                    return {
+                    return i === 0 ? {
                         features: output,
                         progress: progress,
                         configuration: {
@@ -145,7 +145,7 @@ export class PiperStreamingService implements StreamingService {
                             },
                             inputSampleRate: config.inputSampleRate
                         }
-                    };
+                    } : {features: output, progress: progress};
                 })
         });
     }

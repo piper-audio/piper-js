@@ -197,7 +197,9 @@ function toFeatureCollection(featureStream: Observable<StreamingResponse>,
             for (let i = 0, len = val.features.length; i < len; ++i) {
                 acc.features.push(val.features[i]);
             }
-            acc.config = val.configuration;
+            if (val.configuration) {
+                acc.config = val.configuration;
+            }
             return acc;
         }, {features: [], config: null})
         .map<InterimNonsense, FeatureCollection>(val => {
