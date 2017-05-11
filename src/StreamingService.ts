@@ -7,11 +7,13 @@ import {
     Service
 } from "./Piper";
 import {
+    FeatureCollection,
     loadAndConfigure,
     segment,
     SimpleConfigurationResponse,
     SimpleRequest,
-    toProcessInputStream
+    toProcessInputStream,
+    reshape
 } from "./HigherLevelUtilities";
 import {Observable, Observer} from "rxjs";
 import {PiperClient} from "./PiperClient";
@@ -96,6 +98,35 @@ function streamFeatures(request: SimpleRequest,
             () => observer.complete()
         ).catch(err => observer.error(err));
     });
+}
+
+export type ProgressCallback = (current: StreamingResponse) => any;
+export function collect(featureStream: Observable<StreamingResponse>,
+                        onNext: ProgressCallback): Promise<FeatureCollection> {
+    interface InterimNonsense {
+        features: FeatureList,
+        config: StreamingConfiguration
+    }
+    return featureStream
+        .reduce<StreamingResponse, InterimNonsense>((acc, val) => {
+            onNext(val);
+            for (let i = 0, len = val.features.length; i < len; ++i) {
+                acc.features.push(val.features[i]);
+            }
+            if (val.configuration) {
+                acc.config = val.configuration;
+            }
+            return acc;
+        }, {features: [], config: null})
+        .map<InterimNonsense, FeatureCollection>(val => {
+            return reshape(
+                val.features,
+                val.config.inputSampleRate,
+                val.config.framing.stepSize,
+                val.config.outputDescriptor.configured,
+                false
+            );
+        }).toPromise();
 }
 
 export class PiperStreamingService implements StreamingService {

@@ -5,17 +5,15 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
     AudioStreamFormat,
-    FeatureCollection,
     MatrixFeature,
-    Output,
-    reshape,
     VectorFeature
 } from "../src/HigherLevelUtilities";
 import {Observable} from "rxjs";
 import {
     PiperStreamingService,
     StreamingService,
-    StreamingResponse, StreamingConfiguration
+    StreamingResponse,
+    collect
 } from "../src/StreamingService";
 import {KissRealFft} from "../src/fft/RealFft";
 import {
@@ -185,38 +183,10 @@ describe("StreamingService", () => {
     });
 });
 
-function toFeatureCollection(featureStream: Observable<StreamingResponse>,
-                             onNext: Function): Promise<FeatureCollection> {
-    interface InterimNonsense {
-        features: FeatureList,
-        config: StreamingConfiguration
-    }
-    return featureStream
-        .reduce<StreamingResponse, InterimNonsense>((acc, val) => {
-            onNext();
-            for (let i = 0, len = val.features.length; i < len; ++i) {
-                acc.features.push(val.features[i]);
-            }
-            if (val.configuration) {
-                acc.config = val.configuration;
-            }
-            return acc;
-        }, {features: [], config: null})
-        .map<InterimNonsense, FeatureCollection>(val => {
-            return reshape(
-                val.features,
-                val.config.inputSampleRate,
-                val.config.framing.stepSize,
-                val.config.outputDescriptor.configured,
-                false
-            );
-        }).toPromise();
-}
-
 describe("Summarising streams", () => {
     it("Can be collected after the fact (matrix)", done => {
         let nBlocksProcessed = 0;
-        toFeatureCollection(
+        collect(
             service.process({
                 audioData: samples,
                 audioFormat: streamFormat,
@@ -246,7 +216,7 @@ describe("Summarising streams", () => {
     it("Can be collected after the fact (vector)", done => {
         const expectedSums = [-4, -2, 0, 2, 4, 2];
         let nBlocksProcessed = 0;
-        toFeatureCollection(
+        collect(
             service.process({
                 audioData: samples,
                 audioFormat: streamFormat,
@@ -276,7 +246,7 @@ describe("Summarising streams", () => {
 
     it("Calls finish method", done => {
         let nBlocksProcessed = 0;
-        toFeatureCollection(
+        collect(
             service.process({
                 audioData: samples,
                 audioFormat: streamFormat,
