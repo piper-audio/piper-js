@@ -3,7 +3,7 @@
  */
 import {StreamingResponse, StreamingService} from "../StreamingService";
 import {ListRequest, ListResponse} from "../Piper";
-import {SimpleRequest, SimpleResponse} from "../HigherLevelUtilities";
+import {SimpleRequest} from "../HigherLevelUtilities";
 import {Observable} from "rxjs";
 import {
     ErrorResponse,
@@ -57,12 +57,8 @@ export class WebWorkerStreamingClient implements StreamingService {
         return this.createFeatureStream(request, "process");
     }
 
-    collect(request: SimpleRequest): Observable<StreamingResponse> {
-        return this.createFeatureStream(request, "collect");
-    }
-
     private createFeatureStream(request: SimpleRequest,
-                                method: WebMethod): Observable<SimpleResponse> {
+                                method: WebMethod): Observable<StreamingResponse> {
         const id: RequestId = this.idProvider.next().value;
 
         return this.createThrowingObserver<SimpleRequest>({

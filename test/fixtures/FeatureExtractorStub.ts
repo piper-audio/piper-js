@@ -24,7 +24,7 @@ export class FeatureExtractorStub implements FeatureExtractor {
                 ["cumsum", descriptor],
                 ["conditional", descriptor],
                 ["passthrough", {
-                    binCount: configuration.framing.stepSize,
+                    binCount: configuration.framing.blockSize,
                     sampleType: SampleType.OneSamplePerStep,
                     hasDuration: false
                 }],

@@ -208,8 +208,7 @@ function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionS
     return "matrix";
 }
 
-function reshapeVector(outputs: Iterable<Output>,
-                       id: OutputIdentifier,
+function reshapeVector(features: Iterable<Feature>,
                        stepDuration: number,
                        descriptor: ConfiguredOutputDescriptor) : FeatureCollection {
 
@@ -223,11 +222,11 @@ function reshapeVector(outputs: Iterable<Output>,
     let currentStartTime = 0;
     let n = -1;
 
-    const features = [...outputs].map(output => output[id]);
+    const outputArr = features instanceof Array ? features : [...features];
 
-    for (let i = 0; i < features.length; ++i) {
+    for (let i = 0; i < outputArr.length; ++i) {
 
-        const f = features[i];
+        const f = outputArr[i];
         n = n + 1;
 
         if (descriptor.sampleType == SampleType.FixedSampleRate &&
@@ -274,12 +273,11 @@ function reshapeVector(outputs: Iterable<Output>,
     }
 }
 
-function reshapeMatrix(outputs: Iterable<Output>,
-                       id: OutputIdentifier,
+function reshapeMatrix(features: Iterable<Feature>,
                        stepDuration: number,
                        descriptor: ConfiguredOutputDescriptor) : FeatureCollection
 {
-    const outputArr = [...outputs];
+    const outputArr = features instanceof Array ? features : [...features];
 
     if (outputArr.length === 0) {
         return {
@@ -291,7 +289,7 @@ function reshapeMatrix(outputs: Iterable<Output>,
             }
         }
     } else {
-        const firstFeature : Feature = outputArr[0][id];
+        const firstFeature : Feature = outputArr[0];
         let startTime = 0;
         if (descriptor.sampleType == SampleType.FixedSampleRate &&
             typeof(firstFeature.timestamp) !== 'undefined') {
@@ -304,15 +302,27 @@ function reshapeMatrix(outputs: Iterable<Output>,
             collected: {
                 startTime,
                 stepDuration,
-                data: outputArr.map(output =>
-                                    new Float32Array(output[id].featureValues))
+                data: outputArr.map(feature =>
+                                    new Float32Array(feature.featureValues))
             }
         };
     }
 }
 
-export function reshape(outputs: Iterable<Output>,
-                        id: OutputIdentifier,
+function reshapeList(features: Iterable<Feature>,
+                     adjuster?: FeatureTimeAdjuster): FeatureCollection {
+    return {
+        shape: "list",
+        collected: [...features].map(feature => {
+            if (adjuster) {
+                adjuster.adjust(feature);
+            }
+            return feature;
+        })
+    }
+}
+
+export function reshape(features: Iterable<Feature>,
                         inputSampleRate: number,
                         stepSize: number,
                         descriptor: ConfiguredOutputDescriptor,
@@ -332,22 +342,13 @@ export function reshape(outputs: Iterable<Output>,
         case "vector":
             // NB this could return either "vector" or "tracks" shape,
             // depending on the feature data
-            return reshapeVector(outputs, id, stepDuration, descriptor);
+            return reshapeVector(features, stepDuration, descriptor);
         
         case "matrix":
-            return reshapeMatrix(outputs, id, stepDuration, descriptor);
+            return reshapeMatrix(features, stepDuration, descriptor);
 
         case "list":
-            return {
-                shape,
-                collected: [...outputs].map(output => {
-                    const feature: Feature = output[id];
-                    if (adjustTimestamps) {
-                        adjuster.adjust(feature);
-                    }
-                    return feature;
-                })
-            };
+            return reshapeList(features, adjustTimestamps ? adjuster : null);
         default:
             // Assumption here that deduceShape can't return "tracks",
             // because it can't tell the difference between vector and
@@ -410,9 +411,15 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
         extractor,
         [outputId]
     );
+
+    const lazyFeatures: Iterable<Feature> = (function* () {
+        for (const output of lazyOutputs) {
+            yield output[outputId];
+        }
+    })();
+
     return reshape(
-        lazyOutputs,
-        outputId,
+        lazyFeatures,
         stream.format.sampleRate,
         config.framing.stepSize,
         descriptor
@@ -616,13 +623,8 @@ export class PiperSimpleClient implements SimpleService {
                     },
                     outputDescriptor: res.outputDescriptor
                 } : {
-                    features: reshape(/* TODO avoid reshaping for list */
-                        features.map(feature => {
-                            return {
-                                [res.configuredOutputId]: feature
-                            }
-                        }), // map FeatureList to {outputId: Feature}[]
-                        res.configuredOutputId,
+                    features: reshape(
+                        features,
                         res.inputSampleRate,
                         res.configuredStepSize,
                         res.outputDescriptor.configured,
