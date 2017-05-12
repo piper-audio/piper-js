@@ -102,14 +102,16 @@ function streamFeatures(request: SimpleRequest,
 
 export type ProgressCallback = (current: StreamingResponse) => any;
 export function collect(featureStream: Observable<StreamingResponse>,
-                        onNext: ProgressCallback): Promise<FeatureCollection> {
+                        onNext?: ProgressCallback): Promise<FeatureCollection> {
     interface InterimNonsense {
         features: FeatureList,
         config: StreamingConfiguration
     }
     return featureStream
         .reduce<StreamingResponse, InterimNonsense>((acc, val) => {
-            onNext(val);
+            if (onNext) {
+                onNext(val);
+            }
             for (let i = 0, len = val.features.length; i < len; ++i) {
                 acc.features.push(val.features[i]);
             }
