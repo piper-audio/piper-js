@@ -16,6 +16,7 @@ import {
     MatrixFeature,
     TracksFeature
 } from "../src/HigherLevelUtilities";
+import {collect, PiperStreamingService} from "../src/StreamingService";
 
 var expect = chai.expect;
 chai.should();
@@ -167,9 +168,15 @@ describe('VampTestPlugin', () => {
                 data: new Float32Array(expectedValues[i])
             });
         }
-        return client.collect(request).then(response => {
-            expect(response.features.shape).eql("tracks");
-            expect(response.features.collected).eql(expected);
+        const streamingService = new PiperStreamingService(service);
+        return Promise.all([
+            collect(streamingService.process(request)),
+            client.collect(request).then(res => res.features)
+        ]).then(responses => {
+            responses.forEach(response => {
+                expect(response.shape).eql("tracks");
+                expect(response.collected).eql(expected);
+            });
         });
     });
     
