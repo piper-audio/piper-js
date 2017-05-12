@@ -7,7 +7,7 @@ import {
     SampleType, ProcessInput, AdapterFlags, OutputDescriptor
 } from "./FeatureExtractor";
 import {Feature, FeatureSet, FeatureList} from "./Feature";
-import {fromFrames} from "./Timestamp";
+import {fromFrames, toSeconds} from "./Timestamp";
 import {
     FeatureTimeAdjuster,
     createFeatureTimeAdjuster
@@ -33,16 +33,34 @@ export interface AudioStream {
     format: AudioStreamFormat;
 }
 
-export type FeatureCollectionShape = "matrix" | "vector" | "list";
-// TODO consider revising
-export interface FeatureCollection {
-    shape: FeatureCollectionShape;
-    data: FeatureList | Float32Array | Float32Array[];
+// Note, these interfaces represent time using a simple number, in
+// seconds. They don't use the Piper API Timestamp as the raw feature
+// does. That's only really there for protocol compatibility.
+
+//!!! question: is Float32Array really sensible (rather than just
+//!!! number[]) for feature values?
+
+export interface VectorFeature {
+    startTime: number;
+    stepDuration: number;
+    data: Float32Array;
 }
 
-export interface FixedSpacedFeatures extends FeatureCollection {
+export interface MatrixFeature {
+    startTime: number;
     stepDuration: number;
+    data: Float32Array[];
 }
+
+export type TracksFeature = VectorFeature[];
+
+export type FeatureCollectionShape = "matrix" | "vector" | "tracks" | "list";
+
+export type FeatureCollection = {
+    shape: FeatureCollectionShape;
+    collected: VectorFeature | MatrixFeature | TracksFeature | FeatureList;
+}
+
 export type KeyValueObject = {[key: string]: any};
 export type CreateFeatureExtractorFunction = (sampleRate: number,
                                        key: string,
@@ -190,12 +208,125 @@ function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionS
     return "matrix";
 }
 
-export function reshape(outputs: Iterable<Output>,
-                        id: OutputIdentifier,
+function reshapeVector(features: Iterable<Feature>,
+                       stepDuration: number,
+                       descriptor: ConfiguredOutputDescriptor) : FeatureCollection {
+
+    // Determine whether a purported vector output (fixed spacing, one
+    // bin per feature) should actually be returned as multiple
+    // tracks, because it has gaps between features or feature timings
+    // that overlap
+    
+    const tracks : TracksFeature = [];
+    let currentTrack : number[] = [];
+    let currentStartTime = 0;
+    let n = -1;
+
+    const outputArr = features instanceof Array ? features : [...features];
+
+    for (let i = 0; i < outputArr.length; ++i) {
+
+        const f = outputArr[i];
+        n = n + 1;
+
+        if (descriptor.sampleType == SampleType.FixedSampleRate &&
+            typeof(f.timestamp) !== 'undefined') {
+            const m = Math.round(toSeconds(f.timestamp) / stepDuration);
+            if (m !== n) {
+                if (currentTrack.length > 0) {
+                    tracks.push({
+                        startTime: currentStartTime,
+                        stepDuration,
+                        data: new Float32Array(currentTrack)
+                    });
+                    currentTrack = [];
+                    n = m;
+                }
+                currentStartTime = m * stepDuration;
+            }
+        }
+
+        currentTrack.push(f.featureValues[0]);
+    }
+
+    if (tracks.length > 0) {
+        if (currentTrack.length > 0) {
+            tracks.push({
+                startTime: currentStartTime,
+                stepDuration,
+                data: new Float32Array(currentTrack)
+            });
+        }
+        return {
+            shape: "tracks",
+            collected: tracks
+        };
+    } else {
+        return {
+            shape: "vector",
+            collected: {
+                startTime: currentStartTime,
+                stepDuration,
+                data: new Float32Array(currentTrack)
+            }
+        }
+    }
+}
+
+function reshapeMatrix(features: Iterable<Feature>,
+                       stepDuration: number,
+                       descriptor: ConfiguredOutputDescriptor) : FeatureCollection
+{
+    const outputArr = features instanceof Array ? features : [...features];
+
+    if (outputArr.length === 0) {
+        return {
+            shape: "matrix",
+            collected: {
+                startTime: 0,
+                stepDuration,
+                data: []
+            }
+        }
+    } else {
+        const firstFeature : Feature = outputArr[0];
+        let startTime = 0;
+        if (descriptor.sampleType == SampleType.FixedSampleRate &&
+            typeof(firstFeature.timestamp) !== 'undefined') {
+            const m = Math.round(toSeconds(firstFeature.timestamp) /
+                                 stepDuration);
+            startTime = m * stepDuration;
+        }
+        return {
+            shape: "matrix",
+            collected: {
+                startTime,
+                stepDuration,
+                data: outputArr.map(feature =>
+                                    new Float32Array(feature.featureValues))
+            }
+        };
+    }
+}
+
+function reshapeList(features: Iterable<Feature>,
+                     adjuster?: FeatureTimeAdjuster): FeatureCollection {
+    return {
+        shape: "list",
+        collected: [...features].map(feature => {
+            if (adjuster) {
+                adjuster.adjust(feature);
+            }
+            return feature;
+        })
+    }
+}
+
+export function reshape(features: Iterable<Feature>,
                         inputSampleRate: number,
                         stepSize: number,
                         descriptor: ConfiguredOutputDescriptor,
-                        adjustTimestamps: boolean = true): FeatureCollection | FixedSpacedFeatures {
+                        adjustTimestamps: boolean = true) : FeatureCollection {
     const shape: FeatureCollectionShape = deduceShape(descriptor);
     const stepDuration: number = getFeatureStepDuration(
         inputSampleRate,
@@ -207,32 +338,21 @@ export function reshape(outputs: Iterable<Output>,
         stepDuration
     );
 
-    // TODO switch suggests that matrix and list could be types, dynamically dispatch to a .data() method or similar
-    // TODO adjust timestamps for vector and matrix?
-    switch(shape) {
+    switch (shape) {
         case "vector":
-            return {
-                shape: shape,
-                stepDuration: stepDuration,
-                data: new Float32Array([...outputs].map(output => output[id].featureValues[0]))
-            };
+            // NB this could return either "vector" or "tracks" shape,
+            // depending on the feature data
+            return reshapeVector(features, stepDuration, descriptor);
+        
         case "matrix":
-            return {
-                shape: shape,
-                stepDuration: stepDuration,
-                data: [...outputs].map(output => new Float32Array(output[id].featureValues))
-            };
+            return reshapeMatrix(features, stepDuration, descriptor);
+
         case "list":
-            return {
-                shape: shape,
-                data: [...outputs].map(output => {
-                    const feature: Feature = output[id];
-                    if (adjustTimestamps)
-                        adjuster.adjust(feature);
-                    return feature;
-                })
-            };
+            return reshapeList(features, adjustTimestamps ? adjuster : null);
         default:
+            // Assumption here that deduceShape can't return "tracks",
+            // because it can't tell the difference between vector and
+            // tracks without looking at potentially all the data
             throw new Error("A valid shape could not be deduced.");
     }
 }
@@ -257,7 +377,7 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
                         extractorKey: string,
                         outputId?: OutputIdentifier,
                         params?: Parameters,
-                        args: KeyValueObject = {}): FeatureCollection {
+                        args: KeyValueObject = {}) : FeatureCollection {
     // TODO reduce duplication with process -
     // only issue stopping calling process directly here for
     // lazyOutputs is that ConfigurationResponse and Configuration are needed
@@ -291,9 +411,15 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
         extractor,
         [outputId]
     );
+
+    const lazyFeatures: Iterable<Feature> = (function* () {
+        for (const output of lazyOutputs) {
+            yield output[outputId];
+        }
+    })();
+
     return reshape(
-        lazyOutputs,
-        outputId,
+        lazyFeatures,
         stream.format.sampleRate,
         config.framing.stepSize,
         descriptor
@@ -493,17 +619,12 @@ export class PiperSimpleClient implements SimpleService {
                 return forceList ? {
                     features: {
                         shape: "list",
-                        data: features
+                        collected: features
                     },
                     outputDescriptor: res.outputDescriptor
                 } : {
-                    features: reshape(/* TODO avoid reshaping for list */
-                        features.map(feature => {
-                            return {
-                                [res.configuredOutputId]: feature
-                            }
-                        }), // map FeatureList to {outputId: Feature}[]
-                        res.configuredOutputId,
+                    features: reshape(
+                        features,
                         res.inputSampleRate,
                         res.configuredStepSize,
                         res.outputDescriptor.configured,

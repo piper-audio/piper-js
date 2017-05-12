@@ -9,28 +9,37 @@ import {
 import {
     FeatureCollection,
     loadAndConfigure,
-    reshape,
     segment,
     SimpleConfigurationResponse,
     SimpleRequest,
-    SimpleResponse,
-    toProcessInputStream
+    toProcessInputStream,
+    reshape
 } from "./HigherLevelUtilities";
 import {Observable, Observer} from "rxjs";
 import {PiperClient} from "./PiperClient";
 import {FeatureList, FeatureSet} from "./Feature";
+import {OutputDescriptor, Framing} from './FeatureExtractor';
 
 export interface StreamingProgress {
     processedBlockCount: number;
     totalBlockCount?: number;
 }
 
-export type StreamingResponse = SimpleResponse & StreamingProgress;
+export interface StreamingConfiguration { // based on SimpleConfigurationResponse
+    inputSampleRate: number;
+    framing: Framing;
+    outputDescriptor: OutputDescriptor;
+}
+
+export interface StreamingResponse {
+    progress: StreamingProgress;
+    features: FeatureList;
+    configuration?: StreamingConfiguration;
+}
 
 export interface StreamingService {
     list(request: ListRequest): Promise<ListResponse>;
     process(request: SimpleRequest): Observable<StreamingResponse>;
-    collect(request: SimpleRequest): Observable<StreamingResponse>;
 }
 
 type FeaturesExtractedHandler = (features: FeatureSet) => void;
@@ -91,6 +100,37 @@ function streamFeatures(request: SimpleRequest,
     });
 }
 
+export type ProgressCallback = (current: StreamingResponse) => any;
+export function collect(featureStream: Observable<StreamingResponse>,
+                        onNext?: ProgressCallback): Promise<FeatureCollection> {
+    interface InterimNonsense {
+        features: FeatureList,
+        config: StreamingConfiguration
+    }
+    return featureStream
+        .reduce<StreamingResponse, InterimNonsense>((acc, val) => {
+            if (onNext) {
+                onNext(val);
+            }
+            for (let i = 0, len = val.features.length; i < len; ++i) {
+                acc.features.push(val.features[i]);
+            }
+            if (val.configuration) {
+                acc.config = val.configuration;
+            }
+            return acc;
+        }, {features: [], config: null})
+        .map<InterimNonsense, FeatureCollection>(val => {
+            return reshape(
+                val.features,
+                val.config.inputSampleRate,
+                val.config.framing.stepSize,
+                val.config.outputDescriptor.configured,
+                false
+            );
+        }).toPromise();
+}
+
 export class PiperStreamingService implements StreamingService {
     private client: Service;
 
@@ -104,34 +144,11 @@ export class PiperStreamingService implements StreamingService {
 
     process(request: SimpleRequest): Observable<StreamingResponse> {
         return this.createResponseObservable(
-            request,
-            (output) => ({
-                shape: "list",
-                data: output
-            })
+            request
         );
     }
 
-    // TODO reduce dupe with above process
-    collect(request: SimpleRequest): Observable<StreamingResponse> {
-        return this.createResponseObservable(request, (output, config) => {
-            return reshape(
-                // map FeatureList to {outputId: Feature}[]
-                output.map(feature => ({[config.configuredOutputId]: feature})),
-                config.configuredOutputId,
-                config.inputSampleRate,
-                config.configuredStepSize,
-                config.outputDescriptor.configured,
-                false
-            )
-        });
-    }
-
-    private createResponseObservable(request: SimpleRequest,
-                                     mapToFeatureCollection: (
-                                         output: FeatureList,
-                                         config: SimpleConfigurationResponse
-                                     ) => FeatureCollection)
+    private createResponseObservable(request: SimpleRequest)
     : Observable<StreamingResponse> {
         return Observable.fromPromise(loadAndConfigure(
             request,
@@ -150,11 +167,18 @@ export class PiperStreamingService implements StreamingService {
                                 nSamples / config.configuredStepSize
                             ) + 1 /* Plus one for finish block */
                         } : {processedBlockCount: i + 1};
-                    const partialResponse: SimpleResponse = {
-                        features: mapToFeatureCollection(output, config),
-                        outputDescriptor: config.outputDescriptor
-                    };
-                    return Object.assign({}, progress, partialResponse);
+                    return i === 0 ? {
+                        features: output,
+                        progress: progress,
+                        configuration: {
+                            outputDescriptor: config.outputDescriptor,
+                            framing: {
+                                stepSize: config.configuredStepSize,
+                                blockSize: config.configuredBlockSize
+                            },
+                            inputSampleRate: config.inputSampleRate
+                        }
+                    } : {features: output, progress: progress};
                 })
         });
     }

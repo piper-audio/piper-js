@@ -8,11 +8,11 @@ import {
     process,
     collect,
     AudioStreamFormat,
-    FixedSpacedFeatures,
     AudioData,
     CreateFeatureExtractorFunction,
     CreateAudioStreamFunction, PiperSimpleClient, FeatureCollection,
-    SimpleRequest
+    SimpleRequest,
+    VectorFeature, MatrixFeature, TracksFeature
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {fromSeconds, fromFrames} from "../src/Timestamp"
@@ -293,24 +293,25 @@ describe("collect()", function () {
     });
 
     it("produces valid output for one sample per step features", () => {
-        const features = collect(
+        const result = collect(
             createStreamCallback(1, 10 * blockSize),
             streamFormat,
             createExtractorCallback,
             extractorKey,
             "input-timestamp"
         );
-        features.shape.should.eql("vector");
+        result.shape.should.eql("vector");
         // TODO downcasting doesn't seem particularly desirable - but perhaps doesn't matter
-        Math.abs((features as FixedSpacedFeatures).stepDuration - (blockSize / sampleRate))
+	const collected = result.collected as VectorFeature;
+        Math.abs(collected.stepDuration - (blockSize / sampleRate))
             .should.be.approximately(0.0, delta);
-        features.data.length.should.equal(10);
-        (features.data as Float32Array) // TODO compiler cannot infer the type because it is a union type - perhaps better encode the the matrix / list / vector types
-            .forEach((feature: number, i: number) => feature.should.equal(i * blockSize))
+
+        collected.data.length.should.equal(10);
+        collected.data.forEach((feature: number, i: number) => feature.should.equal(i * blockSize))
     });
 
     it("produces valid vector shape for known extractor (Vamp Plugin Test input-summary)", () => {
-        let features = collect(
+        let result = collect(
             createStreamCallback(1, 10 * blockSize),
             streamFormat,
             createExtractorCallback,
@@ -318,9 +319,10 @@ describe("collect()", function () {
             "input-summary",
             new Map([["produce_output", 0]])
         );
-        features.shape.should.equal("vector");
-        features.data.length.should.equal(0);
-        features = collect(
+        result.shape.should.equal("vector");
+	let collected = result.collected as VectorFeature;
+        collected.data.length.should.equal(0);
+        result = collect(
             createStreamCallback(1, 10 * blockSize),
             streamFormat,
             createExtractorCallback,
@@ -328,14 +330,15 @@ describe("collect()", function () {
             "input-summary",
             new Map([["produce_output", 1]])
         );
-        features.data.length.should.be.greaterThan(0);
+	collected = result.collected as VectorFeature;
+        collected.data.length.should.be.greaterThan(0);
     });
 
     it("can accept custom block and step sizes", () => {
         const blockSize = 8;
         const stepSize = 4;
         const sampleRate = 16;
-        const features = collect(
+        const result = collect(
             createStreamCallback(1, 10 * blockSize),
             {
                 channelCount: 1,
@@ -347,37 +350,40 @@ describe("collect()", function () {
             undefined, // TODO consider revising the function signature for these optional arguments - seems awkward and not very idiomatic JS, I've been too directly influenced from the Python code here
             {blockSize: blockSize, stepSize: stepSize}
         );
-        features.data[0].should.equal(blockSize + 1); // because the first sample in the first block is 1
-        features.shape.should.equal("vector");
-        (features as FixedSpacedFeatures).stepDuration.should.equal(stepSize / sampleRate);
+        result.shape.should.equal("vector");
+	const collected = result.collected as VectorFeature;
+        collected.data[0].should.equal(blockSize + 1); // because the first sample in the first block is 1
+        collected.stepDuration.should.equal(stepSize / sampleRate);
     });
 
     it("produces valid matrix shape for known extractor (Vamp Plugin Test grid-oss)", () => {
-        const features = collect(
+        const result = collect(
             createStreamCallback(1, 10 * blockSize),
             streamFormat,
             createExtractorCallback,
             extractorKey,
             "grid-oss"
         );
-        features.shape.should.equal("matrix");
-        features.data.length.should.equal(10);
-        Math.abs((features as FixedSpacedFeatures).stepDuration - (blockSize) / sampleRate)
+        result.shape.should.equal("matrix");
+	const collected = result.collected as MatrixFeature;
+        collected.data.length.should.equal(10);
+        Math.abs(collected.stepDuration - (blockSize) / sampleRate)
             .should.be.approximately(0.0, delta);
-        (features.data as Float32Array[]).forEach((featureBin: Float32Array, i: number) => {
+        collected.data.forEach((featureBin: Float32Array, i: number) => {
             featureBin.filter((value, j) => value - (j + i + 2.0) / 30.0 < delta ).length.should.equal(10);
         });
     });
 
     it("produces valid list shape for variable sample rate extractor (Vamp Plugin Test curve-vsr)", () => {
-        const features = collect(
+        const result = collect(
             createStreamCallback(1, 10 * blockSize),
             streamFormat,
             createExtractorCallback,
             extractorKey,
             "curve-vsr"
         );
-        (features.data as Float32Array).forEach((feature: Feature, i: number) => {
+	const collected = result.collected as FeatureList;
+        collected.forEach((feature: Feature, i: number) => {
             feature.timestamp.should.eql(fromSeconds(i * 0.75));
             (Math.abs(feature.featureValues[0] - i * 0.1) < delta).should.be.true
         });
@@ -445,18 +451,22 @@ describe("PiperSimpleClient", () => {
                 // toFeature(6, frameRate, [0]) // TODO should there be one more buffer?
             ];
 
-            res.features.data.length.should.equal(expectedFeatures.length);
-            (res.features.data as FeatureList).forEach((value, index) => {
+	    const collected = res.features.collected as FeatureList;
+            collected.length.should.equal(expectedFeatures.length);
+            collected.forEach((value, index) => {
                 value.should.eql(expectedFeatures[index]);
             });
         });
     });
 
     it("can collect (reshape), features extracted from an entire AudioStream", () => {
-        const expected: FixedSpacedFeatures = {
+        const expected: FeatureCollection = {
             shape: "vector",
-            data: new Float32Array([-4, -2, 0, 2, 4, 2]),
-            stepDuration: stepSize / sampleRate
+	    collected: {
+		startTime: 0,
+		stepDuration: stepSize / sampleRate,
+		data: new Float32Array([-4, -2, 0, 2, 4, 2])
+	    }
         };
         return client.collect(request).then(response => {
             response.features.should.eql(expected);
@@ -474,10 +484,13 @@ describe("PiperSimpleClient", () => {
     });
 
     it("returns an empty list of features when requested output is empty", () => {
-        const expected: FixedSpacedFeatures = {
+        const expected: FeatureCollection = {
             shape: "vector",
-            data: new Float32Array([]),
-            stepDuration: stepSize / sampleRate
+	    collected: {
+		startTime: 0,
+		stepDuration: stepSize / sampleRate,
+		data: new Float32Array([])
+	    }
         };
         return client.collect({
             audioData: audioData,

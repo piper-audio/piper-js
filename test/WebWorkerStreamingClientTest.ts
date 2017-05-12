@@ -11,7 +11,7 @@ import {
     WebWorkerStreamingClient
 } from "../src/client-stubs/WebWorkerStreamingClient";
 import {StreamingResponse} from "../src/StreamingService";
-import {Feature, FeatureList} from "../src/Feature";
+import {FeatureList} from "../src/Feature";
 
 function createStubWorker(work: string | WorkerFunction): Worker {
     let stubWorker = new TinyWorker(work);
@@ -172,23 +172,29 @@ describe("WebWorkerStreamingClient", () => {
                     }];
 
                     const response: StreamingResponse = {
-                        features: {
-                            shape: "list",
-                            data: data
-                        },
-                        outputDescriptor: {
-                            basic: {
-                                identifier: "count",
-                                name: "Arbitrary count",
-                                description: "Sequence of integers for testing"
+                        features: data,
+                        configuration: {
+                            outputDescriptor: {
+                                basic: {
+                                    identifier: "count",
+                                    name: "Arbitrary count",
+                                    description: "Sequence of integers for testing"
+                                },
+                                configured: {
+                                    hasDuration: false,
+                                    sampleType: 0
+                                }
                             },
-                            configured: {
-                                hasDuration: false,
-                                sampleType: 0
+                            inputSampleRate: 0,
+                            framing: {
+                                stepSize: 0,
+                                blockSize: 0
                             }
                         },
-                        processedBlockCount: i,
-                        totalBlockCount: totalBlockCount
+                        progress: {
+                            processedBlockCount: i,
+                            totalBlockCount: totalBlockCount
+                        }
                     };
 
                     this.postMessage({
@@ -222,14 +228,14 @@ describe("WebWorkerStreamingClient", () => {
             stepSize: 1
         }).do(val => {
             try {
-                val.processedBlockCount.should.eql(nProcessed++)
+                val.progress.processedBlockCount.should.eql(nProcessed++)
             } catch (e) {
                 done(e);
             }
         }).scan((acc, val) => {
                 if (val.features) {
                     acc.push(
-                        (val.features.data[0] as Feature).featureValues[0]
+                        ((val.features)[0]).featureValues[0]
                     );
                 }
                 return featureValues;
