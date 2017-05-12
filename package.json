@@ -1,6 +1,6 @@
 {
   "name": "piper",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Piper is a protocol for driving audio feature extractors. This library provides ways of implementing clients and servers in JavaScript for the Piper protocol.",
   "main": "Piper.js",
   "typings": "Piper.d.ts",
