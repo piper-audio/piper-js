@@ -105,6 +105,11 @@ export const MetaDataStub: StaticData = {
             name: "Final number"
         }
     ],
+    staticOutputInfo: new Map([
+        ["sum", {
+            typeURI: "http://example.com/test/uri"
+        }]
+    ]),
     inputDomain: InputDomain.TimeDomain,
     maxChannelCount: 1,
     minChannelCount: 1,

@@ -180,6 +180,11 @@ describe("WebWorkerStreamingClient", () => {
                                     name: "Arbitrary count",
                                     description: "Sequence of integers for testing"
                                 },
+                                static: new Map([
+                                    ["count", {
+                                        "typeURI": "http://example.com/count"
+                                    }]
+                                ]),
                                 configured: {
                                     hasDuration: false,
                                     sampleType: 0

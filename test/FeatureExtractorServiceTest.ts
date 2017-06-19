@@ -162,6 +162,7 @@ describe("FeatureExtractionService", () => {
                         config.framing.blockSize : 1;
                     return {
                         basic: basic,
+                        static: {}, //!!! should fail currently
                         configured: {
                             binCount: binCount,
                             binNames: [],

@@ -62,10 +62,15 @@ class MockService implements StreamingService, Mock {
             configuration: {
                 outputDescriptor: {
                     basic: {
-                        name: "fake feature",
+                        name: "fake",
                         description: "nonsense!",
                         identifier: "stub-stub-stub"
                     },
+                    static: new Map([
+                        ["fake", {
+                            "typeURI": "http://example.com/fake"
+                        }]
+                    ]),
                     configured: {
                         binCount: 1,
                         binNames: [],
