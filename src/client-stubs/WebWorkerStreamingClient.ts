@@ -31,7 +31,21 @@ export class WebWorkerStreamingClient implements StreamingService {
     constructor(worker: Worker, idProvider: RequestIdProvider) {
         this.worker = worker;
         this.idProvider = idProvider;
-        this.messages$ = Observable.fromEvent(this.worker, "message").share();
+        this.messages$ = Observable.fromEvent(this.worker, "message")
+            .do((val: ResponseMessage<any>) => {
+                // TODO piper specific exception types
+                if (!this.running.includes(val.data.id)) {
+                    throw new Error(`Invalid response id`);
+                }
+                if (!["list", "process", "finish"].includes(val.data.method)) {
+                    throw new Error("Invalid response type");
+                }
+                if (this.isErrorResponse(val.data)) {
+                    const error = val.data.error;
+                    throw new Error(`${error.code}: ${error.message}`);
+                }
+            })
+            .share();
         this.running = [];
     }
 
@@ -40,7 +54,7 @@ export class WebWorkerStreamingClient implements StreamingService {
         const method: WebMethod = "list";
 
         const list$: Observable<ListResponse> =
-            this.createThrowingObserver<ListRequest>({
+            this.createResponseObserver<ListRequest>({
                     id: id,
                     method: method,
                     params: request
@@ -62,7 +76,7 @@ export class WebWorkerStreamingClient implements StreamingService {
     : Observable<StreamingResponse> {
         const id: RequestId = this.idProvider.next().value;
 
-        return this.createThrowingObserver<SimpleRequest>({
+        return this.createResponseObserver<SimpleRequest>({
                 id: id,
                 method: "process",
                 params: request
@@ -76,34 +90,21 @@ export class WebWorkerStreamingClient implements StreamingService {
     }
 
     // TODO take predicate and also check response validity
-    private createThrowingObserver<T>(seedRequest: RequestMessage<T>): ResponseObservable {
-        const sendRequest$ = Observable.create(() => {
+    private createResponseObserver<T>(seedRequest: RequestMessage<T>): ResponseObservable {
+        const sendRequest$: Observable<any> = Observable.create(() => {
             this.running.push(seedRequest.id);
             this.worker.postMessage(seedRequest);
-            return () => {
-                const i = this.running.findIndex(id => id === seedRequest.id);
-                if (i !== -1) {
-                    this.running.splice(i, 1);
-                }
-            };
         });
 
         return this.messages$
             .merge(sendRequest$)
-            .do((val: ResponseMessage<any>) => {
-                // TODO piper specific exception types
-                if (!this.running.includes(val.data.id)) {
-                    throw new Error("Invalid response id");
+            .filter(val => val.data.id === seedRequest.id)
+            .finally(() => {
+                const i = this.running.findIndex(id => id === seedRequest.id);
+                if (i !== -1) {
+                    this.running.splice(i, 1);
                 }
-                if (!["list", "process", "finish"].includes(val.data.method)) {
-                    throw new Error("Invalid response type");
-                }
-                if (this.isErrorResponse(val.data)) {
-                    const error = val.data.error;
-                    throw new Error(`${error.code}: ${error.message}`);
-                }
-            })
-            .filter(val => val.data.id === seedRequest.id);
+            });
     }
 
     private isErrorResponse<T>(data: ResponseData<T>): data is ErrorResponse {
