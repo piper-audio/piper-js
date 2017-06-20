@@ -259,7 +259,7 @@ describe("WebWorkerStreamingClient", () => {
 
     it("can queue up multiple requests", () => {
         const stubWorker = createStubWorker(function () {
-            const requestResolveTimes = [300, 150, 50];
+            const requestResolveTimes = [50, 100, 150];
             const responses: (ListResponse | StreamingResponse)[] = [
                 {
                     available: [
