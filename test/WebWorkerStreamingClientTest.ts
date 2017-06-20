@@ -430,4 +430,40 @@ describe("WebWorkerStreamingClient", () => {
             },
         ]);
     });
+
+    it("can process requests after receiving an error response", () => {
+        const stubWorker = createStubWorker(function () {
+            this.onmessage = (message) => {
+                if (message.data.id === 'error') {
+                    this.postMessage({
+                        id: "error",
+                        method: "list",
+                        error: {
+                            code: 123,
+                            message: "Oh, bother!"
+                        }
+                    });
+                } else {
+                    this.postMessage({
+                        id: "stub",
+                        method: "list",
+                        result: {
+                            available: {}
+                        }
+                    })
+                }
+            };
+        });
+        const idProvider: RequestIdProvider = function* () {
+            yield "error";
+            yield "stub";
+        }();
+        const client = new WebWorkerStreamingClient(
+            stubWorker,
+            idProvider
+        );
+        return client.list({})
+            .catch(() => client.list({}))
+            .should.eventually.eql({available: {}});
+    });
 });
