@@ -54,7 +54,7 @@ export class WebWorkerStreamingClient implements StreamingService {
         const method: WebMethod = "list";
 
         const list$: Observable<ListResponse> =
-            this.createResponseObserver<ListRequest>({
+            this.createResponseObservable<ListRequest>({
                     id: id,
                     method: method,
                     params: request
@@ -76,7 +76,7 @@ export class WebWorkerStreamingClient implements StreamingService {
     : Observable<StreamingResponse> {
         const id: RequestId = this.idProvider.next().value;
 
-        return this.createResponseObserver<SimpleRequest>({
+        return this.createResponseObservable<SimpleRequest>({
                 id: id,
                 method: "process",
                 params: request
@@ -90,7 +90,8 @@ export class WebWorkerStreamingClient implements StreamingService {
     }
 
     // TODO take predicate and also check response validity
-    private createResponseObserver<T>(seedRequest: RequestMessage<T>): ResponseObservable {
+    private createResponseObservable<T>(seedRequest: RequestMessage<T>)
+    : ResponseObservable {
         const sendRequest$: Observable<any> = Observable.create(() => {
             const validMethods: WebMethod[] = seedRequest.method === "process" ?
                 ["process", "finish"] : [seedRequest.method];
