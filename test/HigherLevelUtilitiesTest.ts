@@ -478,7 +478,8 @@ describe("PiperSimpleClient", () => {
                     hasDuration: false,
                     sampleRate: 0,
                     sampleType: 0
-                }
+                },
+                static: MetaDataStub.staticOutputInfo
             })
         });
     });
