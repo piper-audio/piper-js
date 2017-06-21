@@ -26,11 +26,27 @@ export class WebWorkerStreamingClient implements StreamingService {
     private worker: Worker;
     private idProvider: RequestIdProvider;
     private messages$: ResponseObservable;
+    private running: Map<RequestId, WebMethod[]>;
 
     constructor(worker: Worker, idProvider: RequestIdProvider) {
         this.worker = worker;
         this.idProvider = idProvider;
-        this.messages$ = Observable.fromEvent(this.worker, "message");
+        this.running = new Map();
+        this.messages$ = Observable.fromEvent(this.worker, "message")
+            .do((val: ResponseMessage<any>) => {
+                // TODO piper specific exception types
+                if (!this.running.has(val.data.id)) {
+                    throw new Error(`Invalid response id`);
+                }
+                if (!this.running.get(val.data.id).includes(val.data.method)) {
+                    throw new Error("Invalid response method");
+                }
+                if (this.isErrorResponse(val.data)) {
+                    const error = val.data.error;
+                    throw new Error(`${error.code}: ${error.message}`);
+                }
+            })
+            .share();
     }
 
     list(request: ListRequest): Promise<ListResponse> {
@@ -38,12 +54,11 @@ export class WebWorkerStreamingClient implements StreamingService {
         const method: WebMethod = "list";
 
         const list$: Observable<ListResponse> =
-            this.createThrowingObserver<ListRequest>({
+            this.createResponseObservable<ListRequest>({
                     id: id,
                     method: method,
                     params: request
-                },
-                method
+                }
             )
             .filter(res => (res. data as SuccessfulResponse<ListResponse>)
                 .result.available !== undefined) /* TODO should this throw?*/
@@ -54,20 +69,18 @@ export class WebWorkerStreamingClient implements StreamingService {
     }
 
     process(request: SimpleRequest): Observable<StreamingResponse> {
-        return this.createFeatureStream(request, "process");
+        return this.createFeatureStream(request);
     }
 
-    private createFeatureStream(request: SimpleRequest,
-                                method: WebMethod): Observable<StreamingResponse> {
+    private createFeatureStream(request: SimpleRequest)
+    : Observable<StreamingResponse> {
         const id: RequestId = this.idProvider.next().value;
 
-        return this.createThrowingObserver<SimpleRequest>({
+        return this.createResponseObservable<SimpleRequest>({
                 id: id,
-                method: method,
+                method: "process",
                 params: request
-            },
-            method,
-            "finish"
+            }
         )
         /*TODO inspect res.data to ensure valid StreamingResponse?*/
             .takeWhile(val => val.data.method !== "finish")
@@ -77,30 +90,20 @@ export class WebWorkerStreamingClient implements StreamingService {
     }
 
     // TODO take predicate and also check response validity
-    private createThrowingObserver<T>(seedRequest: RequestMessage<T>,
-                                   ...method: WebMethod[]): ResponseObservable {
-        const sendRequest$ = Observable.create(() => {
+    private createResponseObservable<T>(seedRequest: RequestMessage<T>)
+    : ResponseObservable {
+        const sendRequest$: Observable<any> = Observable.create(() => {
+            const validMethods: WebMethod[] = seedRequest.method === "process" ?
+                ["process", "finish"] : [seedRequest.method];
+            this.running.set(seedRequest.id, validMethods);
             this.worker.postMessage(seedRequest);
         });
 
-        // TODO this won't work if multiple requests are being processed
-        // perhaps errors shouldn't be thrown, and each observer should just
-        // filter for matching id, allowing the other messages to pass through.
-        // Then, it still may make sense to throw if the method doesn't match
         return this.messages$
             .merge(sendRequest$)
-            .do((val: ResponseMessage<any>) => {
-                // TODO piper specific exception types
-                if (val.data.id !== seedRequest.id) {
-                    throw new Error("Wrong response id");
-                }
-                if (!method.includes(val.data.method)) {
-                    throw new Error("Wrong response type");
-                }
-                if (this.isErrorResponse(val.data)) {
-                    const error = val.data.error;
-                    throw new Error(`${error.code}: ${error.message}`);
-                }
+            .filter(val => val.data.id === seedRequest.id)
+            .finally(() => {
+                this.running.delete(seedRequest.id);
             });
     }
 
