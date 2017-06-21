@@ -199,7 +199,7 @@ interface WireStaticData {
     programs?: string[];
     inputDomain: string;
     basicOutputInfo: BasicDescriptor[];
-    staticOutputInfo: WireStaticOutputInfo;
+    staticOutputInfo?: WireStaticOutputInfo;
 }
 
 type WireListRequest = ListRequest;
@@ -253,7 +253,7 @@ interface WireConfiguredOutputDescriptor {
 
 interface WireOutputDescriptor {
     basic: BasicDescriptor;
-    static: WireStaticOutputDescriptor;
+    static?: WireStaticOutputDescriptor;
     configured: WireConfiguredOutputDescriptor;
 }
 

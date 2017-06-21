@@ -82,7 +82,7 @@ export interface StaticData {
     programs?: string[];
     inputDomain: InputDomain;
     basicOutputInfo: BasicDescriptor[];
-    staticOutputInfo: Map<OutputIdentifier, StaticOutputDescriptor>;
+    staticOutputInfo?: Map<OutputIdentifier, StaticOutputDescriptor>;
 }
 
 export interface ConfigurationResponse {
@@ -92,7 +92,7 @@ export interface ConfigurationResponse {
 
 export interface OutputDescriptor {
     basic: BasicDescriptor;
-    static: StaticOutputDescriptor;
+    static?: StaticOutputDescriptor;
     configured: ConfiguredOutputDescriptor;
 }
 
