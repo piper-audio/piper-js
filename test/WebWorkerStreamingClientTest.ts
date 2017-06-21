@@ -7,11 +7,13 @@ chai.should();
 chai.use(chaiAsPromised);
 import * as TinyWorker from "tiny-worker";
 import {
+    countingIdProvider,
     RequestIdProvider,
     WebWorkerStreamingClient
 } from "../src/client-stubs/WebWorkerStreamingClient";
 import {StreamingResponse} from "../src/StreamingService";
 import {FeatureList} from "../src/Feature";
+import {ListResponse} from '../src/Piper';
 
 function createStubWorker(work: string | WorkerFunction): Worker {
     let stubWorker = new TinyWorker(work);
@@ -75,7 +77,35 @@ describe("WebWorkerStreamingClient", () => {
         );
         return client.list({}).should.eventually.be.rejectedWith(
             Error,
-            "Wrong response id"
+            "Invalid response id"
+        );
+    });
+
+    it("rejects from list on mismatched method", () => {
+        const stubWorker = createStubWorker(function () {
+            this.onmessage = () => {
+                this.postMessage({
+                    id: "sonic",
+                    method: "process",
+                    result: {
+                        available: {}
+                    }
+                });
+            };
+        });
+        const singleIdProvider: RequestIdProvider = {
+            next: () => ({
+                done: true,
+                value: "sonic"
+            })
+        };
+        const client = new WebWorkerStreamingClient(
+            stubWorker,
+            singleIdProvider
+        );
+        return client.list({}).should.eventually.be.rejectedWith(
+            Error,
+            "Invalid response method"
         );
     });
 
@@ -260,9 +290,213 @@ describe("WebWorkerStreamingClient", () => {
         )
     });
 
-    // TODO
-    // it("terminates stream with error on non well-formed response", () => {
-    // });
-    //
+    it("can queue up multiple requests", () => {
+        const stubWorker = createStubWorker(function () {
+            const requestResolveTimes = [50, 100, 150];
+            const responses: (ListResponse | StreamingResponse)[] = [
+                {
+                    available: [
+                        {
+                            key: 'one',
+                            basic: {
+                                identifier: 'stubone',
+                                name: 'Blah blah',
+                                description: 'not meaningful'
 
+                            },
+                            inputDomain: 0,
+                            basicOutputInfo: [],
+                            version: 1.0,
+                            minChannelCount: 1,
+                            maxChannelCount: 2
+                        }
+                    ]
+                },
+                {
+                    features: [],
+                    configuration: {
+                        outputDescriptor: {
+                            basic: {
+                                identifier: "nothing",
+                                name: "Nothing!",
+                                description: "Absolutely nothing!"
+                            },
+                            configured: {
+                                hasDuration: false,
+                                sampleType: 0
+                            }
+                        },
+                        inputSampleRate: 0,
+                        framing: {
+                            stepSize: 0,
+                            blockSize: 0
+                        }
+                    },
+                    progress: {
+                        processedBlockCount: 0,
+                        totalBlockCount: 0
+                    }
+                },
+                {
+                    available: [
+                        {
+                            key: 'two',
+                            basic: {
+                                identifier: 'stubtwo',
+                                name: 'Blah blah blah',
+                                description: 'even less meaningful'
+
+                            },
+                            inputDomain: 0,
+                            basicOutputInfo: [],
+                            version: 2.0,
+                            minChannelCount: 1,
+                            maxChannelCount: 2
+                        }
+                    ]
+                },
+            ];
+            this.onmessage = (message) => {
+                const response = {
+                    id: `${message.data.id}`,
+                    method: message.data.method,
+                    result: responses[message.data.id]
+                };
+                setTimeout(
+                    () => {
+                        this.postMessage(response);
+                        if (response.method === 'process') {
+                            this.postMessage({
+                                id: response.id,
+                                method: "finish",
+                                result: {}
+                            });
+                        }
+                    },
+                    requestResolveTimes[message.data.id++]
+                );
+            };
+        });
+        const client = new WebWorkerStreamingClient(
+            stubWorker,
+            countingIdProvider(0)
+        );
+
+        // annoying duplication of the expected responses due to
+        // the bodge in TinyWorker for instantiating a worker
+        // (function body converted to a string and then eval-ed)
+        return Promise.all([
+            client.list({from: ['one']}),
+            client.process({
+                audioData: [Float32Array.of(1, 2, 3, 4, 5)],
+                audioFormat: {
+                    channelCount: 1,
+                    sampleRate: 4
+                },
+                key: "test",
+                outputId: "count",
+                blockSize: 1,
+                stepSize: 1
+            }).toPromise(),
+            client.list({from: ['two']}),
+        ]).should.eventually.eql([
+            {
+                available: [
+                    {
+                        key: 'one',
+                        basic: {
+                            identifier: 'stubone',
+                            name: 'Blah blah',
+                            description: 'not meaningful'
+
+                        },
+                        inputDomain: 0,
+                        basicOutputInfo: [],
+                        version: 1.0,
+                        minChannelCount: 1,
+                        maxChannelCount: 2
+                    }
+                ]
+            },
+            {
+                features: [],
+                configuration: {
+                    outputDescriptor: {
+                        basic: {
+                            identifier: "nothing",
+                            name: "Nothing!",
+                            description: "Absolutely nothing!"
+                        },
+                        configured: {
+                            hasDuration: false,
+                            sampleType: 0
+                        }
+                    },
+                    inputSampleRate: 0,
+                    framing: {
+                        stepSize: 0,
+                        blockSize: 0
+                    }
+                },
+                progress: {
+                    processedBlockCount: 0,
+                    totalBlockCount: 0
+                }
+            },
+            {
+                available: [
+                    {
+                        key: 'two',
+                        basic: {
+                            identifier: 'stubtwo',
+                            name: 'Blah blah blah',
+                            description: 'even less meaningful'
+
+                        },
+                        inputDomain: 0,
+                        basicOutputInfo: [],
+                        version: 2.0,
+                        minChannelCount: 1,
+                        maxChannelCount: 2
+                    }
+                ]
+            },
+        ]);
+    });
+
+    it("can process requests after receiving an error response", () => {
+        const stubWorker = createStubWorker(function () {
+            this.onmessage = (message) => {
+                if (message.data.id === 'error') {
+                    this.postMessage({
+                        id: "error",
+                        method: "list",
+                        error: {
+                            code: 123,
+                            message: "Oh, bother!"
+                        }
+                    });
+                } else {
+                    this.postMessage({
+                        id: "stub",
+                        method: "list",
+                        result: {
+                            available: {}
+                        }
+                    })
+                }
+            };
+        });
+        const idProvider: RequestIdProvider = function* () {
+            yield "error";
+            yield "stub";
+        }();
+        const client = new WebWorkerStreamingClient(
+            stubWorker,
+            idProvider
+        );
+        return client.list({})
+            .catch(() => client.list({}))
+            .should.eventually.eql({available: {}});
+    });
 });
