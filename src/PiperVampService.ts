@@ -100,9 +100,7 @@ export class PiperVampSynchronousService implements SynchronousService {
     }
 
     list(request: ListRequest): ListResponse {
-        return Deserialise.ListResponse(
-            jsonRequest(this.module, Serialise.ListRequest(request))
-        );
+        return list(this.module, request);
     }
 
     load(request: LoadRequest): LoadResponse {
