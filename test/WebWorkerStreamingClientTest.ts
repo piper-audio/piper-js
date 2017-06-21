@@ -81,6 +81,34 @@ describe("WebWorkerStreamingClient", () => {
         );
     });
 
+    it("rejects from list on mismatched method", () => {
+        const stubWorker = createStubWorker(function () {
+            this.onmessage = () => {
+                this.postMessage({
+                    id: "sonic",
+                    method: "process",
+                    result: {
+                        available: {}
+                    }
+                });
+            };
+        });
+        const singleIdProvider: RequestIdProvider = {
+            next: () => ({
+                done: true,
+                value: "sonic"
+            })
+        };
+        const client = new WebWorkerStreamingClient(
+            stubWorker,
+            singleIdProvider
+        );
+        return client.list({}).should.eventually.be.rejectedWith(
+            Error,
+            "Invalid response method"
+        );
+    });
+
     it("rejects from list on non well-formed response", () => {
         const executeList = (work: WorkerFunction): Promise<any> => {
             const nonConformingWorker = createStubWorker(work);

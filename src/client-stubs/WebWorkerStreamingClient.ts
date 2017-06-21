@@ -26,19 +26,20 @@ export class WebWorkerStreamingClient implements StreamingService {
     private worker: Worker;
     private idProvider: RequestIdProvider;
     private messages$: ResponseObservable;
-    private running: RequestId[];
+    private running: Map<RequestId, WebMethod[]>;
 
     constructor(worker: Worker, idProvider: RequestIdProvider) {
         this.worker = worker;
         this.idProvider = idProvider;
+        this.running = new Map();
         this.messages$ = Observable.fromEvent(this.worker, "message")
             .do((val: ResponseMessage<any>) => {
                 // TODO piper specific exception types
-                if (!this.running.includes(val.data.id)) {
+                if (!this.running.has(val.data.id)) {
                     throw new Error(`Invalid response id`);
                 }
-                if (!["list", "process", "finish"].includes(val.data.method)) {
-                    throw new Error("Invalid response type");
+                if (!this.running.get(val.data.id).includes(val.data.method)) {
+                    throw new Error("Invalid response method");
                 }
                 if (this.isErrorResponse(val.data)) {
                     const error = val.data.error;
@@ -46,7 +47,6 @@ export class WebWorkerStreamingClient implements StreamingService {
                 }
             })
             .share();
-        this.running = [];
     }
 
     list(request: ListRequest): Promise<ListResponse> {
@@ -92,7 +92,9 @@ export class WebWorkerStreamingClient implements StreamingService {
     // TODO take predicate and also check response validity
     private createResponseObserver<T>(seedRequest: RequestMessage<T>): ResponseObservable {
         const sendRequest$: Observable<any> = Observable.create(() => {
-            this.running.push(seedRequest.id);
+            const validMethods: WebMethod[] = seedRequest.method === "process" ?
+                ["process", "finish"] : [seedRequest.method];
+            this.running.set(seedRequest.id, validMethods);
             this.worker.postMessage(seedRequest);
         });
 
@@ -100,10 +102,7 @@ export class WebWorkerStreamingClient implements StreamingService {
             .merge(sendRequest$)
             .filter(val => val.data.id === seedRequest.id)
             .finally(() => {
-                const i = this.running.findIndex(id => id === seedRequest.id);
-                if (i !== -1) {
-                    this.running.splice(i, 1);
-                }
+                this.running.delete(seedRequest.id);
             });
     }
 
