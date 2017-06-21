@@ -303,13 +303,22 @@ function fromTransport(buffer: SerialisedJson): any {
 
 function toWireStaticData(data: StaticData): WireStaticData {
     let staticOutputInfoObj: WireStaticOutputInfo = {};
-    for (const outputId of data.staticOutputInfo.keys()) {
-        staticOutputInfoObj[outputId] = data.staticOutputInfo.get(outputId);
+    const shouldPopulateStaticOutputs =
+        data.staticOutputInfo && data.staticOutputInfo.size > 0;
+    const { staticOutputInfo, inputDomain, ...alreadyMappedData } = data;
+    if (shouldPopulateStaticOutputs) {
+        for (const outputId of staticOutputInfo.keys()) {
+            staticOutputInfoObj[outputId] = staticOutputInfo.get(outputId);
+        }
     }
-    return Object.assign({}, data, {
-        inputDomain: InputDomain[data.inputDomain],
-        staticOutputInfo: staticOutputInfoObj
-    });
+    return Object.assign(
+        {},
+        alreadyMappedData,
+        {inputDomain: InputDomain[inputDomain]},
+        shouldPopulateStaticOutputs ? {
+            staticOutputInfo: staticOutputInfoObj
+        } : {}
+    );
 }
 
 function toStaticData(data: WireStaticData): StaticData {

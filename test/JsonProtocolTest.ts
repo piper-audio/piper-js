@@ -3,9 +3,13 @@
  */
 import * as chai from "chai";
 import {segment} from "../src/HigherLevelUtilities";
-import {ProcessRequest, ProcessResponse, ListRequest} from "../src/Piper";
+import {
+    ProcessRequest, ProcessResponse, ListRequest,
+    ListResponse
+} from "../src/Piper";
 import {Serialise, Deserialise} from "../src/JsonProtocol";
 import {FeatureList} from "../src/Feature";
+import {InputDomain} from '../src/FeatureExtractor';
 chai.should();
 
 describe("Serialise.ProcessRequest()", () => {
@@ -285,5 +289,144 @@ describe("Various optional behaviour of (de)serialisation functions", () => {
         })).should.eql({
             handle: 1
         });
+    });
+});
+
+describe("Deserialise.ListResponse()", () => {
+    it("Populates staticOutputInfo when present", () => {
+        const message = {
+            method: "list",
+            result: {
+                available: [{
+                    key: "test",
+                    basic: {
+                        identifier: "nonsense",
+                        name: "Nonsense",
+                        description: "Absolute Nonsense!"
+                    },
+                    version: 1,
+                    minChannelCount: 0,
+                    maxChannelCount: 1,
+                    inputDomain: "TimeDomain",
+                    basicOutputInfo: [
+                        {
+                            identifier: "nonsense",
+                            name: "Nonsense",
+                            description: "Absolute Nonsense!"
+                        }
+                    ]
+                }]
+            }
+        };
+        const expected: ListResponse = {
+            available: [
+                Object.assign(
+                    {},
+                    message.result.available[0],
+                    {inputDomain: 0}
+                )
+            ]
+        };
+        Deserialise.ListResponse(message).should.eql(expected);
+        const responseWithStaticInfo = Deserialise.ListResponse({
+            method: "list",
+            result: {
+                available: [
+                    Object.assign(
+                        {},
+                        message.result.available[0],
+                        {
+                            staticOutputInfo: {
+                                nonsense: "http://example.com/test/uri"
+                            }
+                        }
+                    )
+                ]
+            }
+        });
+        responseWithStaticInfo.available[0].staticOutputInfo.should.exist;
+        responseWithStaticInfo.available[0].staticOutputInfo.size.should.eql(1);
+        responseWithStaticInfo.available[0].staticOutputInfo.get(
+            "nonsense"
+        ).should.eql("http://example.com/test/uri");
+    });
+});
+
+describe("Serialise.ListResponse()", () => {
+    it("Converts staticOutputInfo when present", () => {
+        const response: ListResponse = {
+            available: [{
+                key: "test",
+                basic: {
+                    identifier: "nonsense",
+                    name: "Nonsense",
+                    description: "Absolute Nonsense!"
+                },
+                version: 1,
+                minChannelCount: 0,
+                maxChannelCount: 1,
+                inputDomain: InputDomain.TimeDomain,
+                basicOutputInfo: [
+                    {
+                        identifier: "nonsense",
+                        name: "Nonsense",
+                        description: "Absolute Nonsense!"
+                    }
+                ]
+            }]
+        };
+        const expected = {
+            method: "list",
+            result: {
+                available: [{
+                    key: "test",
+                    basic: {
+                        identifier: "nonsense",
+                        name: "Nonsense",
+                        description: "Absolute Nonsense!"
+                    },
+                    version: 1,
+                    minChannelCount: 0,
+                    maxChannelCount: 1,
+                    inputDomain: "TimeDomain",
+                    basicOutputInfo: [
+                        {
+                            identifier: "nonsense",
+                            name: "Nonsense",
+                            description: "Absolute Nonsense!"
+                        }
+                    ]
+                }]
+            }
+        };
+        JSON.parse(Serialise.ListResponse(response)).should.eql(expected);
+        JSON.parse(Serialise.ListResponse({
+            available: [
+                Object.assign(
+                    {},
+                    response.available[0],
+                    {
+                        staticOutputInfo: new Map([
+                            ["nonsense", "http://example.com/test/uri"]
+                        ])
+                    }
+                )
+            ]
+        })).should.eql({
+            method: "list",
+            result: {
+                available: [
+                    Object.assign(
+                        {},
+                        expected.result.available[0],
+                        {
+                            staticOutputInfo: {
+                                nonsense: "http://example.com/test/uri"
+                            }
+                        }
+                    )
+                ]
+            }
+        })
     });
 });
