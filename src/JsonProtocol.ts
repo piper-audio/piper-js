@@ -30,7 +30,9 @@ import {
     StaticOutputDescriptor,
     OutputIdentifier,
     ValueExtents,
-    Configuration, StaticData, ProcessInput, Framing
+    Configuration,
+    StaticData,
+    Framing
 } from "./FeatureExtractor";
 
 export namespace Serialise {
@@ -299,12 +301,10 @@ function fromTransport(buffer: SerialisedJson): any {
     return response.result || response.params;
 }
 
-function toWireStaticData(data: StaticData) : WireStaticData {
-    let staticOutputInfoObj : WireStaticOutputInfo = {};
-    const outputIds: string[] = Array.from(data.staticOutputInfo.keys());
-    for (let i = 0; i < outputIds.length; ++i) {
-        staticOutputInfoObj[outputIds[i]] =
-            data.staticOutputInfo.get(outputIds[i]);
+function toWireStaticData(data: StaticData): WireStaticData {
+    let staticOutputInfoObj: WireStaticOutputInfo = {};
+    for (const outputId of data.staticOutputInfo.keys()) {
+        staticOutputInfoObj[outputId] = data.staticOutputInfo.get(outputId);
     }
     return Object.assign({}, data, {
         inputDomain: InputDomain[data.inputDomain],
@@ -312,21 +312,24 @@ function toWireStaticData(data: StaticData) : WireStaticData {
     });
 }
 
-function toStaticData(data : WireStaticData) : StaticData {
+function toStaticData(data: WireStaticData): StaticData {
     let staticOutputInfoMap =
         new Map<OutputIdentifier, StaticOutputDescriptor>();
-    if (typeof(data.staticOutputInfo) !== 'undefined' &&
-        data.staticOutputInfo !== null) {
-        let outputIds : OutputIdentifier[] = Object.keys(data.staticOutputInfo);
-        for (let i = 0; i < outputIds.length; ++i) {
-            staticOutputInfoMap.set(outputIds[i],
-                                    data.staticOutputInfo[outputIds[i]]);
+    const { staticOutputInfo, inputDomain, ...alreadyMappedData} = data;
+    if (staticOutputInfo) {
+        for (const outputId of Object.keys(staticOutputInfo)) {
+            staticOutputInfoMap.set(outputId,
+                staticOutputInfo[outputId]);
         }
     }
-    return Object.assign({}, data, {
-        inputDomain: parseInt(InputDomain[data.inputDomain as any]),
-        staticOutputInfo: staticOutputInfoMap
-    });
+    return Object.assign(
+        {},
+        alreadyMappedData,
+        {inputDomain: parseInt(InputDomain[inputDomain as any])},
+        staticOutputInfoMap.size > 0 ? {
+            staticOutputInfo: staticOutputInfoMap
+        } : {}
+    );
 }
 
 function toWireListResponse(response: ListResponse): WireListResponse {
