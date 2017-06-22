@@ -12,7 +12,8 @@ import {
     CreateFeatureExtractorFunction,
     CreateAudioStreamFunction, PiperSimpleClient, FeatureCollection,
     SimpleRequest,
-    VectorFeature, MatrixFeature, TracksFeature
+    VectorFeature,
+    MatrixFeature
 } from "../src/HigherLevelUtilities";
 import {FeatureExtractor} from "../src/FeatureExtractor";
 import {fromSeconds, fromFrames} from "../src/Timestamp"
@@ -479,7 +480,9 @@ describe("PiperSimpleClient", () => {
                     sampleRate: 0,
                     sampleType: 0
                 },
-                static: MetaDataStub.staticOutputInfo
+                static: MetaDataStub.staticOutputInfo.get(
+                    MetaDataStub.basicOutputInfo[0].identifier
+                )
             })
         });
     });

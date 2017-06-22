@@ -110,8 +110,12 @@ export class FeatureExtractorSynchronousService implements SynchronousService {
                         response.outputs.get(basic.identifier)
                     )
                 },
-                plugin.metadata.staticOutputInfo ?
-                    {static: plugin.metadata.staticOutputInfo} : {}
+                plugin.metadata.staticOutputInfo.has(basic.identifier) ?
+                    {
+                        static: plugin.metadata.staticOutputInfo.get(
+                            basic.identifier
+                        )
+                    } : {}
             );
         });
         return {
