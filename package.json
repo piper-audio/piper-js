@@ -36,12 +36,12 @@
     "rxjs": "^5.4.0"
   },
   "devDependencies": {
-    "@types/chai": "^3.5.2",
-    "@types/chai-as-promised": "0.0.29",
+    "@types/chai": "^4.0.0",
+    "@types/chai-as-promised": "^0.0.31",
     "@types/mocha": "^2.2.41",
     "@types/node": "^6.0.73",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^5.3.0",
+    "chai": "^4.0.0",
+    "chai-as-promised": "^7.0.0",
     "coveralls": "^2.13.1",
     "mocha": "^3.3.0",
     "nyc": "^10.3.2",
