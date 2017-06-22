@@ -18,9 +18,7 @@ function createOutputDescriptor(hasDuration: boolean, sampleRate: number, sample
             identifier: "stub",
             name: "Stub OutputDescriptor"
         },
-        static: new Map([
-            ["stub", { typeURI: "http://example.com/stub" }]
-        ]),
+        static:  { typeURI: "http://example.com/stub" },
         configured: {
             hasDuration: hasDuration,
             sampleRate: sampleRate,
@@ -109,9 +107,7 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
                         identifier: "stub",
                         name: "Stub OutputDescriptor"
                     },
-                    static: new Map([
-                        ["stub", { typeURI: "http://example.com/stub" }]
-                    ]),
+                    static: { typeURI: "http://example.com/stub" },
                     configured: {
                         hasDuration: false,
                         sampleType: SampleType.VariableSampleRate,
@@ -133,9 +129,7 @@ describe("VariableSampleRateFeatureTimeAdjuster", () => {
                         identifier: "stub",
                         name: "Stub OutputDescriptor"
                     },
-                    static: new Map([
-                        ["stub", { typeURI: "http://example.com/stub" }]
-                    ]),
+                    static: { typeURI: "http://example.com/stub" },
                     configured: {
                         hasDuration: false,
                         sampleType: SampleType.VariableSampleRate,
@@ -233,7 +227,6 @@ describe("FixedSampleRateFeatureTimeAdjuster", () => {
                     identifier: "stub",
                     name: "Stub OutputDescriptor"
                 },
-                static: {},
                 configured: {
                     hasDuration: false,
                     sampleType: SampleType.FixedSampleRate
