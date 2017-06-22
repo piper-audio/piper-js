@@ -61,6 +61,18 @@ describe("PiperVampServiceTest", () => {
     it("Can load an available plugin", () => {
         const expectedResponse = loadFixture("expected-load-response");
         expectedResponse.staticData.inputDomain = InputDomain[expectedResponse.staticData.inputDomain];
+        const objToMap = (obj: {[key: string]: any}): Map<string, any> => {
+            return new Map(
+                Object.keys(obj).map(key => [
+                        key,
+                        obj[key]
+                    ]
+                ) as [string, any][]
+            );
+        };
+        expectedResponse.defaultConfiguration.parameterValues = objToMap(
+            expectedResponse.defaultConfiguration.parameterValues
+        );
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });
 
