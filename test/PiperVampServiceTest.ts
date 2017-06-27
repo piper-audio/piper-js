@@ -27,6 +27,15 @@ import {
 chai.should();
 chai.use(chaiAsPromised);
 const cleaner: EmscriptenListenerCleaner = createEmscriptenCleanerWithNodeGlobal();
+const objToMap = (obj: {[key: string]: any}): Map<string, any> => {
+    return new Map(
+        Object.keys(obj).map(key => [
+                key,
+                obj[key]
+            ]
+        ) as [string, any][]
+    );
+};
 
 describe("PiperVampServiceTest", () => {
     afterEach(() => cleaner.clean());
@@ -42,7 +51,14 @@ describe("PiperVampServiceTest", () => {
 
     it("Can list available plugins in the module", () => {
         const expectedList: StaticData[] = loadFixture("expected-plugin-list").available
-            .map((data: any) => Object.assign({}, data as any, {inputDomain: InputDomain[data.inputDomain]}));
+            .map((data: any) => Object.assign(
+                {},
+                data as any,
+                {inputDomain: InputDomain[data.inputDomain]},
+                data.staticOutputInfo
+                    ? {staticOutputInfo: objToMap(data.staticOutputInfo)} : {}
+                )
+            );
         return client.list({}).then(available => available.available.should.eql(expectedList));
     });
 
@@ -61,17 +77,11 @@ describe("PiperVampServiceTest", () => {
     it("Can load an available plugin", () => {
         const expectedResponse = loadFixture("expected-load-response");
         expectedResponse.staticData.inputDomain = InputDomain[expectedResponse.staticData.inputDomain];
-        const objToMap = (obj: {[key: string]: any}): Map<string, any> => {
-            return new Map(
-                Object.keys(obj).map(key => [
-                        key,
-                        obj[key]
-                    ]
-                ) as [string, any][]
-            );
-        };
         expectedResponse.defaultConfiguration.parameterValues = objToMap(
             expectedResponse.defaultConfiguration.parameterValues
+        );
+        expectedResponse.staticData.staticOutputInfo = objToMap(
+            expectedResponse.staticData.staticOutputInfo
         );
         return loadResponse.should.eventually.deep.equal(expectedResponse);
     });

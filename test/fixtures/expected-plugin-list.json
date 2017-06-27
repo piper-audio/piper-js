@@ -13,7 +13,12 @@
         "name": "Amplitude"
       }
     ],
-    "category": [],
+    "staticOutputInfo": {
+      "amplitude": { "typeURI": "http://purl.org/ontology/af/Signal" }
+    },
+    "category": [
+      "Low Level Features"
+    ],
     "rights": "Code copyright 2006 Dan Stowell; method from SuperCollider.  Freely redistributable (BSD license)",
     "inputDomain": "TimeDomain",
     "maker": "Vamp SDK Example Plugins",
@@ -86,7 +91,28 @@
         "name": "Filtered Autocorrelation"
       }
     ],
-    "category": [],
+    "staticOutputInfo": {
+      "acf": {
+        "typeURI": "http://purl.org/ontology/af/Signal"
+      },
+      "candidates": {
+        "typeURI": "http://purl.org/ontology/af/Tempo"
+      },
+      "detectionfunction": {
+        "typeURI": "http://purl.org/ontology/af/OnsetDetectionFunction"
+      },
+      "filtered_acf": {
+        "typeURI": "http://purl.org/ontology/af/Signal"
+      },
+      "tempo": {
+        "typeURI": "http://purl.org/ontology/af/Tempo"
+      }
+    }
+    ,
+    "category": [
+      "Time",
+      "Tempo"
+    ],
     "rights": "Code copyright 2008 Queen Mary, University of London.  Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
@@ -158,7 +184,18 @@
         "name": "Detection Function"
       }
     ],
-    "category": [],
+    "staticOutputInfo": {
+      "detectionfunction": {
+        "typeURI": "http://purl.org/ontology/af/OnsetDetectionFunction"
+      },
+      "onsets": {
+        "typeURI": "http://purl.org/ontology/af/Onset"
+      }
+    },
+    "category": [
+      "Time",
+      "Onsets"
+    ],
     "rights": "Code copyright 2006 Queen Mary, University of London, after Dan Barry et al 2005.  Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
@@ -211,7 +248,12 @@
         "name": "Power Spectrum"
       }
     ],
-    "category": [],
+    "staticOutputInfo": {
+      "powerspectrum": {"typeURI": "http://purl.org/ontology/af/Signal"}
+    },
+    "category": [
+      "Visualisation"
+    ],
     "rights": "Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
@@ -240,7 +282,17 @@
         "name": "Linear Frequency Centroid"
       }
     ],
-    "category": [],
+    "staticOutputInfo": {
+      "linearcentroid": {
+        "typeURI": "http://purl.org/ontology/af/LinearFrequencyCentroid"
+      },
+      "logcentroid": {
+        "typeURI": "http://purl.org/ontology/af/LogFrequencyCentroid"
+      }
+    },
+    "category": [
+      "Low Level Features"
+    ],
     "rights": "Freely redistributable (BSD license)",
     "inputDomain": "FrequencyDomain",
     "maker": "Vamp SDK Example Plugins",
@@ -269,7 +321,17 @@
         "name": "Zero Crossings"
       }
     ],
-    "category": [],
+    "staticOutputInfo": {
+      "counts": {
+        "typeURI": "http://purl.org/ontology/af/ZeroCrossingCount"
+      },
+      "zerocrossings": {
+        "typeURI": "http://purl.org/ontology/af/ZeroCrossing"
+      }
+    },
+    "category": [
+      "Low Level Features"
+    ],
     "rights": "Freely redistributable (BSD license)",
     "inputDomain": "TimeDomain",
     "maker": "Vamp SDK Example Plugins",

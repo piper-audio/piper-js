@@ -15,6 +15,9 @@
         "sampleRate": 0,
         "sampleType": "OneSamplePerStep",
         "unit": "crossings"
+      },
+      "static": {
+        "typeURI": "http://purl.org/ontology/af/ZeroCrossingCount"
       }
     },
     {
@@ -31,6 +34,9 @@
         "sampleRate": 16,
         "sampleType": "VariableSampleRate",
         "unit": ""
+      },
+      "static": {
+        "typeURI": "http://purl.org/ontology/af/ZeroCrossing"
       }
     }
   ],
