@@ -7,6 +7,9 @@
 	"basic": {
 	    "$ref": "http://vamp-plugins.org/piper/json/schema/basic#"
 	},
+        "static": {
+            "$ref": "http://vamp-plugins.org/piper/json/schema/staticoutputdescriptor#"
+        },
 	"configured": {
 	    "$ref": "http://vamp-plugins.org/piper/json/schema/configuredoutputdescriptor#"
 	}
