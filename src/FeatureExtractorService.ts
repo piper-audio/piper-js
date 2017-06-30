@@ -102,10 +102,21 @@ export class FeatureExtractorSynchronousService implements SynchronousService {
         const response: Configured = plugin.extractor.configure(request.configuration);
         this.configured.set(request.handle, plugin);
         const outputList: OutputList = plugin.metadata.basicOutputInfo.map(basic => {
-            return {
-                basic: basic,
-                configured: Object.assign({binNames: [], sampleRate: 0}, response.outputs.get(basic.identifier))
-            };
+            return Object.assign(
+                {
+                    basic: basic,
+                    configured: Object.assign(
+                        {binNames: [], sampleRate: 0},
+                        response.outputs.get(basic.identifier)
+                    )
+                },
+                plugin.metadata.staticOutputInfo.has(basic.identifier) ?
+                    {
+                        static: plugin.metadata.staticOutputInfo.get(
+                            basic.identifier
+                        )
+                    } : {}
+            );
         });
         return {
             handle: request.handle,

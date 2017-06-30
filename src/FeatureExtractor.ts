@@ -52,6 +52,23 @@ export interface ParameterDescriptor {
     valueNames?: string[];
 }
 
+export type OutputIdentifier = string;
+
+export interface StaticOutputDescriptor {
+    typeURI?: string;
+}
+
+export interface ConfiguredOutputDescriptor {
+    unit?: string;
+    binCount?: number;
+    binNames?: string[];
+    extents?: ValueExtents;
+    quantizeStep?: number;
+    sampleType: SampleType;
+    sampleRate?: number;
+    hasDuration: boolean;
+}
+
 export interface StaticData {
     key: string;
     basic: BasicDescriptor;
@@ -65,19 +82,7 @@ export interface StaticData {
     programs?: string[];
     inputDomain: InputDomain;
     basicOutputInfo: BasicDescriptor[];
-}
-
-export type OutputIdentifier = string;
-
-export interface ConfiguredOutputDescriptor {
-    unit?: string;
-    binCount?: number;
-    binNames?: string[];
-    extents?: ValueExtents;
-    quantizeStep?: number;
-    sampleType: SampleType;
-    sampleRate?: number;
-    hasDuration: boolean;
+    staticOutputInfo?: Map<OutputIdentifier, StaticOutputDescriptor>;
 }
 
 export interface ConfigurationResponse {
@@ -87,10 +92,11 @@ export interface ConfigurationResponse {
 
 export interface OutputDescriptor {
     basic: BasicDescriptor;
+    static?: StaticOutputDescriptor;
     configured: ConfiguredOutputDescriptor;
 }
 
-export type OutputList = OutputDescriptor[];
+export type OutputList = OutputDescriptor[]; //!!! unused, because would normally be in Piper ConfigurationResponse
 export type ParameterIdentifier = string;
 export type Parameters = Map<ParameterIdentifier, number>;
 

@@ -26,8 +26,17 @@
         "name": "Zero Crossings"
       }
     ],
-    "category": [],
-    "rights": "Freely redistributable (BSD license)",
+    "staticOutputInfo": {
+      "counts": {
+        "typeURI": "http://purl.org/ontology/af/ZeroCrossingCount"
+      },
+      "zerocrossings": {
+        "typeURI": "http://purl.org/ontology/af/ZeroCrossing"
+      }
+    },
+    "category": [
+      "Low Level Features"
+    ],
     "inputDomain": "TimeDomain",
     "maker": "Vamp SDK Example Plugins",
     "maxChannelCount": 1,
@@ -35,6 +44,7 @@
     "parameters": [],
     "key": "vamp-example-plugins:zerocrossing",
     "version": 2,
-    "programs": []
+    "programs": [],
+    "rights": "Freely redistributable (BSD license)"
   }
 }

@@ -160,16 +160,23 @@ describe("FeatureExtractionService", () => {
                         2 : 0;
                     const binCount = basic.identifier === "passthrough" ?
                         config.framing.blockSize : 1;
-                    return {
-                        basic: basic,
-                        configured: {
-                            binCount: binCount,
-                            binNames: [],
-                            hasDuration: false,
-                            sampleRate: 0,
-                            sampleType: sampleType
-                        }
-                    }
+                    return Object.assign({
+                            basic: basic,
+                            configured: {
+                                binCount: binCount,
+                                binNames: [],
+                                hasDuration: false,
+                                sampleRate: 0,
+                                sampleType: sampleType
+                            }
+                        },
+                        MetaDataStub.staticOutputInfo.has(basic.identifier) ?
+                            {
+                                static: MetaDataStub.staticOutputInfo.get(
+                                    basic.identifier
+                                )
+                            } : {}
+                    )
                 }),
                 framing: config.framing
             };

@@ -64,6 +64,9 @@ export const FrequencyMetaDataStub: StaticData = {
             name: "Power Spectrum"
         }
     ],
+    staticOutputInfo: new Map([
+        ["stub-freq", { typeURI: "http://example.com/stub-freq" }]
+    ]),
     inputDomain: InputDomain.FrequencyDomain,
     maxChannelCount: 1,
     minChannelCount: 1,
@@ -87,6 +90,9 @@ export class PassThroughExtractor implements FeatureExtractor {
                     name: "Pass-through"
                 }
             ],
+            staticOutputInfo: new Map([
+                ["passthrough", { typeURI: "http://example.com/passthrough" }]
+            ]),
             inputDomain: InputDomain.FrequencyDomain,
             maxChannelCount: 1,
             minChannelCount: 1,

@@ -43,7 +43,15 @@
 	"basicOutputInfo": {
 	    "type": "array",
 	    "items": { "$ref": "http://vamp-plugins.org/piper/json/schema/basic#" }
-	}
+	},
+        "staticOutputInfo": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z0-9_-]+$": {
+                    "$ref": "http://vamp-plugins.org/piper/json/schema/staticoutputdescriptor#"
+                }
+            }
+        }
     },
     "required": [ "key", "basic", "version",
 		  "minChannelCount", "maxChannelCount",
