@@ -618,7 +618,7 @@ export class PiperSimpleClient implements SimpleService {
                 const features: FeatureList = featureSet.get(res.configuredOutputId) || [];
                 return forceList ? {
                     features: {
-                        shape: "list",
+                        shape: "list" as FeatureCollectionShape,
                         collected: features
                     },
                     outputDescriptor: res.outputDescriptor
