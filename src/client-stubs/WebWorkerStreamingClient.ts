@@ -32,21 +32,22 @@ export class WebWorkerStreamingClient implements StreamingService {
         this.worker = worker;
         this.idProvider = idProvider;
         this.running = new Map();
-        this.messages$ = Observable.fromEvent(this.worker, "message")
-            .do((val: ResponseMessage<any>) => {
-                // TODO piper specific exception types
-                if (!this.running.has(val.data.id)) {
-                    throw new Error(`Invalid response id`);
-                }
-                if (!this.running.get(val.data.id).includes(val.data.method)) {
-                    throw new Error("Invalid response method");
-                }
-                if (this.isErrorResponse(val.data)) {
-                    const error = val.data.error;
-                    throw new Error(`${error.code}: ${error.message}`);
-                }
-            })
-            .share();
+        this.messages$ = Observable.fromEvent<ResponseMessage<any>>(
+            this.worker,
+            "message"
+        ).do(val => {
+            // TODO piper specific exception types
+            if (!this.running.has(val.data.id)) {
+                throw new Error(`Invalid response id`);
+            }
+            if (!this.running.get(val.data.id).includes(val.data.method)) {
+                throw new Error("Invalid response method");
+            }
+            if (this.isErrorResponse(val.data)) {
+                const error = val.data.error;
+                throw new Error(`${error.code}: ${error.message}`);
+            }
+        }).share();
     }
 
     list(request: ListRequest): Promise<ListResponse> {
