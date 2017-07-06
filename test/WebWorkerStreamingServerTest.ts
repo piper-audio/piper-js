@@ -66,11 +66,7 @@ class MockService implements StreamingService, Mock {
                         description: "nonsense!",
                         identifier: "stub-stub-stub"
                     },
-                    static: new Map([
-                        ["fake", {
-                            "typeURI": "http://example.com/fake"
-                        }]
-                    ]),
+                    static: {typeURI: "http://example.com/fake"},
                     configured: {
                         binCount: 1,
                         binNames: [],
