@@ -9,5 +9,6 @@ module.exports = {
         filename: 'piper.bundle.js',
         library: "Piper",
         libraryTarget: "umd"
-    }
+    },
+    devtool: 'inline-source-map'
 };
