@@ -1,6 +1,6 @@
 {
   "name": "piper",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "description": "Piper is a protocol for driving audio feature extractors. This library provides ways of implementing clients and servers in JavaScript for the Piper protocol.",
   "main": "Piper.js",
   "typings": "Piper.d.ts",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@types/base64-js": "^1.2.5",
     "base64-js": "^1.2.0",
-    "rxjs": "^5.4.0"
+    "rxjs": "^5.4.2"
   },
   "devDependencies": {
     "@types/chai": "^4.0.0",
@@ -46,8 +46,8 @@
     "mocha": "^3.3.0",
     "nyc": "^10.3.2",
     "tiny-worker": "^2.1.1",
-    "ts-node": "^2.1.2",
+    "ts-node": "^3.2.0",
     "tv4": "^1.3.0",
-    "typescript": "2.3.4"
+    "typescript": "^2.4.1"
   }
 }
