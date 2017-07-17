@@ -11,7 +11,7 @@
     "build": "tsc && cp src/fft/KissFft*.js dist/ts/src/fft",
     "build-src-only": "tsc -p ./tsconfig.src.json && cp src/fft/KissFft*.js dist/ts/fft",
     "clean": "rm -rf fft *.js *.js.map *.d.ts dist extractors client-stubs fft protocols servers",
-    "prepublish": "npm run clean && npm run build-src-only && cp -r dist/ts/* .",
+    "prepare": "npm run clean && npm run build-src-only && cp -r dist/ts/* .",
     "cover": "nyc npm t",
     "coveralls": "npm run clean && npm run cover && cat ./coverage/lcov.info | coveralls"
   },
