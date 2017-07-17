@@ -75,12 +75,3 @@ export interface SynchronousService {
     process(request: ProcessRequest): ProcessResponse;
     finish(request: FinishRequest): FinishResponse;
 }
-
-// exports for library consumption
-export {PiperVampService} from "./PiperVampService";
-export * from "./JsonProtocol";
-export {FeatureExtractorService} from "./FeatureExtractorService";
-export {PiperClient} from "./PiperClient";
-export {segment, process, collect} from "./HigherLevelUtilities";
-export * from "./FeatureExtractor";
-export {fromSeconds, fromFrames, toSeconds} from "./Timestamp";
