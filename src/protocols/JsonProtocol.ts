@@ -2,7 +2,7 @@
  * Created by lucast on 04/10/2016.
  */
 import * as base64 from "base64-js";
-import {Timestamp} from "./Timestamp";
+import {Timestamp} from "../Timestamp";
 import {
     ExtractorHandle,
     ProcessRequest,
@@ -15,12 +15,12 @@ import {
     FinishRequest,
     FinishResponse,
     ListRequest
-} from "./Piper";
+} from "../Piper";
 import {
     Feature,
     FeatureList,
     FeatureSet
-} from "./Feature";
+} from "../Feature";
 import {
     AdapterFlags,
     InputDomain,
@@ -33,7 +33,7 @@ import {
     Configuration,
     StaticData,
     Framing
-} from "./FeatureExtractor";
+} from "../FeatureExtractor";
 
 export namespace Serialise {
     export function ListRequest(request: ListRequest, tag?: Tag): string {

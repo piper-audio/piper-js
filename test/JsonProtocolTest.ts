@@ -7,7 +7,7 @@ import {
     ProcessRequest, ProcessResponse, ListRequest,
     ListResponse
 } from "../src/Piper";
-import {Serialise, Deserialise} from "../src/JsonProtocol";
+import {Serialise, Deserialise} from "../src/protocols/JsonProtocol";
 import {FeatureList} from "../src/Feature";
 import {InputDomain} from '../src/FeatureExtractor';
 chai.should();

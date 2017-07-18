@@ -9,7 +9,7 @@ import {
 } from "./Piper";
 import {
     Serialise, Deserialise
-} from "./JsonProtocol";
+} from "./protocols/JsonProtocol";
 import {
     ConfigurationResponse as Configured, Configuration, ProcessInput, FeatureExtractor,
     AdapterFlags, ConfiguredOutputDescriptor
