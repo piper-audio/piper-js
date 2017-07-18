@@ -55,4 +55,5 @@ export const piper = {
     }
 };
 export type PiperModule = typeof piper;
+export default piper;
 module.exports = piper;
