@@ -10,5 +10,5 @@ module.exports = {
         library: "Piper",
         libraryTarget: "umd"
     },
-    devtool: 'inline-source-map'
+    devtool: 'source-map'
 };
