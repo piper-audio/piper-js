@@ -26,7 +26,7 @@ import * as extractor from './FeatureExtractor';
 import * as piperStuff from './Piper';
 
 // Perhaps something like ?
-export const piper = {
+const piper = {
     core: Object.assign({
         PiperClient,
         PiperSimpleClient,
@@ -54,6 +54,6 @@ export const piper = {
         ZeroCrossings
     }
 };
-export type PiperModule = typeof piper;
 export default piper;
+export type PiperModule = typeof piper;
 module.exports = piper;
