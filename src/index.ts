@@ -1,7 +1,6 @@
 /**
  * Created by lucast on 17/07/2017.
  */
-/// <reference path="../node_modules/@types/node/index.d.ts"/>
 // main barrel, import library functionality and export in desired shape
 
 // exports for library consumption
@@ -24,6 +23,18 @@ import * as webWorkerClientStuff from './client-stubs/WebWorkerStreamingClient';
 import {WebWorkerStreamingServer} from './servers/WebWorkerStreamingServer';
 import * as extractor from './FeatureExtractor';
 import * as piperStuff from './Piper';
+
+// re-exports
+export * from './Piper';
+export * from './FeatureExtractor';
+export * from './Feature';
+export * from './protocols/WebWorkerProtocol';
+export * from './protocols/JsonProtocol';
+export * from './client-stubs/WebWorkerStreamingClient';
+export {RealFft} from './fft/RealFft';
+export * from './StreamingService';
+export * from './Timestamp';
+
 // Perhaps something like ?
 module.exports = {
     core: Object.assign({
@@ -53,5 +64,3 @@ module.exports = {
         ZeroCrossings
     }
 };
-export type PiperModule = typeof module.exports;
-export default module.exports;
