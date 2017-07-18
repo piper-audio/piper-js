@@ -1,9 +1,9 @@
 {
   "name": "piper-js",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "description": "Piper is a protocol for driving audio feature extractors. This library provides ways of implementing clients and servers in JavaScript for the Piper protocol.",
   "main": "./dist/piper.bundle.js",
-  "typings": "./dist/index.d.ts",
+  "typings": "./dist/ts/index.d.ts",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
     "timings": "mocha perf/*.ts --require ts-node/register",
@@ -12,7 +12,7 @@
     "build-src-only": "tsc -p ./tsconfig.src.json && cp src/fft/KissFft*.js dist/ts/fft",
     "clean": "rm -rf fft *.js *.js.map *.d.ts dist/ts extractors client-stubs fft protocols servers",
     "move-dist-to-root": "cp -r dist/ts/* .",
-    "prepare": "npm run bundle && cp ./dist/ts/index.d.ts ./dist && npm run clean",
+    "prepare": "npm run bundle",
     "cover": "nyc npm t",
     "coveralls": "npm run clean && npm run cover && cat ./coverage/lcov.info | coveralls",
     "bundle": "npm run build-src-only && webpack --config ./dist/webpack.config.js"
