@@ -2,8 +2,8 @@
   "name": "piper-js",
   "version": "0.17.3",
   "description": "Piper is a protocol for driving audio feature extractors. This library provides ways of implementing clients and servers in JavaScript for the Piper protocol.",
-  "main": "index.js",
-  "typings": "Piper.d.ts",
+  "main": "./dist/piper.bundle.js",
+  "typings": "./dist/ts/index.d.ts",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
     "timings": "mocha perf/*.ts --require ts-node/register",
