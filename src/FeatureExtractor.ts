@@ -5,7 +5,7 @@ import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
 
 export abstract class FeatureExtractor {
-    abstract configure(configuration: Configuration): ConfigurationResponse;
+    abstract configure(configuration: Configuration): ExtractorConfiguration;
     abstract getDefaultConfiguration(): Configuration;
     abstract process(block: ProcessInput): FeatureSet;
     abstract finish(): FeatureSet;
@@ -85,7 +85,7 @@ export interface StaticData {
     staticOutputInfo?: Map<OutputIdentifier, StaticOutputDescriptor>;
 }
 
-export interface ConfigurationResponse {
+export interface ExtractorConfiguration {
     outputs: Map<OutputIdentifier, ConfiguredOutputDescriptor>;
     framing: Framing;
 }
@@ -96,7 +96,7 @@ export interface OutputDescriptor {
     configured: ConfiguredOutputDescriptor;
 }
 
-export type OutputList = OutputDescriptor[]; //!!! unused, because would normally be in Piper ConfigurationResponse
+export type OutputList = OutputDescriptor[]; //!!! unused, because would normally be in Piper ExtractorConfiguration
 export type ParameterIdentifier = string;
 export type Parameters = Map<ParameterIdentifier, number>;
 

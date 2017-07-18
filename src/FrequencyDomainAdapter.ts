@@ -4,7 +4,7 @@
 import {RealFft, RealFftFactory} from "./fft/RealFft";
 import {
     ProcessInput, FeatureExtractor, Configuration,
-    ConfigurationResponse
+    ExtractorConfiguration
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature"
 import {cyclicShiftInPlace, applyHannWindowTo} from "./FftUtilities";
@@ -36,7 +36,7 @@ export class FrequencyDomainAdapter implements FeatureExtractor {
         this.adjustmentMethod = adjustmentMethod;
     }
 
-    configure(configuration: Configuration): ConfigurationResponse {
+    configure(configuration: Configuration): ExtractorConfiguration {
         this.fft = this.fftFactory(configuration.framing.blockSize); // TODO verify power of 2?
         this.adjuster = this.adjustmentMethod === ProcessInputAdjustmentMethod.Buffer
                         ? new ProcessInputBuffersAdjuster(configuration)

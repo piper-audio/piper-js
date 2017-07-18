@@ -3,7 +3,7 @@
  */
 import {
     Parameters, OutputIdentifier, FeatureExtractor, Configuration,
-    ConfigurationResponse, ConfiguredOutputDescriptor,
+    ExtractorConfiguration, ConfiguredOutputDescriptor,
     SampleType, ProcessInput, AdapterFlags, OutputDescriptor
 } from "./FeatureExtractor";
 import {Feature, FeatureSet, FeatureList} from "./Feature";
@@ -156,7 +156,7 @@ function loadAndConfigureExtractor(extractor: FeatureExtractor,
                                    defaultConfig: Configuration,
                                    channelCount: number,
                                    params: Parameters = new Map(),
-                                   args: KeyValueObject = {}): [Configuration, ConfigurationResponse] {
+                                   args: KeyValueObject = {}): [Configuration, ExtractorConfiguration] {
 
     const config = determineConfiguration(defaultConfig, {
         blockSize: (args)["blockSize"],
@@ -380,7 +380,7 @@ export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
                         args: KeyValueObject = {}) : FeatureCollection {
     // TODO reduce duplication with process -
     // only issue stopping calling process directly here for
-    // lazyOutputs is that ConfigurationResponse and Configuration are needed
+    // lazyOutputs is that ExtractorConfiguration and Configuration are needed
     const extractor = createFeatureExtractorCallback(
         streamFormat.sampleRate,
         extractorKey

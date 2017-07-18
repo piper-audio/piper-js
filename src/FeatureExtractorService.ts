@@ -4,7 +4,7 @@
 import {
     FeatureExtractor,
     Configuration,
-    ConfigurationResponse as Configured,
+    ExtractorConfiguration as Configured,
     OutputList,
     StaticData,
     InputDomain,

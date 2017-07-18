@@ -152,7 +152,7 @@ describe("FeatureExtractionService", () => {
             return Promise.all([loadResponse.then(configure), loadResponse.then(configure)]).should.be.rejected;
         });
 
-        it("Resolves to a response whose content body is a ConfigurationResponse", () => {
+        it("Resolves to a response whose content body is a ExtractorConfiguration", () => {
             const expectedResponse: ConfigurationResponse = {
                 handle: 1,
                 outputList: MetaDataStub.basicOutputInfo.map(basic => {

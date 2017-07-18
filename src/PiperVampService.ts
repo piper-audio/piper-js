@@ -11,7 +11,7 @@ import {
     Serialise, Deserialise
 } from "./protocols/JsonProtocol";
 import {
-    ConfigurationResponse as Configured, Configuration, ProcessInput, FeatureExtractor,
+    ExtractorConfiguration as Configured, Configuration, ProcessInput, FeatureExtractor,
     AdapterFlags, ConfiguredOutputDescriptor
 } from "./FeatureExtractor";
 import {FeatureSet} from "./Feature";
