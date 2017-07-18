@@ -5,28 +5,28 @@
 // main barrel, import library functionality and export in desired shape
 
 // exports for library consumption
-const { PiperClient } = require('./dist/ts/PiperClient');
-const timestamp = require('./dist/ts/Timestamp');
-const fftUtils = require('./dist/ts/FftUtilities');
-const {
+import { PiperClient } from './PiperClient';
+import * as timestamp from './Timestamp';
+import * as fftUtils from './FftUtilities';
+import {
     PiperVampService,
     PiperVampSynchronousService,
     PiperVampFeatureExtractor
-} = require('./dist/ts/PiperVampService');
-const {
+} from './PiperVampService';
+import {
     FeatureExtractorSynchronousService,
     FeatureExtractorService
-} = require('./dist/ts/FeatureExtractorService');
-const { PiperSimpleClient } = require('./dist/ts/HigherLevelUtilities');
-const streaming = require('./dist/ts/StreamingService');
-const ZeroCrossings = require('./dist/ts/extractors/ZeroCrossings');
-const webWorkerClientStuff = require('./dist/ts/client-stubs/WebWorkerStreamingClient');
-const {WebWorkerStreamingServer} = require('./dist/ts/servers/WebWorkerStreamingServer');
-const extractor = require('./dist/ts/FeatureExtractor');
-const piperStuff = require('./dist/ts/Piper');
+} from './FeatureExtractorService';
+import { PiperSimpleClient } from './HigherLevelUtilities';
+import * as streaming from './StreamingService';
+import * as ZeroCrossings from './extractors/ZeroCrossings';
+import * as webWorkerClientStuff from './client-stubs/WebWorkerStreamingClient';
+import {WebWorkerStreamingServer} from './servers/WebWorkerStreamingServer';
+import * as extractor from './FeatureExtractor';
+import * as piperStuff from './Piper';
 
 // Perhaps something like ?
-module.exports = {
+export const piper = {
     core: Object.assign({
         PiperClient,
         PiperSimpleClient,
@@ -54,3 +54,5 @@ module.exports = {
         ZeroCrossings
     }
 };
+export type PiperModule = typeof piper;
+module.exports = piper;
