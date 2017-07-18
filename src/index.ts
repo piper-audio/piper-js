@@ -1,7 +1,7 @@
 /**
  * Created by lucast on 17/07/2017.
  */
-
+/// <reference path="../node_modules/@types/node/index.d.ts"/>
 // main barrel, import library functionality and export in desired shape
 
 // exports for library consumption
@@ -24,7 +24,6 @@ import * as webWorkerClientStuff from './client-stubs/WebWorkerStreamingClient';
 import {WebWorkerStreamingServer} from './servers/WebWorkerStreamingServer';
 import * as extractor from './FeatureExtractor';
 import * as piperStuff from './Piper';
-
 // Perhaps something like ?
 module.exports = {
     core: Object.assign({
@@ -55,3 +54,4 @@ module.exports = {
     }
 };
 export type PiperModule = typeof module.exports;
+export default module.exports;
