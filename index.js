@@ -22,27 +22,35 @@ const streaming = require('./dist/ts/StreamingService');
 const ZeroCrossings = require('./dist/ts/extractors/ZeroCrossings');
 const webWorkerClientStuff = require('./dist/ts/client-stubs/WebWorkerStreamingClient');
 const {WebWorkerStreamingServer} = require('./dist/ts/servers/WebWorkerStreamingServer');
+const extractor = require('./dist/ts/FeatureExtractor');
+const piperStuff = require('./dist/ts/Piper');
 
 // Perhaps something like ?
-// const piper = {
-//     core: {},
-//     vamp: {},
-//     streaming: {},
-//     worker: {},
-// };
-
-// Just export everything we've imported for now
-module.exports = Object.assign({
-    PiperClient,
-    PiperSimpleClient,
-    timestamp,
-    fft: Object.assign({}, fftUtils), // might add more
-    PiperVampService,
-    PiperVampSynchronousService,
-    PiperVampFeatureExtractor,
-    FeatureExtractorSynchronousService,
-    FeatureExtractorService,
+module.exports = {
+    core: Object.assign({
+        PiperClient,
+        PiperSimpleClient,
+        timestamp,
+        fft: Object.assign({}, fftUtils) // might add more
+    }, piperStuff),
+    vamp: {
+        PiperVampService,
+        PiperVampSynchronousService,
+        PiperVampFeatureExtractor,
+    },
     streaming,
-    ZeroCrossings,
-    WebWorkerStreamingServer
-}, webWorkerClientStuff);
+    worker: Object.assign(
+        {WebWorkerStreamingServer},
+        webWorkerClientStuff
+    ),
+    extractor: Object.assign(
+        {
+            FeatureExtractorSynchronousService,
+            FeatureExtractorService
+        },
+        extractor
+    ),
+    extractors: {
+        ZeroCrossings
+    }
+};
