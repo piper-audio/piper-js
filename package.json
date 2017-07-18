@@ -3,19 +3,19 @@
   "version": "0.18.0",
   "description": "Piper is a protocol for driving audio feature extractors. This library provides ways of implementing clients and servers in JavaScript for the Piper protocol.",
   "main": "./dist/piper.bundle.js",
-  "typings": "./dist/ts/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "scripts": {
     "test": "mocha test/*Test.ts --require ts-node/register",
     "timings": "mocha perf/*.ts --require ts-node/register",
     "profile": "npm run timings && node --prof-process $(ls -1tr isolate*.log | tail -1) > profile.txt",
     "build": "tsc && cp src/fft/KissFft*.js dist/ts/src/fft",
     "build-src-only": "tsc -p ./tsconfig.src.json && cp src/fft/KissFft*.js dist/ts/fft",
-    "clean": "rm -rf fft *.js *.js.map *.d.ts dist extractors client-stubs fft protocols servers",
+    "clean": "rm -rf fft *.js *.js.map *.d.ts dist/ts extractors client-stubs fft protocols servers",
     "move-dist-to-root": "cp -r dist/ts/* .",
-    "prepare": "npm run clean && npm run build-src-only && npm run move-dist-to-root",
+    "prepare": "npm run bundle && cp ./dist/ts/index.d.ts ./dist && npm run clean",
     "cover": "nyc npm t",
     "coveralls": "npm run clean && npm run cover && cat ./coverage/lcov.info | coveralls",
-    "bundle": "npm run build-src-only && webpack"
+    "bundle": "npm run build-src-only && webpack --config ./dist/webpack.config.js"
   },
   "repository": {
     "type": "git",
