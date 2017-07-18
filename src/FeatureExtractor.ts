@@ -4,11 +4,11 @@
 import {FeatureSet} from "./Feature";
 import {Timestamp} from "./Timestamp";
 
-export interface FeatureExtractor {
-    configure(configuration: Configuration): ConfigurationResponse;
-    getDefaultConfiguration(): Configuration;
-    process(block: ProcessInput): FeatureSet;
-    finish(): FeatureSet;
+export abstract class FeatureExtractor {
+    abstract configure(configuration: Configuration): ConfigurationResponse;
+    abstract getDefaultConfiguration(): Configuration;
+    abstract process(block: ProcessInput): FeatureSet;
+    abstract finish(): FeatureSet;
 }
 
 

@@ -37,9 +37,9 @@ export interface StreamingResponse {
     configuration?: StreamingConfiguration;
 }
 
-export interface StreamingService {
-    list(request: ListRequest): Promise<ListResponse>;
-    process(request: SimpleRequest): Observable<StreamingResponse>;
+export abstract class StreamingService {
+    abstract list(request: ListRequest): Promise<ListResponse>;
+    abstract process(request: SimpleRequest): Observable<StreamingResponse>;
 }
 
 type FeaturesExtractedHandler = (features: FeatureSet) => void;

@@ -60,18 +60,18 @@ export type FinishResponse = ProcessResponse;
 
 //
 
-export interface Service {
-    list(request: ListRequest): Promise<ListResponse>;
-    load(request: LoadRequest) : Promise<LoadResponse>;
-    configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
-    process(request: ProcessRequest): Promise<ProcessResponse>;
-    finish(request: FinishRequest): Promise<FinishResponse>;
+export abstract class Service {
+    abstract list(request: ListRequest): Promise<ListResponse>;
+    abstract load(request: LoadRequest) : Promise<LoadResponse>;
+    abstract configure(request: ConfigurationRequest): Promise<ConfigurationResponse>;
+    abstract process(request: ProcessRequest): Promise<ProcessResponse>;
+    abstract finish(request: FinishRequest): Promise<FinishResponse>;
 }
 
-export interface SynchronousService {
-    list(request: ListRequest): ListResponse;
-    load(request: LoadRequest) : LoadResponse;
-    configure(request: ConfigurationRequest): ConfigurationResponse;
-    process(request: ProcessRequest): ProcessResponse;
-    finish(request: FinishRequest): FinishResponse;
+export abstract class SynchronousService {
+    abstract list(request: ListRequest): ListResponse;
+    abstract load(request: LoadRequest) : LoadResponse;
+    abstract configure(request: ConfigurationRequest): ConfigurationResponse;
+    abstract process(request: ProcessRequest): ProcessResponse;
+    abstract finish(request: FinishRequest): FinishResponse;
 }
