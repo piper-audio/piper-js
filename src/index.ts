@@ -17,11 +17,11 @@ import {
     FeatureExtractorService
 } from './FeatureExtractorService';
 import { PiperSimpleClient } from './HigherLevelUtilities';
-import * as streaming from './StreamingService';
+import * as streamingStuff from './StreamingService';
 import * as ZeroCrossings from './extractors/ZeroCrossings';
 import * as webWorkerClientStuff from './client-stubs/WebWorkerStreamingClient';
 import {WebWorkerStreamingServer} from './servers/WebWorkerStreamingServer';
-import * as extractor from './FeatureExtractor';
+import * as extractorStuff from './FeatureExtractor';
 import * as piperStuff from './Piper';
 
 // re-exports
@@ -40,32 +40,34 @@ export {
 } from './StreamingService';
 export {Timestamp} from './Timestamp';
 
-// Perhaps something like ?
-module.exports = {
-    core: Object.assign({
-        PiperClient,
-        PiperSimpleClient,
-        timestamp,
-        fft: Object.assign({}, fftUtils) // might add more
-    }, piperStuff),
-    vamp: {
-        PiperVampService,
-        PiperVampSynchronousService,
-        PiperVampFeatureExtractor,
+export const core = Object.assign({
+    PiperClient,
+    PiperSimpleClient,
+    timestamp,
+    fft: Object.assign({}, fftUtils) // might add more
+}, piperStuff);
+
+export const vamp = {
+    PiperVampService,
+    PiperVampSynchronousService,
+    PiperVampFeatureExtractor,
+};
+
+export const streaming = streamingStuff;
+
+export const worker = Object.assign(
+    {WebWorkerStreamingServer},
+    webWorkerClientStuff
+);
+
+export const extractor = Object.assign(
+    {
+        FeatureExtractorSynchronousService,
+        FeatureExtractorService
     },
-    streaming,
-    worker: Object.assign(
-        {WebWorkerStreamingServer},
-        webWorkerClientStuff
-    ),
-    extractor: Object.assign(
-        {
-            FeatureExtractorSynchronousService,
-            FeatureExtractorService
-        },
-        extractor
-    ),
-    extractors: {
-        ZeroCrossings
-    }
+    extractorStuff
+);
+
+export const extractors = {
+    ZeroCrossings
 };
