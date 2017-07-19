@@ -65,13 +65,20 @@ export default class ZeroCrossings implements FeatureExtractor {
         channel.forEach((sample, nSample) => {
             if (this.hasCrossedAxis(sample)) {
                 ++count;
-                crossingPoints.push({timestamp: fromFrames(nSample, this.inputSampleRate)});
+                crossingPoints.push({
+                    timestamp: fromFrames(nSample, this.inputSampleRate)
+                });
             }
             this.previousSample = sample;
         });
 
-        returnFeatures.set("counts", [{featureValues: new Float32Array([count])}]);
-        if (crossingPoints.length > 0) returnFeatures.set("crossings", crossingPoints);
+        returnFeatures.set(
+            "counts",
+            [{featureValues: new Float32Array([count])}]
+        );
+        if (crossingPoints.length > 0) {
+            returnFeatures.set("crossings", crossingPoints);
+        }
         return returnFeatures;
     }
 

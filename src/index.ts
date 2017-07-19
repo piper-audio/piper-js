@@ -17,7 +17,7 @@ import {
 } from './core';
 import { OneShotExtractionClient } from './one-shot';
 import * as streamingStuff from './streaming';
-import * as ZeroCrossings from './extractors/ZeroCrossings';
+import * as ZeroCrossings from './extractors/zero-crossings';
 import * as webWorkerClientStuff from './clients/web-worker-streaming';
 import {WebWorkerStreamingServer} from './servers/web-worker-streaming';
 import * as extractorStuff from './FeatureExtractor';
