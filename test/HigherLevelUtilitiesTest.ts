@@ -27,6 +27,7 @@ import {
     segment
 } from '../src/audio';
 import {RealFftFactory} from '../src/fft';
+import {KissFft} from '../src/fft/KissFftModule';
 chai.should();
 
 describe("Segment", () => {
@@ -87,7 +88,10 @@ describe("Segment", () => {
 });
 
 describe("OneShotExtractionClient", () => {
-    const fftInitCallback: RealFftFactory = (size: number) => new KissRealFft(size);
+    const fftInitCallback: RealFftFactory = (size: number) => new KissRealFft(
+        size,
+        KissFft
+    );
     const service = new FeatureExtractorService(
         fftInitCallback,
         {create: sr => new FrequencyDomainExtractorStub(), metadata: FrequencyMetaDataStub},

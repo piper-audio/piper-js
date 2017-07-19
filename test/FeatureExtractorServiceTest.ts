@@ -5,9 +5,15 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
-    LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service,
-    FinishRequest, ListResponse, AdapterFlags, StaticData,
+    LoadResponse,
+    ConfigurationResponse,
+    ConfigurationRequest,
+    ProcessRequest,
+    ProcessResponse,
+    LoadRequest,
+    ListResponse,
+    AdapterFlags,
+    StaticData,
     FeatureExtractorFactory
 } from "../src/core";
 import {
@@ -22,9 +28,12 @@ import {FeatureSet} from "../src/core";
 import {KissRealFft} from "../src/fft";
 import {
     FrequencyDomainExtractorStub,
-    FrequencyMetaDataStub, PassThroughExtractor
+    FrequencyMetaDataStub,
+    PassThroughExtractor
 } from "./fixtures/FrequencyDomainExtractorStub";
 import {RealFftFactory} from '../src/fft';
+import {KissFft} from "../src/fft/KissFftModule";
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -35,7 +44,10 @@ describe("FeatureExtractionService", () => {
         metadata: metadata
     };
     const plugins: FeatureExtractorFactory[] = [];
-    const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
+    const fftFactory: RealFftFactory = (size: number) => new KissRealFft(
+        size,
+        KissFft
+    );
     plugins.push(factory);
     plugins.push({
         create: () => new FrequencyDomainExtractorStub(),

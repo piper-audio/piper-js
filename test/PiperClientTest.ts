@@ -20,12 +20,16 @@ import {
     MetaDataStub
 } from "./fixtures/FeatureExtractorStub";
 import {RealFftFactory} from '../src/fft';
+import {KissFft} from '../src/fft/KissFftModule';
 chai.should();
 chai.use(chaiAsPromised);
 
 
 describe("Client", () => {
-    const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
+    const fftFactory: RealFftFactory = (size: number) => new KissRealFft(
+        size,
+        KissFft
+    );
     const sampleRate: number = 16;
     const blockSize: number = 8;
     const stepSize: number = 4;

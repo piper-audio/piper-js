@@ -2,7 +2,6 @@
  * Created by lucast on 21/10/2016.
  */
 import {EmscriptenModule} from './emscripten';
-import {KissFft} from './fft/KissFftModule';
 
 function multiplyMutating(a: Float32Array, b: Float32Array): Float32Array {
     a.forEach((x, i, arr) => arr[i] = b[i] * x);
@@ -65,8 +64,8 @@ export class KissRealFft implements RealFft {
     private kiss_fftri: any;
     private kiss_fftr_free: any;
 
-    constructor(size: number) {
-        this.kissFFTModule = KissFft();
+    constructor(size: number, createFftModule: () => EmscriptenModule) {
+        this.kissFFTModule = createFftModule();
         this.kiss_fftr_alloc = this.kissFFTModule.cwrap(
             'kiss_fftr_alloc', 'number', ['number', 'number', 'number', 'number']
         );

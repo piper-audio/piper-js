@@ -24,6 +24,7 @@ import {
 } from "./fixtures/FeatureExtractorStub";
 import {FeatureExtractorFactory, FeatureList} from '../src/core';
 import {AudioStreamFormat} from '../src/audio';
+import {KissFft} from '../src/fft/KissFftModule';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -47,7 +48,7 @@ const samples = [
 
 const service: StreamingService = new PiperStreamingService(
     new FeatureExtractorService(
-        (size: number) => new KissRealFft(size),
+        (size: number) => new KissRealFft(size, KissFft),
         ...extractorsToCreate
     )
 );

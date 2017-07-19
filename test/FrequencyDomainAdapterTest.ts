@@ -13,6 +13,7 @@ import {KissRealFft} from "../src/fft";
 import {fromSeconds} from "../src/time";
 import {Feature} from '../src/core';
 import {ProcessInputAdjustmentMethod} from '../src/adjusters';
+import {KissFft} from '../src/fft/KissFftModule';
 chai.should();
 
 function crudeBuffering(input: Float32Array,
@@ -53,7 +54,10 @@ describe("FrequencyDomainAdapter", () => {
         const stepSize: number = 2;
         let extractor = new FrequencyDomainAdapter(
             new PassThroughExtractor(),
-            (size: number) => new KissRealFft(size),
+            (size: number) => new KissRealFft(
+                size,
+                KissFft
+            ),
             sampleRate,
             ProcessInputAdjustmentMethod.Buffer
         );
