@@ -29,11 +29,16 @@ export * from './Piper';
 export * from './FeatureExtractor';
 export * from './Feature';
 export * from './protocols/WebWorkerProtocol';
-export * from './protocols/JsonProtocol';
-export * from './client-stubs/WebWorkerStreamingClient';
+export {RequestIdProvider} from './client-stubs/WebWorkerStreamingClient';
 export {RealFft} from './fft/RealFft';
-export * from './StreamingService';
-export * from './Timestamp';
+export {
+    StreamingProgress,
+    StreamingConfiguration,
+    StreamingResponse,
+    StreamingService,
+    ProgressCallback
+} from './StreamingService';
+export {Timestamp} from './Timestamp';
 
 // Perhaps something like ?
 module.exports = {
