@@ -93,7 +93,7 @@ export namespace Serialise {
     }
 }
 
-export namespace Deserialise {
+export namespace Parse {
     export function ListRequest(request: SerialisedJson): ListRequest {
         return toListRequest(fromTransport(request))
     }

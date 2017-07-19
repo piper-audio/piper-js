@@ -13,6 +13,7 @@ import * as streaming from './streaming';
 import * as time from './time';
 import ZeroCrossings from './extractors/zero-crossings';
 import * as webWorker from './web-worker';
+import * as json from './protocols/json';
 
 export = {
     core,
@@ -25,5 +26,8 @@ export = {
     extractors: {
         ZeroCrossings
     },
-    webWorker
+    webWorker,
+    protocols: {
+        json
+    }
 };

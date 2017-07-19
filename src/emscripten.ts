@@ -21,7 +21,7 @@ import {
     Configuration
 } from "./core";
 import {
-    Serialise, Deserialise
+    Serialise, Parse
 } from "./protocols/json";
 import {
     ProcessInput} from "./core";
@@ -56,7 +56,7 @@ export class EmscriptenFeatureExtractor extends FeatureExtractor {
         super();
         this.module = module;
         pluginKey = pluginKey ? pluginKey : list(module, {}).available[0].key;
-        const response: LoadResponse = Deserialise.LoadResponse(
+        const response: LoadResponse = Parse.LoadResponse(
             jsonRequest(module, Serialise.LoadRequest({
                 key: pluginKey,
                 inputSampleRate: sampleRate,
@@ -68,7 +68,7 @@ export class EmscriptenFeatureExtractor extends FeatureExtractor {
     }
 
     configure(configuration: Configuration): ExtractorConfiguration {
-        const response: ConfigurationResponse = Deserialise.ConfigurationResponse(
+        const response: ConfigurationResponse = Parse.ConfigurationResponse(
             jsonRequest(this.module, Serialise.ConfigurationRequest({
                 handle: this.handle,
                 configuration: configuration
@@ -88,7 +88,7 @@ export class EmscriptenFeatureExtractor extends FeatureExtractor {
     }
 
     process(block: ProcessInput): FeatureSet {
-        return Deserialise.ProcessResponse(
+        return Parse.ProcessResponse(
             rawProcess(this.module, {
                 handle: this.handle,
                 processInput: block
@@ -97,7 +97,7 @@ export class EmscriptenFeatureExtractor extends FeatureExtractor {
     }
 
     finish(): FeatureSet {
-        const response: FinishResponse = Deserialise.FinishResponse(
+        const response: FinishResponse = Parse.FinishResponse(
             jsonRequest(this.module, Serialise.FinishRequest({handle: this.handle}))
         );
         return response.features;
@@ -116,23 +116,23 @@ export class EmscriptenSynchronousService implements SynchronousService {
     }
 
     load(request: LoadRequest): LoadResponse {
-        return Deserialise.LoadResponse(
+        return Parse.LoadResponse(
             jsonRequest(this.module, Serialise.LoadRequest(request))
         );
     }
 
     configure(request: ConfigurationRequest): ConfigurationResponse {
-        return Deserialise.ConfigurationResponse(
+        return Parse.ConfigurationResponse(
             jsonRequest(this.module, Serialise.ConfigurationRequest(request))
         );
     }
 
     process(request: ProcessRequest): ProcessResponse {
-        return Deserialise.ProcessResponse(rawProcess(this.module, request));
+        return Parse.ProcessResponse(rawProcess(this.module, request));
     }
 
     finish(request: FinishRequest): ProcessResponse {
-        return Deserialise.FinishResponse(
+        return Parse.FinishResponse(
             jsonRequest(this.module, Serialise.FinishRequest(request))
         );
     }
@@ -145,7 +145,7 @@ export class EmscriptenService extends FakeAsyncService {
 }
 
 export function list(module: EmscriptenModule, request: ListRequest): ListResponse {
-    return Deserialise.ListResponse(jsonRequest(module, Serialise.ListRequest(request)));
+    return Parse.ListResponse(jsonRequest(module, Serialise.ListRequest(request)));
 }
 
 const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
