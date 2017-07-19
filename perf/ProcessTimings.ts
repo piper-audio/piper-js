@@ -1,20 +1,21 @@
 /* -*- indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import {AdapterFlags, ProcessInput} from "../src/FeatureExtractor";
-import {fromFrames} from "../src/Timestamp";
-import {batchProcess} from "../src/HigherLevelUtilities";
+import {ProcessInput} from "../src/core";
+import {fromFrames} from "../src/time";
+import {batchProcess} from "../src/one-shot";
 import VampExamplePlugins from "../ext/VampExamplePluginsModule";
-import {PiperVampService} from "../src/PiperVampService";
-import {PiperClient} from "../src/PiperClient";
+import {EmscriptenService} from "../src/emscripten";
+import {Client} from "../src/core";
+import {AdapterFlags} from '../src/core';
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe('ProcessTimings', () => {
 
-    const server = new PiperClient(
-        new PiperVampService(VampExamplePlugins()));
+    const server = new Client(
+        new EmscriptenService(VampExamplePlugins()));
 
     const iterations = 1000;
     

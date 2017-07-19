@@ -10,10 +10,10 @@ import {
     countingIdProvider,
     RequestIdProvider,
     WebWorkerStreamingClient
-} from "../src/client-stubs/WebWorkerStreamingClient";
-import {StreamingResponse} from "../src/StreamingService";
-import {FeatureList} from "../src/Feature";
-import {ListResponse} from '../src/Piper';
+} from "../src/clients/web-worker-streaming";
+import {StreamingResponse} from "../src/streaming";
+import {FeatureList} from "../src/core";
+import {ListResponse} from '../src/core';
 
 function createStubWorker(work: string | WorkerFunction): Worker {
     let stubWorker = new TinyWorker(work);

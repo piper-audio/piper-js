@@ -1,6 +1,6 @@
-import {StreamingResponse, StreamingService} from "../src/StreamingService";
-import {ListRequest, ListResponse} from "../src/Piper";
-import {SimpleRequest} from "../src/HigherLevelUtilities";
+import {StreamingResponse, StreamingService} from "../src/streaming";
+import {ListRequest, ListResponse} from "../src/core";
+import {OneShotExtractionRequest} from "../src/one-shot";
 import {Observable} from "rxjs/Observable";
 import "rxjs/add/observable/of";
 import "rxjs/add/observable/throw";
@@ -8,8 +8,8 @@ import * as chai from "chai";
 import {
     DedicatedWorkerGlobalScope,
     WebWorkerStreamingServer
-} from "../src/servers/WebWorkerStreamingServer";
-import {RequestMessage} from "../src/protocols/WebWorkerProtocol";
+} from "../src/servers/web-worker-streaming";
+import {RequestMessage} from "../src/protocols/web-worker";
 
 // WebWorkerStreamingService contains most of the server logic (already tested.)
 
@@ -17,7 +17,7 @@ import {RequestMessage} from "../src/protocols/WebWorkerProtocol";
 // is correctly implemented (as it hasn't been abstracted and tested elsewhere)
 
 interface Mock {
-    wasCalledWith(request: ListRequest | SimpleRequest,
+    wasCalledWith(request: ListRequest | OneShotExtractionRequest,
                   method: "list" | "process"): boolean;
 }
 
@@ -39,12 +39,12 @@ class MockService implements StreamingService, Mock {
         return Promise.resolve(null);
     }
 
-    process(request: SimpleRequest): Observable<StreamingResponse> {
+    process(request: OneShotExtractionRequest): Observable<StreamingResponse> {
         this.callLog.process.push(request);
         return this.createFakeObservable();
     }
 
-    wasCalledWith(request: ListRequest | SimpleRequest,
+    wasCalledWith(request: ListRequest | OneShotExtractionRequest,
                   method: "list" | "collect" | "process"): boolean {
         return typeof this.callLog[method].find((val: any) => {
                 try {
@@ -220,7 +220,7 @@ describe("WebWorkerStreamingServer", () => {
     const testStreamingMethod: (method: "process",
                                 done: MochaDone) => void =
         (method, done) => {
-            const message: RequestMessage<SimpleRequest> = {
+            const message: RequestMessage<OneShotExtractionRequest> = {
                 id: "0",
                 method: method,
                 params: {
@@ -274,7 +274,7 @@ describe("WebWorkerStreamingServer", () => {
         };
         type ExtractMethod = "process";
         const getSimpleRequestMessage =
-            (method: ExtractMethod): RequestMessage<SimpleRequest> => ({
+            (method: ExtractMethod): RequestMessage<OneShotExtractionRequest> => ({
                 id: "0",
                 method: method,
                 params: {

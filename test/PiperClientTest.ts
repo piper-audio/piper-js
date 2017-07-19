@@ -9,21 +9,22 @@ import {
 } from "./fixtures/FrequencyDomainExtractorStub";
 import {
     FeatureExtractorService
-} from "../src/FeatureExtractorService";
-import {KissRealFft, RealFftFactory} from "../src/fft/RealFft";
-import {PiperClient} from "../src/PiperClient";
-import {AdapterFlags} from "../src/FeatureExtractor";
-import {ProcessResponse} from "../src/Piper";
-import {fromSeconds, Timestamp} from "../src/Timestamp";
+} from "../src/core";
+import {KissRealFft} from "../src/fft";
+import {Client} from "../src/core";
+import {AdapterFlags} from "../src/core";
+import {ProcessResponse} from "../src/core";
+import {fromSeconds, Timestamp} from "../src/time";
 import {
     FeatureExtractorStub,
     MetaDataStub
 } from "./fixtures/FeatureExtractorStub";
+import {RealFftFactory} from '../src/fft';
 chai.should();
 chai.use(chaiAsPromised);
 
 
-describe("PiperClient", () => {
+describe("Client", () => {
     const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
     const sampleRate: number = 16;
     const blockSize: number = 8;
@@ -36,7 +37,7 @@ describe("PiperClient", () => {
             {create: (sr: number) => new FeatureExtractorStub(), metadata: MetaDataStub}
         );
 
-        const client = new PiperClient(service);
+        const client = new Client(service);
 
         const loadConfigureProcessWith = (key: string, adapterFlags: AdapterFlags[], outputId: string): Promise<Timestamp> => {
             return client.load({

@@ -2,12 +2,16 @@
  * Created by lucas on 25/08/2016.
  */
 import {
-    FeatureExtractor, ExtractorConfiguration,
-    Configuration, OutputIdentifier, ConfiguredOutputDescriptor, SampleType,
     ProcessInput
-} from "../FeatureExtractor";
-import {FeatureSet, FeatureList} from "../Feature";
-import {fromFrames} from "../Timestamp";
+} from "../core";
+import {
+    Configuration,
+    ConfiguredOutputDescriptor, ExtractorConfiguration,
+    FeatureExtractor, FeatureSet, OutputIdentifier,
+    SampleType
+} from "../core";
+import {fromFrames} from "../time";
+import {FeatureList} from '../core';
 
 
 export default class ZeroCrossings implements FeatureExtractor {

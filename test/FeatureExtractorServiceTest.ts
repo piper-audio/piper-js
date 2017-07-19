@@ -7,23 +7,24 @@ import * as chaiAsPromised from "chai-as-promised";
 import {
     LoadResponse, ConfigurationResponse,
     ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service,
-    FinishRequest, ListResponse
-} from "../src/Piper";
+    FinishRequest, ListResponse, AdapterFlags, StaticData,
+    FeatureExtractorFactory
+} from "../src/core";
 import {
-    FeatureExtractorFactory,
     FeatureExtractorService
-} from "../src/FeatureExtractorService";
-import {StaticData, Configuration, AdapterFlags} from "../src/FeatureExtractor";
+} from "../src/core";
+import {Configuration} from "../src/core";
 import {
     FeatureExtractorStub,
     MetaDataStub
 } from "./fixtures/FeatureExtractorStub";
-import {FeatureSet} from "../src/Feature";
-import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
+import {FeatureSet} from "../src/core";
+import {KissRealFft} from "../src/fft";
 import {
     FrequencyDomainExtractorStub,
     FrequencyMetaDataStub, PassThroughExtractor
 } from "./fixtures/FrequencyDomainExtractorStub";
+import {RealFftFactory} from '../src/fft';
 chai.should();
 chai.use(chaiAsPromised);
 

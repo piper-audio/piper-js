@@ -1,4 +1,4 @@
-import {RpcMethod} from "./JsonProtocol";
+import {RpcMethod} from "./json";
 export type RequestId = string;
 export type WebMethod = RpcMethod | "collect";
 

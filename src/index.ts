@@ -4,63 +4,65 @@
 // main barrel, import library functionality and export in desired shape
 
 // exports for library consumption
-import { PiperClient } from './PiperClient';
-import * as timestamp from './Timestamp';
-import * as fftUtils from './FftUtilities';
+import {Client, FeatureExtractorSynchronousService} from './core';
+import * as timestamp from './time';
+import * as fftUtils from './fft';
 import {
-    PiperVampService,
-    PiperVampSynchronousService,
-    PiperVampFeatureExtractor
-} from './PiperVampService';
+    EmscriptenService,
+    EmscriptenSynchronousService,
+    EmscriptenFeatureExtractor
+} from './emscripten';
 import {
-    FeatureExtractorSynchronousService,
     FeatureExtractorService
-} from './FeatureExtractorService';
-import { PiperSimpleClient } from './HigherLevelUtilities';
-import * as streamingStuff from './StreamingService';
+} from './core';
+import { OneShotExtractionClient } from './one-shot';
+import * as streamingStuff from './streaming';
 import * as ZeroCrossings from './extractors/ZeroCrossings';
-import * as webWorkerClientStuff from './client-stubs/WebWorkerStreamingClient';
-import {WebWorkerStreamingServer} from './servers/WebWorkerStreamingServer';
+import * as webWorkerClientStuff from './clients/web-worker-streaming';
+import {WebWorkerStreamingServer} from './servers/web-worker-streaming';
 import * as extractorStuff from './FeatureExtractor';
-import * as piperStuff from './Piper';
-
-// re-exports
-export * from './Piper';
-export * from './FeatureExtractor';
-export * from './Feature';
-export * from './protocols/WebWorkerProtocol';
-export {RequestIdProvider} from './client-stubs/WebWorkerStreamingClient';
-export {RealFft} from './fft/RealFft';
-export {
+import * as piperStuff from './core';
+import * as workerProtocol from './protocols/web-worker';
+import * as featureStuff from './Feature';
+import {RealFft as IRealFft} from './fft';
+import {
     StreamingProgress,
     StreamingConfiguration,
     StreamingResponse,
     StreamingService,
     ProgressCallback
-} from './StreamingService';
-export {Timestamp} from './Timestamp';
+} from './streaming';
+import {Timestamp} from './time';
 
-export const core = Object.assign({
-    PiperClient,
-    PiperSimpleClient,
+const core = Object.assign({
+    PiperClient: Client,
+    PiperSimpleClient: OneShotExtractionClient,
     timestamp,
-    fft: Object.assign({}, fftUtils) // might add more
-}, piperStuff);
+    fft: Object.assign({}, fftUtils)
+}, piperStuff, featureStuff);
 
-export const vamp = {
-    PiperVampService,
-    PiperVampSynchronousService,
-    PiperVampFeatureExtractor,
+// TypeScript merges this with the above
+namespace core {
+    export namespace fft {
+        // export interface RealFft extends IRealFft {}
+    }
+}
+
+const vamp = {
+    PiperVampService: EmscriptenService,
+    PiperVampSynchronousService: EmscriptenSynchronousService,
+    PiperVampFeatureExtractor: EmscriptenFeatureExtractor,
 };
 
-export const streaming = streamingStuff;
+const streaming = streamingStuff;
 
-export const worker = Object.assign(
+const worker = Object.assign(
     {WebWorkerStreamingServer},
-    webWorkerClientStuff
+    webWorkerClientStuff,
+    workerProtocol
 );
 
-export const extractor = Object.assign(
+const extractor = Object.assign(
     {
         FeatureExtractorSynchronousService,
         FeatureExtractorService
@@ -68,6 +70,6 @@ export const extractor = Object.assign(
     extractorStuff
 );
 
-export const extractors = {
+const extractors = {
     ZeroCrossings
 };

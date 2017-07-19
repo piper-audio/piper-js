@@ -2,14 +2,14 @@
  * Created by lucas on 23/11/2016.
  */
 import * as chai from "chai";
-import {segment} from "../src/HigherLevelUtilities";
+import {segment} from "../src/audio";
 import {
     ProcessRequest, ProcessResponse, ListRequest,
     ListResponse
-} from "../src/Piper";
-import {Serialise, Deserialise} from "../src/protocols/JsonProtocol";
-import {FeatureList} from "../src/Feature";
-import {InputDomain} from '../src/FeatureExtractor';
+} from "../src/core";
+import {Serialise, Deserialise} from "../src/protocols/json";
+import {FeatureList} from "../src/core";
+import {InputDomain} from '../src/core';
 chai.should();
 
 describe("Serialise.ProcessRequest()", () => {

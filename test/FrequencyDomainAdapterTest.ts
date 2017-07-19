@@ -4,15 +4,15 @@
 import * as chai from "chai";
 import {
     ProcessInput
-} from "../src/FeatureExtractor";
-import {FeatureList, Feature} from "../src/Feature";
+} from "../src/core";
+import {FeatureList} from "../src/core";
 import {PassThroughExtractor} from "./fixtures/FrequencyDomainExtractorStub";
 import {
-    FrequencyDomainAdapter,
-    ProcessInputAdjustmentMethod
-} from "../src/FrequencyDomainAdapter";
-import {KissRealFft} from "../src/fft/RealFft";
-import {fromSeconds} from "../src/Timestamp";
+    FrequencyDomainAdapter} from "../src/adjusters";
+import {KissRealFft} from "../src/fft";
+import {fromSeconds} from "../src/time";
+import {Feature} from '../src/core';
+import {ProcessInputAdjustmentMethod} from '../src/adjusters';
 chai.should();
 
 function crudeBuffering(input: Float32Array,

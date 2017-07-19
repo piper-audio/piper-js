@@ -2,36 +2,29 @@
  * Created by lucas on 07/11/2016.
  */
 import {
-    Parameters, OutputIdentifier, FeatureExtractor, Configuration,
-    ExtractorConfiguration, ConfiguredOutputDescriptor,
-    SampleType, ProcessInput, AdapterFlags, OutputDescriptor
-} from "./FeatureExtractor";
-import {Feature, FeatureSet, FeatureList} from "./Feature";
-import {fromFrames, toSeconds} from "./Timestamp";
+    ProcessInput} from "./core";
 import {
-    FeatureTimeAdjuster,
-    createFeatureTimeAdjuster
-} from "./FeatureTimeAdjuster";
+    AdapterFlags, Configuration, ConfiguredOutputDescriptor,
+    ExtractorHandle,
+    Feature,
+    FeatureList,
+    FeatureSet,
+    ListRequest,
+    ListResponse,
+    LoadResponse, OutputDescriptor, OutputIdentifier, Parameters, SampleType,
+    Service
+} from "./core";
+import {toSeconds} from "./time";
 import {
-    ListRequest, ListResponse, Service, LoadResponse,
-    ExtractorHandle
-} from "./Piper";
-import {PiperClient} from "./PiperClient";
-
-export type AudioData = Float32Array[];
-export type Output = {[key: string]: Feature}; // TODO rename / re-think
-export type FramedAudio = IterableIterator<AudioData>;
-
-export interface AudioStreamFormat {
-    channelCount: number;
-    sampleRate: number;
-    length?: number;
-}
-
-export interface AudioStream {
-    frames: FramedAudio;
-    format: AudioStreamFormat;
-}
+    createFeatureTimeAdjuster} from "./adjusters";
+import {Client} from "./core";
+import {
+    AudioData,
+    AudioStreamFormat,
+    segment,
+    toProcessInputStream
+} from './audio';
+import {FeatureTimeAdjuster} from './adjusters';
 
 // Note, these interfaces represent time using a simple number, in
 // seconds. They don't use the Piper API Timestamp as the raw feature
@@ -61,20 +54,11 @@ export type FeatureCollection = {
     collected: VectorFeature | MatrixFeature | TracksFeature | FeatureList;
 }
 
-export type KeyValueObject = {[key: string]: any};
-export type CreateFeatureExtractorFunction = (sampleRate: number,
-                                       key: string,
-                                       additionalArgs?: KeyValueObject) => FeatureExtractor;
-
 // TODO should format be passed in or derived by the callback?
 // TODO does this even make any sense? This only exists because the extractor can inform the buffer size, so one might want to stream at that size
-export type CreateAudioStreamFunction = (blockSize: number,
-                                         stepSize: number,
-                                         format: AudioStreamFormat,
-                                         additionalArgs?: KeyValueObject) => AudioStream;
 
 
-export interface SimpleRequest {
+export interface OneShotExtractionRequest {
     audioData: AudioData;
     audioFormat: AudioStreamFormat;
     key: string;
@@ -84,45 +68,15 @@ export interface SimpleRequest {
     blockSize?: number;
 }
 
-export interface SimpleResponse {
+export interface OneShotExtractionResponse {
     features: FeatureCollection;
     outputDescriptor: OutputDescriptor;
 }
 
-export interface SimpleService {
+export interface OneShotExtractionService {
     list(request: ListRequest): Promise<ListResponse>;
-    process(request: SimpleRequest): Promise<SimpleResponse>;
-    collect(request: SimpleRequest): Promise<SimpleResponse>;
-}
-
-export function* segment(blockSize: number,
-                         stepSize: number,
-                         audioData: AudioData): FramedAudio {
-    let nStep: number = 0;
-    const nSteps: number = audioData[0].length / stepSize;
-    while (nStep < nSteps) {
-        const start: number = nStep++ * stepSize;
-        const stop: number = start + blockSize;
-        yield audioData.map(channelData => {
-            const block = channelData.subarray(start, stop);
-            return block.length === blockSize
-                ? channelData.subarray(start, stop)
-                : Float32Array.of(...block, ...new Float32Array(blockSize - block.length));
-        })
-    }
-}
-
-export function* toProcessInputStream(stream: AudioStream,
-                                      stepSize: number)
-: IterableIterator<ProcessInput> {
-    let nFrame: number = 0;
-    for (let frame of stream.frames) {
-        yield {
-            timestamp: fromFrames(nFrame, stream.format.sampleRate),
-            inputBuffers: frame
-        };
-        nFrame += stepSize;
-    }
+    process(request: OneShotExtractionRequest): Promise<OneShotExtractionResponse>;
+    collect(request: OneShotExtractionRequest): Promise<OneShotExtractionResponse>;
 }
 
 interface OptionalConfiguration {
@@ -150,52 +104,6 @@ function determineConfiguration(defaultConfig: Configuration,
         config["parameterValues"] = overrides.parameterValues;
 
     return config;
-}
-
-function loadAndConfigureExtractor(extractor: FeatureExtractor,
-                                   defaultConfig: Configuration,
-                                   channelCount: number,
-                                   params: Parameters = new Map(),
-                                   args: KeyValueObject = {}): [Configuration, ExtractorConfiguration] {
-
-    const config = determineConfiguration(defaultConfig, {
-        blockSize: (args)["blockSize"],
-        stepSize: (args)["stepSize"],
-        channelCount: channelCount,
-        parameterValues: params
-    });
-
-    return [config, extractor.configure(config)];
-}
-
-export function* processConfiguredExtractor(frames: FramedAudio,
-                                            sampleRate: number,
-                                            stepSize: number,
-                                            extractor: FeatureExtractor,
-                                            outputs: OutputIdentifier[]): IterableIterator<Output> {
-    let nFrame: number = 0;
-    const lazyOutput = function* (features: FeatureSet) {
-        for (let output of outputs) {
-            if (features.has(output))
-                for (let feature of features.get(output))
-                    yield {[output]: feature};
-        }
-    };
-
-    for (let frame of frames) {
-        const features: FeatureSet = extractor.process({
-            timestamp: fromFrames(nFrame, sampleRate),
-            inputBuffers: frame
-        });
-
-        for (let output of lazyOutput(features))
-            yield output;
-
-        nFrame += stepSize;
-    }
-
-    for (let output of lazyOutput(extractor.finish()))
-        yield output;
 }
 
 function deduceShape(descriptor: ConfiguredOutputDescriptor): FeatureCollectionShape {
@@ -370,111 +278,6 @@ function getFeatureStepDuration(inputSampleRate: number,
     }
 }
 
-// TODO revise "factories"
-export function collect(createAudioStreamCallback: CreateAudioStreamFunction,
-                        streamFormat: AudioStreamFormat,
-                        createFeatureExtractorCallback: CreateFeatureExtractorFunction,
-                        extractorKey: string,
-                        outputId?: OutputIdentifier,
-                        params?: Parameters,
-                        args: KeyValueObject = {}) : FeatureCollection {
-    // TODO reduce duplication with process -
-    // only issue stopping calling process directly here for
-    // lazyOutputs is that ExtractorConfiguration and Configuration are needed
-    const extractor = createFeatureExtractorCallback(
-        streamFormat.sampleRate,
-        extractorKey
-    );
-
-    const [config, outputs] = loadAndConfigureExtractor(
-        extractor,
-        extractor.getDefaultConfiguration(),
-        streamFormat.channelCount,
-        params,
-        args
-    );
-
-    const stream: AudioStream = createAudioStreamCallback(
-        config.framing.blockSize,
-        config.framing.stepSize,
-        streamFormat
-    );
-    outputId = outputId ? outputId : outputs.outputs.keys().next().value;
-
-    if (!outputs.outputs.has(outputId)) throw Error("Invalid output identifier.");
-
-    const descriptor: ConfiguredOutputDescriptor = outputs.outputs.get(outputId);
-    const lazyOutputs = processConfiguredExtractor(
-        stream.frames,
-        stream.format.sampleRate,
-        config.framing.stepSize,
-        extractor,
-        [outputId]
-    );
-
-    const lazyFeatures: Iterable<Feature> = (function* () {
-        for (const output of lazyOutputs) {
-            yield output[outputId];
-        }
-    })();
-
-    return reshape(
-        lazyFeatures,
-        stream.format.sampleRate,
-        config.framing.stepSize,
-        descriptor
-    );
-}
-
-export function* process(createAudioStreamCallback: CreateAudioStreamFunction,
-                         streamFormat: AudioStreamFormat,
-                         createFeatureExtractorCallback: CreateFeatureExtractorFunction,
-                         extractorKey: string,
-                         outputId?: OutputIdentifier,
-                         params?: Parameters,
-                         args: KeyValueObject = {}): IterableIterator<Feature> {
-    // TODO needs wrapping to handle input domain, channel and buffer adapter?
-    // this is going to happen automatically in piper-vamp /
-    // emscripten extractors - Perhaps it should happen in the factory
-    const extractor = createFeatureExtractorCallback(
-        streamFormat.sampleRate,
-        extractorKey
-    );
-
-    const [config, outputs] = loadAndConfigureExtractor(
-        extractor,
-        extractor.getDefaultConfiguration(),
-        streamFormat.channelCount,
-        params,
-        args
-    );
-
-    const stream: AudioStream = createAudioStreamCallback(
-        config.framing.blockSize,
-        config.framing.stepSize,
-        streamFormat
-    );
-    outputId = outputId ? outputId : outputs.outputs.keys().next().value;
-    const descriptor: ConfiguredOutputDescriptor = outputs.outputs.get(outputId);
-    const lazyOutputs = processConfiguredExtractor(
-        stream.frames,
-        stream.format.sampleRate,
-        config.framing.stepSize,
-        extractor,
-        [outputId]
-    );
-
-    const adjuster: FeatureTimeAdjuster = createFeatureTimeAdjuster(
-        descriptor,
-        getFeatureStepDuration(stream.format.sampleRate, config.framing.stepSize, descriptor)
-    );
-
-    for (let output of lazyOutputs) {
-        adjuster.adjust(output[outputId]);
-        yield output[outputId];
-    }
-}
-
 export function batchProcess(blocks: Iterable<ProcessInput>,
                              process: (block: ProcessInput) => Promise<FeatureSet>,
                              finish: () => Promise<FeatureSet>)
@@ -509,7 +312,7 @@ function createOrConcat(data: FeatureList, key: string, map: FeatureSet) {
     }
 }
 
-export interface SimpleConfigurationResponse {
+export interface OneShotConfigurationResponse {
     handle: ExtractorHandle;
     inputSampleRate: number; // TODO this is here for convenience - might not belong here
     configuredOutputId: string;
@@ -518,10 +321,10 @@ export interface SimpleConfigurationResponse {
     outputDescriptor: OutputDescriptor;
 }
 
-export function loadAndConfigure(request: SimpleRequest,
-                                 service: Service): Promise<SimpleConfigurationResponse> {
+export function loadAndConfigure(request: OneShotExtractionRequest,
+                                 service: Service): Promise<OneShotConfigurationResponse> {
     
-    const load = (request: SimpleRequest) => (response: ListResponse): Promise<LoadResponse> => {
+    const load = (request: OneShotExtractionRequest) => (response: ListResponse): Promise<LoadResponse> => {
         const metadata = response.available.filter(metadata => metadata.key === request.key);
         if (metadata.length !== 1) throw Error("Invalid key.");
 
@@ -532,7 +335,7 @@ export function loadAndConfigure(request: SimpleRequest,
         });
     };
 
-    const configure = (request: SimpleRequest) => (res: LoadResponse): Promise<SimpleConfigurationResponse> => {
+    const configure = (request: OneShotExtractionRequest) => (res: LoadResponse): Promise<OneShotConfigurationResponse> => {
         const config = determineConfiguration(
             res.defaultConfiguration,
             {
@@ -572,32 +375,30 @@ export function loadAndConfigure(request: SimpleRequest,
         .then(configure(request))
 }
 
-export class PiperSimpleClient implements SimpleService {
+export class OneShotExtractionClient implements OneShotExtractionService {
     private client: Service;
 
     constructor(service: Service) {
-        this.client = new PiperClient(service);
+        this.client = new Client(service);
     }
 
     list(request: ListRequest): Promise<ListResponse> {
         return this.client.list(request);
     }
 
-    process(request: SimpleRequest): Promise<SimpleResponse> {
+    process(request: OneShotExtractionRequest): Promise<OneShotExtractionResponse> {
         return loadAndConfigure(request, this.client).then(this.processAndFinish(request));
     }
 
-    collect(request: SimpleRequest): Promise<SimpleResponse> {
+    collect(request: OneShotExtractionRequest): Promise<OneShotExtractionResponse> {
         return loadAndConfigure(request, this.client).then(this.processAndFinish(request, false));
     }
 
-    private processAndFinish(request: SimpleRequest,
-                             forceList: boolean = true): (res: SimpleConfigurationResponse) => Promise<SimpleResponse> {
+    private processAndFinish(request: OneShotExtractionRequest,
+                             forceList: boolean = true): (res: OneShotConfigurationResponse) => Promise<OneShotExtractionResponse> {
 
         // TODO implement something better than batchProcess?
-        return (res: SimpleConfigurationResponse) => {
-            // TODO refactor parts of processConfiguredExtractor for use here / reduce dup
-
+        return (res: OneShotConfigurationResponse) => {
             const blocks = toProcessInputStream({
                 frames: segment(
                     res.configuredBlockSize,

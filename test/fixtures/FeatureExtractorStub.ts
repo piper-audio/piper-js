@@ -1,8 +1,12 @@
 import {
-    Configuration, ExtractorConfiguration, FeatureExtractor, ProcessInput, StaticData, InputDomain, OutputIdentifier,
-    ConfiguredOutputDescriptor, SampleType
-} from "../../src/FeatureExtractor";
-import {FeatureSet, Feature} from "../../src/Feature";
+    ProcessInput} from "../../src/core";
+import {
+    Configuration,
+    ConfiguredOutputDescriptor, ExtractorConfiguration,
+    FeatureExtractor, FeatureSet, InputDomain, OutputIdentifier,
+    SampleType, StaticData
+} from "../../src/core";
+import {Feature} from '../../src/core';
 
 export class FeatureExtractorStub implements FeatureExtractor {
     private cumulativeSum: number;

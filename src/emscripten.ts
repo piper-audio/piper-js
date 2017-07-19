@@ -3,19 +3,30 @@
  */
 import {
     ProcessRequest,
-    Service, ListRequest, ListResponse, LoadResponse, LoadRequest,
-    ConfigurationRequest, ConfigurationResponse, ProcessResponse,
-    FinishResponse, FinishRequest, ExtractorHandle, SynchronousService
-} from "./Piper";
+    ListRequest,
+    ListResponse,
+    LoadResponse,
+    LoadRequest,
+    ConfigurationRequest,
+    ConfigurationResponse,
+    ProcessResponse,
+    FinishResponse,
+    FinishRequest,
+    ExtractorHandle,
+    SynchronousService,
+    FeatureExtractor,
+    AdapterFlags,
+    ConfiguredOutputDescriptor,
+    ExtractorConfiguration,
+    Configuration
+} from "./core";
 import {
     Serialise, Deserialise
-} from "./protocols/JsonProtocol";
+} from "./protocols/json";
 import {
-    ExtractorConfiguration as Configured, Configuration, ProcessInput, FeatureExtractor,
-    AdapterFlags, ConfiguredOutputDescriptor
-} from "./FeatureExtractor";
-import {FeatureSet} from "./Feature";
-import {FakeAsyncService} from "./FeatureExtractorService";
+    ProcessInput} from "./core";
+import {FeatureSet} from "./core";
+import {FakeAsyncService} from "./core";
 
 export interface EmscriptenModule {
     cwrap(ident: string, returnType: string, argTypes: string[]): Function;
@@ -36,12 +47,13 @@ export enum Allocator {
     ALLOC_NONE
 }
 
-export class PiperVampFeatureExtractor implements FeatureExtractor {
+export class EmscriptenFeatureExtractor extends FeatureExtractor {
     private module: EmscriptenModule;
     private handle: ExtractorHandle;
     private defaultConfig: Configuration;
 
     constructor(module: EmscriptenModule, sampleRate: number, pluginKey?: string) {
+        super();
         this.module = module;
         pluginKey = pluginKey ? pluginKey : list(module, {}).available[0].key;
         const response: LoadResponse = Deserialise.LoadResponse(
@@ -55,7 +67,7 @@ export class PiperVampFeatureExtractor implements FeatureExtractor {
         this.handle = response.handle;
     }
 
-    configure(configuration: Configuration): Configured {
+    configure(configuration: Configuration): ExtractorConfiguration {
         const response: ConfigurationResponse = Deserialise.ConfigurationResponse(
             jsonRequest(this.module, Serialise.ConfigurationRequest({
                 handle: this.handle,
@@ -92,7 +104,7 @@ export class PiperVampFeatureExtractor implements FeatureExtractor {
     }
 }
 
-export class PiperVampSynchronousService implements SynchronousService {
+export class EmscriptenSynchronousService implements SynchronousService {
     private module: EmscriptenModule;
 
     constructor(module: EmscriptenModule) {
@@ -126,9 +138,9 @@ export class PiperVampSynchronousService implements SynchronousService {
     }
 }
 
-export class PiperVampService extends FakeAsyncService {
+export class EmscriptenService extends FakeAsyncService {
     constructor(module: EmscriptenModule) {
-        super(new PiperVampSynchronousService(module));
+        super(new EmscriptenSynchronousService(module));
     }
 }
 

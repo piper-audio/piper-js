@@ -2,13 +2,13 @@
 // TypeScript has a .d.ts file for webworkers,
 // but tsconfig cannot use both dom and webworker definitions
 // so stub out a basic type here for now
-import {StreamingService} from "../StreamingService";
+import {StreamingService} from "../streaming";
 import {
     ErrorResponse,
     RequestMessage,
     ResponseData,
     ResponseInfo
-} from "../protocols/WebWorkerProtocol";
+} from "../protocols/web-worker";
 export interface DedicatedWorkerGlobalScope {
     onmessage: (this: this, ev: MessageEvent) => any;
     postMessage(data: any): void;

@@ -6,8 +6,8 @@ import chaiAsPromised = require("chai-as-promised");
 chai.should();
 chai.use(chaiAsPromised);
 
-import {Feature, FeatureSet, FeatureList} from "../src/Feature";
-import {ProcessInput} from "../src/FeatureExtractor";
+import {FeatureSet} from "../src/core";
+import {ProcessInput} from "../src/core";
 import {
     lfo,
     generateSineWave,
@@ -15,9 +15,10 @@ import {
     AudioBufferStub,
     AudioBuffer
 } from "./AudioUtilities";
-import {FeatureExtractor} from "../src/FeatureExtractor";
+import {FeatureExtractor} from "../src/core";
 import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
-import {batchProcess} from "../src/HigherLevelUtilities";
+import {batchProcess} from "../src/one-shot";
+import {Feature, FeatureList} from '../src/core';
 
 describe("BatchBlockProcess", () => {
     it("should aggregate features extracted from multiple blocks", () => {

@@ -1,11 +1,14 @@
 
 
 import {
-    FeatureExtractor, ExtractorConfiguration,
-    Configuration, ConfiguredOutputDescriptor, OutputIdentifier, SampleType,
-    ProcessInput, StaticData, InputDomain
-} from "../../src/FeatureExtractor";
-import {FeatureSet, FeatureList} from "../../src/Feature";
+    ProcessInput} from "../../src/core";
+import {
+    Configuration,
+    ConfiguredOutputDescriptor, ExtractorConfiguration,
+    FeatureExtractor, FeatureSet, InputDomain, OutputIdentifier,
+    SampleType, StaticData
+} from "../../src/core";
+import {FeatureList} from '../../src/core';
 export class FrequencyDomainExtractorStub implements FeatureExtractor {
     private binCount: number;
 
