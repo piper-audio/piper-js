@@ -77,8 +77,10 @@ describe("StreamingService", () => {
             audioFormat: streamFormat,
             key: "stub:sum",
             outputId: "passthrough",
-            blockSize: blockSize,
-            stepSize: stepSize
+            framing: {
+                blockSize,
+                stepSize
+            }
         });
         let nBlocksProcessed = 0;
 
@@ -114,8 +116,10 @@ describe("StreamingService", () => {
             audioFormat: streamFormat,
             key: "stub:sum",
             outputId: "not-real",
-            blockSize: blockSize,
-            stepSize: stepSize
+            framing: {
+                blockSize,
+                stepSize
+            }
         });
         collectStream.subscribe(
             () => {},
@@ -146,8 +150,10 @@ describe("StreamingService", () => {
             audioFormat: streamFormat,
             key: "stub:sum",
             outputId: "passthrough",
-            blockSize: blockSize,
-            stepSize: stepSize
+            framing: {
+                blockSize,
+                stepSize
+            }
         });
         let nBlocksProcessed = 0;
         const nBlocksToProcess = Math.ceil(samples[0].length / stepSize) + 1;
@@ -192,8 +198,10 @@ describe("Summarising streams", () => {
                 audioFormat: streamFormat,
                 key: "stub:sum",
                 outputId: "passthrough",
-                blockSize: blockSize,
-                stepSize: stepSize
+                framing: {
+                    blockSize,
+                    stepSize
+                }
             }),
             () => ++nBlocksProcessed
         ).then(res => {
@@ -222,8 +230,10 @@ describe("Summarising streams", () => {
                 audioFormat: streamFormat,
                 key: "stub:sum",
                 outputId: "sum",
-                blockSize: blockSize,
-                stepSize: stepSize
+                framing: {
+                    blockSize,
+                    stepSize
+                }
             }),
             () => ++nBlocksProcessed
         ).then(res => {
@@ -252,8 +262,10 @@ describe("Summarising streams", () => {
                 audioFormat: streamFormat,
                 key: "stub:sum",
                 outputId: "finish",
-                blockSize: blockSize,
-                stepSize: stepSize
+                framing: {
+                    blockSize,
+                    stepSize
+                }
             }),
             () => ++nBlocksProcessed
         ).then(res => {

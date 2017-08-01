@@ -117,8 +117,10 @@ describe("OneShotExtractionClient", () => {
         },
         key: "stub:sum",
         outputId: "sum",
-        blockSize: blockSize,
-        stepSize: stepSize
+        framing: {
+            blockSize,
+            stepSize
+        }
     };
 
     it("Can process an entire AudioStream, for a single output", () => {
@@ -192,8 +194,10 @@ describe("OneShotExtractionClient", () => {
             },
             key: "stub:sum",
             outputId: "conditional",
-            blockSize: blockSize,
-            stepSize: stepSize
+            framing: {
+                blockSize,
+                stepSize
+            }
         }).then(actual => actual.features.should.eql(expected));
     });
 
