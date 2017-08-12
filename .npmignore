@@ -1,0 +1,8 @@
+src/
+perf/
+test/
+.travis.yml
+tsconfig*
+.nycrc
+.babelrc
+.appveyor.yml
