@@ -10,7 +10,9 @@ function multiplyMutating(a: Float32Array, b: Float32Array): Float32Array {
 
 export function hann(n: number): Float32Array {
     const range: number[] = [...Array(n).keys()];
-    return new Float32Array(range.map(i => 0.5 - 0.5 * Math.cos((2.0 * Math.PI * i) / n)));
+    return new Float32Array(
+        range.map(i => 0.5 - 0.5 * Math.cos((2.0 * Math.PI * i) / n))
+    );
 }
 
 export function memoise(fn: Function): Function {
@@ -46,7 +48,8 @@ export interface RealFft {
     dispose(): void;
 }
 
-export type RealFftFactory = (size: number, args?: { [key: string]: any }) => RealFft;
+export type KeyValue = { [key: string]: any };
+export type RealFftFactory = (size: number, args?: KeyValue) => RealFft;
 
 export class KissRealFft implements RealFft {
     private size: number;
@@ -67,7 +70,8 @@ export class KissRealFft implements RealFft {
     constructor(size: number, createFftModule: () => EmscriptenModule) {
         this.kissFFTModule = createFftModule();
         this.kiss_fftr_alloc = this.kissFFTModule.cwrap(
-            'kiss_fftr_alloc', 'number', ['number', 'number', 'number', 'number']
+            'kiss_fftr_alloc',
+            'number', ['number', 'number', 'number', 'number']
         );
         this.kiss_fftr = this.kissFFTModule.cwrap(
             'kiss_fftr', 'void', ['number', 'number', 'number']
@@ -96,16 +100,25 @@ export class KissRealFft implements RealFft {
     forward(real: Float32Array): Float32Array {
         this.realIn.set(real);
         this.kiss_fftr(this.forwardConfig, this.realPtr, this.complexPtr);
-        return Float32Array.from(new Float32Array(this.kissFFTModule.HEAPU8.buffer,
-            this.complexPtr, this.size + 2));
+        return Float32Array.from(
+            new Float32Array(
+                this.kissFFTModule.HEAPU8.buffer,
+                this.complexPtr,
+                this.size + 2
+            )
+        );
     }
 
     inverse(complex: Float32Array): Float32Array {
         this.complexIn.set(complex);
         this.kiss_fftri(this.inverseConfig, this.complexPtr, this.realPtr);
         // TODO scaling?
-        return Float32Array.from(new Float32Array(this.kissFFTModule.HEAPU8.buffer,
-            this.realPtr, this.size));
+        return Float32Array.from(
+            new Float32Array(
+                this.kissFFTModule.HEAPU8.buffer,
+                this.realPtr,
+                this.size)
+        );
     }
 
     dispose(): void {

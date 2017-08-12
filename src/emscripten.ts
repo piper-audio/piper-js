@@ -148,7 +148,7 @@ export function list(module: EmscriptenModule, request: ListRequest): ListRespon
     return Parse.ListResponse(jsonRequest(module, Serialise.ListRequest(request)));
 }
 
-const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
+const freeJson = (module: EmscriptenModule, ptr: Pointer): void => module.ccall(
     "piperFreeJson",
     "void",
     ["number"],
@@ -176,8 +176,8 @@ function jsonRequest(emscripten: EmscriptenModule, request: string): string {
     return jsonString;
 }
 
-function rawProcess(emscripten: EmscriptenModule, request: ProcessRequest): string {
-    const doProcess = emscripten.cwrap(
+function rawProcess(module: EmscriptenModule, request: ProcessRequest): string {
+    const doProcess = module.cwrap(
         "piperProcessRaw",
         "number",
         ["number", "number", "number", "number"]
@@ -185,14 +185,14 @@ function rawProcess(emscripten: EmscriptenModule, request: ProcessRequest): stri
 
     const nChannels: number = request.processInput.inputBuffers.length;
     const nFrames: number = request.processInput.inputBuffers[0].length;
-    const buffersPtr: Pointer = emscripten._malloc(nChannels * 4);
+    const buffersPtr: Pointer = module._malloc(nChannels * 4);
     const buffers: Uint32Array = new Uint32Array(
-        emscripten.HEAPU8.buffer, buffersPtr, nChannels);
+        module.HEAPU8.buffer, buffersPtr, nChannels);
 
     for (let i = 0; i < nChannels; ++i) {
-        const framesPtr: Pointer = emscripten._malloc(nFrames * 4);
+        const framesPtr: Pointer = module._malloc(nFrames * 4);
         const frames: Float32Array = new Float32Array(
-            emscripten.HEAPU8.buffer, framesPtr, nFrames);
+            module.HEAPU8.buffer, framesPtr, nFrames);
         frames.set(request.processInput.inputBuffers[i]);
         buffers[i] = framesPtr;
     }
@@ -205,12 +205,12 @@ function rawProcess(emscripten: EmscriptenModule, request: ProcessRequest): stri
     );
 
     for (let i = 0; i < nChannels; ++i) {
-        emscripten._free(buffers[i]);
+        module._free(buffers[i]);
     }
 
-    emscripten._free(buffersPtr);
+    module._free(buffersPtr);
 
-    const jsonString: string = emscripten.Pointer_stringify(responseJson);
-    freeJson(emscripten, responseJson);
+    const jsonString: string = module.Pointer_stringify(responseJson);
+    freeJson(module, responseJson);
     return jsonString;
 }

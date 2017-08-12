@@ -86,11 +86,11 @@ interface OptionalConfiguration {
     parameterValues?: Parameters;
 }
 
-function determineConfiguration(defaultConfig: Configuration,
+function determineConfiguration(defaults: Configuration,
                                 overrides?: OptionalConfiguration): Configuration {
-    let blockSize: number = overrides.blockSize || defaultConfig.framing.blockSize || 1024;
-    let stepSize: number = overrides.stepSize || defaultConfig.framing.stepSize || blockSize;
-    let channelCount: number = overrides.channelCount || defaultConfig.channelCount || 1; // TODO is 1 okay?
+    let blockSize = overrides.blockSize || defaults.framing.blockSize || 1024;
+    let stepSize = overrides.stepSize || defaults.framing.stepSize || blockSize;
+    let channelCount = overrides.channelCount || defaults.channelCount || 1; // TODO is 1 okay?
 
     let config: Configuration = {
         channelCount: channelCount,
@@ -100,9 +100,9 @@ function determineConfiguration(defaultConfig: Configuration,
         }
     };
 
-    if (overrides.parameterValues && overrides.parameterValues.size > 0)
+    if (overrides.parameterValues && overrides.parameterValues.size > 0) {
         config["parameterValues"] = overrides.parameterValues;
-
+    }
     return config;
 }
 
@@ -294,7 +294,8 @@ export function batchProcess(blocks: Iterable<ProcessInput>,
     }, Promise.resolve(new Map() as FeatureSet));
 }
 
-function concatFeatures(running: FeatureSet, nextBlock: Promise<FeatureSet>): Promise<FeatureSet> {
+function concatFeatures(running: FeatureSet,
+                        nextBlock: Promise<FeatureSet>): Promise<FeatureSet> {
     return nextBlock.then((block) => {
         for (let [i, feature] of block.entries()) {
             createOrConcat(feature, i, running);
@@ -323,51 +324,58 @@ export interface OneShotConfigurationResponse {
 
 export function loadAndConfigure(request: OneShotExtractionRequest,
                                  service: Service): Promise<OneShotConfigurationResponse> {
-    
-    const load = (request: OneShotExtractionRequest) => (response: ListResponse): Promise<LoadResponse> => {
-        const metadata = response.available.filter(metadata => metadata.key === request.key);
-        if (metadata.length !== 1) throw Error("Invalid key.");
 
-        return service.load({
-            key: request.key,
-            inputSampleRate: request.audioFormat.sampleRate,
-            adapterFlags: [AdapterFlags.AdaptAllSafe]
-        });
-    };
+    const load = (request: OneShotExtractionRequest) =>
+        (response: ListResponse): Promise<LoadResponse> => {
+            const metadata = response.available.filter(
+                metadata => metadata.key === request.key
+            );
+            if (metadata.length !== 1) throw Error("Invalid key.");
 
-    const configure = (request: OneShotExtractionRequest) => (res: LoadResponse): Promise<OneShotConfigurationResponse> => {
-        const config = determineConfiguration(
-            res.defaultConfiguration,
-            {
-                blockSize: request.blockSize,
-                stepSize: request.stepSize,
-                channelCount: request.audioFormat.channelCount,
-                parameterValues: request.parameterValues
-            }
-        );
-
-        return service.configure({
-            handle: res.handle,
-            configuration: config
-        }).then(res => {
-            const outputId = request.outputId
-                ? request.outputId
-                : res.outputList[0].basic.identifier;
-
-            if (res.outputList.filter(output => output.basic.identifier === outputId).length === 0)
-                throw Error("Invalid output identifier.");
-
-            return {
-                handle: res.handle,
+            return service.load({
+                key: request.key,
                 inputSampleRate: request.audioFormat.sampleRate,
-                configuredOutputId: outputId,
-                configuredBlockSize: config.framing.blockSize,
-                configuredStepSize: config.framing.stepSize,
-                outputDescriptor: res.outputList
-                    .find(output => output.basic.identifier === outputId)
-            }
-        });
-    };
+                adapterFlags: [AdapterFlags.AdaptAllSafe]
+            });
+        };
+
+    const configure = (request: OneShotExtractionRequest) =>
+        (res: LoadResponse): Promise<OneShotConfigurationResponse> => {
+            const config = determineConfiguration(
+                res.defaultConfiguration,
+                {
+                    blockSize: request.blockSize,
+                    stepSize: request.stepSize,
+                    channelCount: request.audioFormat.channelCount,
+                    parameterValues: request.parameterValues
+                }
+            );
+
+            return service.configure({
+                handle: res.handle,
+                configuration: config
+            }).then(res => {
+                const outputId = request.outputId
+                    ? request.outputId
+                    : res.outputList[0].basic.identifier;
+
+                if (res.outputList.filter(
+                    output => output.basic.identifier === outputId).length === 0
+                ) {
+                    throw Error("Invalid output identifier.");
+                }
+
+                return {
+                    handle: res.handle,
+                    inputSampleRate: request.audioFormat.sampleRate,
+                    configuredOutputId: outputId,
+                    configuredBlockSize: config.framing.blockSize,
+                    configuredStepSize: config.framing.stepSize,
+                    outputDescriptor: res.outputList
+                        .find(output => output.basic.identifier === outputId)
+                }
+            });
+        };
 
     // TODO come up with a mechanism for pipelining requests to reduce client-server round-trips
     return service.list({}) // TODO is the list really necessary? - prevents doing any processing if the extractor / output is not available
@@ -387,15 +395,19 @@ export class OneShotExtractionClient implements OneShotExtractionService {
     }
 
     process(request: OneShotExtractionRequest): Promise<OneShotExtractionResponse> {
-        return loadAndConfigure(request, this.client).then(this.processAndFinish(request));
+        return loadAndConfigure(request, this.client)
+            .then(this.processAndFinish(request));
     }
 
     collect(request: OneShotExtractionRequest): Promise<OneShotExtractionResponse> {
-        return loadAndConfigure(request, this.client).then(this.processAndFinish(request, false));
+        return loadAndConfigure(request, this.client)
+            .then(this.processAndFinish(request, false));
     }
 
-    private processAndFinish(request: OneShotExtractionRequest,
-                             forceList: boolean = true): (res: OneShotConfigurationResponse) => Promise<OneShotExtractionResponse> {
+    private processAndFinish(
+        request: OneShotExtractionRequest,
+        forceList: boolean = true
+    ): (res: OneShotConfigurationResponse) => Promise<OneShotExtractionResponse> {
 
         // TODO implement something better than batchProcess?
         return (res: OneShotConfigurationResponse) => {
@@ -414,9 +426,12 @@ export class OneShotExtractionClient implements OneShotExtractionService {
                     handle: res.handle,
                     processInput: block
                 }).then(response => response.features),
-                () => this.client.finish({handle: res.handle}).then(res => res.features)
+                () => this.client.finish({handle: res.handle})
+                    .then(res => res.features)
             ).then(featureSet => {
-                const features: FeatureList = featureSet.get(res.configuredOutputId) || [];
+                const features: FeatureList = featureSet.get(
+                    res.configuredOutputId
+                ) || [];
                 return forceList ? {
                     features: {
                         shape: "list" as FeatureCollectionShape,

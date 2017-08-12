@@ -15,10 +15,12 @@ export interface AudioStream {
     format: AudioStreamFormat;
 }
 
-export type CreateAudioStreamFunction = (blockSize: number,
-                                         stepSize: number,
-                                         format: AudioStreamFormat,
-                                         additionalArgs?: {[key: string]: any}) => AudioStream;
+export type CreateAudioStreamFunction = (
+    blockSize: number,
+    stepSize: number,
+    format: AudioStreamFormat,
+    additionalArgs?: {[key: string]: any}
+) => AudioStream;
 
 export function* segment(blockSize: number,
                          stepSize: number,
@@ -32,13 +34,18 @@ export function* segment(blockSize: number,
             const block = channelData.subarray(start, stop);
             return block.length === blockSize
                 ? channelData.subarray(start, stop)
-                : Float32Array.of(...block, ...new Float32Array(blockSize - block.length));
+                : Float32Array.of(
+                    ...block,
+                    ...new Float32Array(blockSize - block.length)
+                );
         })
     }
 }
 
-export function* toProcessInputStream(stream: AudioStream,
-                                      stepSize: number): IterableIterator<ProcessInput> {
+export function* toProcessInputStream(
+    stream: AudioStream,
+    stepSize: number
+): IterableIterator<ProcessInput> {
     let nFrame: number = 0;
     for (let frame of stream.frames) {
         yield {

@@ -35,8 +35,15 @@ export class ProcessInputBuffersAdjuster implements ProcessInputAdjuster {
         return {
             timestamp: input.timestamp,
             inputBuffers: input.inputBuffers.map((buffer, i) => {
-                this.buffers[i].copyWithin(0, this.stepSize, this.blockSize + this.offset);
-                this.buffers[i].set(buffer.subarray(0, this.blockSize), this.offset);
+                this.buffers[i].copyWithin(
+                    0,
+                    this.stepSize,
+                    this.blockSize + this.offset
+                );
+                this.buffers[i].set(
+                    buffer.subarray(0, this.blockSize),
+                    this.offset
+                );
                 return this.buffers[i].slice(0, this.blockSize);
             })
         };
@@ -52,7 +59,9 @@ export class ProcessInputTimestampAdjuster implements ProcessInputAdjuster {
 
     adjust(input: ProcessInput): ProcessInput {
         return {
-            timestamp: fromSeconds(toSeconds(input.timestamp) + this.adjustmentSeconds),
+            timestamp: fromSeconds(
+                toSeconds(input.timestamp) + this.adjustmentSeconds
+            ),
             inputBuffers: input.inputBuffers
         }
     }
@@ -63,8 +72,7 @@ export interface FeatureTimeAdjuster {
 }
 
 export class VariableSampleRateFeatureTimeAdjuster implements FeatureTimeAdjuster {
-    constructor(private descriptor: ConfiguredOutputDescriptor) {
-    }
+    constructor(private descriptor: ConfiguredOutputDescriptor) {}
 
     adjust(feature: Feature): void {
         if (!feature.hasOwnProperty("timestamp")) {
@@ -109,8 +117,9 @@ export class OneSamplePerStepFeatureTimeAdjuster implements FeatureTimeAdjuster 
     private lastFeatureIndex: number;
 
     constructor(stepSizeSeconds: number) {
-        if (stepSizeSeconds === undefined)
+        if (stepSizeSeconds == null) {
             throw new Error("Host must provide the step size (seconds).");
+        }
         this.stepSizeSeconds = stepSizeSeconds;
         this.lastFeatureIndex = -1;
     }
@@ -178,7 +187,10 @@ export class FrequencyDomainAdapter implements FeatureExtractor {
         this.fft = this.fftFactory(configuration.framing.blockSize); // TODO verify power of 2?
         this.adjuster = this.adjustmentMethod === ProcessInputAdjustmentMethod.Buffer
             ? new ProcessInputBuffersAdjuster(configuration)
-            : new ProcessInputTimestampAdjuster(configuration.framing.blockSize, this.sampleRate);
+            : new ProcessInputTimestampAdjuster(
+                configuration.framing.blockSize,
+                this.sampleRate
+            );
         return this.wrapped.configure(configuration);
     }
 
@@ -188,7 +200,9 @@ export class FrequencyDomainAdapter implements FeatureExtractor {
 
     process(block: ProcessInput): FeatureSet {
         const forwardFft: (channel: Float32Array) => Float32Array =
-            (channel) => this.fft.forward(cyclicShiftInPlace(applyHannWindowTo(channel)));
+            (channel) => this.fft.forward(
+                cyclicShiftInPlace(applyHannWindowTo(channel))
+            );
         const timeAdjustedBlock: ProcessInput = this.adjuster.adjust(block);
         return this.wrapped.process({
             timestamp: timeAdjustedBlock.timestamp,

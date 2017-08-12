@@ -225,9 +225,18 @@ export class Client implements Service {
     public load(request: LoadRequest): Promise<LoadResponse> {
         return this.service.load(request)
             .then(response => {
-                this.handleToSampleRate.set(response.handle, request.inputSampleRate);
-                this.handleToStaticData.set(response.handle, response.staticData);
-                this.handleToAdapterFlags.set(response.handle, request.adapterFlags);
+                this.handleToSampleRate.set(
+                    response.handle,
+                    request.inputSampleRate
+                );
+                this.handleToStaticData.set(
+                    response.handle,
+                    response.staticData
+                );
+                this.handleToAdapterFlags.set(
+                    response.handle,
+                    request.adapterFlags
+                );
                 return response;
             });
     }
@@ -235,10 +244,17 @@ export class Client implements Service {
     public configure(request: ConfigurationRequest): Promise<ConfigurationResponse> {
         return this.service.configure(request)
             .then(response => {
-                this.handleToConfiguration.set(response.handle, request.configuration);
+                this.handleToConfiguration.set(
+                    response.handle,
+                    request.configuration
+                );
                 for (let output of response.outputList) {
-                    this.timeAdjusters.set(output.basic.identifier, createFeatureTimeAdjuster(
-                        output.configured, request.configuration.framing.stepSize / this.handleToSampleRate.get(request.handle))
+                    this.timeAdjusters.set(
+                        output.basic.identifier,
+                        createFeatureTimeAdjuster(
+                            output.configured,
+                            request.configuration.framing.stepSize /
+                            this.handleToSampleRate.get(request.handle))
                     );
                 }
                 return response;
@@ -246,7 +262,8 @@ export class Client implements Service {
     }
 
     public process(request: ProcessRequest): Promise<ProcessResponse> {
-        if (!Client.isInputDomainAdapted(this.handleToAdapterFlags.get(request.handle))) {
+        const flags = this.handleToAdapterFlags.get(request.handle) || [];
+        if (!Client.isInputDomainAdapted(flags)) {
             this.convertProcessInputToFrequencyDomain(request.processInput);
         }
 
@@ -289,9 +306,12 @@ export class Client implements Service {
                 adjuster.adjust(feature, inputTimestamp);
 
                 if (this.isFrequencyDomainExtractor(handle)) {
-                    const offset = this.handleToConfiguration.get(handle)
-                        .framing.blockSize * 0.5 / this.handleToSampleRate.get(handle);
-                    feature.timestamp = fromSeconds(toSeconds(feature.timestamp) + offset);
+                    const config = this.handleToConfiguration.get(handle);
+                    const sampleRate = this.handleToSampleRate.get(handle);
+                    const offset = config.framing.blockSize * 0.5 / sampleRate;
+                    feature.timestamp = fromSeconds(
+                        toSeconds(feature.timestamp) + offset
+                    );
                 }
             });
         }
@@ -306,7 +326,7 @@ export class Client implements Service {
             );
     }
 
-    private convertProcessInputToFrequencyDomain(processInput: ProcessInput): void {
+    private convertProcessInputToFrequencyDomain(input: ProcessInput): void {
         // TODO if frequency domain extractor not loaded with AdaptInputDomain, process FFT
         throw new Error("FFT not implemented, load extractor with AdaptInputDomain.");
     }
