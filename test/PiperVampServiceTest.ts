@@ -12,7 +12,7 @@ import {
 } from "../src/core";
 import {Timestamp} from "../src/time";
 import {batchProcess} from "../src/one-shot";
-import VampExamplePlugins from "../ext/VampExamplePluginsModule";
+import VampExamplePlugins from "../src/ext/VampExamplePluginsModule";
 import {
     EmscriptenService,
     EmscriptenFeatureExtractor
@@ -25,7 +25,7 @@ import {
 } from "../src/core";
 import {Client} from "../src/core";
 import {EmscriptenModule} from "../src/emscripten";
-import VampTestPluginModule from "../ext/VampTestPluginModule";
+import VampTestPluginModule from "../src/ext/VampTestPluginModule";
 import {
     createEmscriptenCleanerWithNodeGlobal,
     EmscriptenListenerCleaner

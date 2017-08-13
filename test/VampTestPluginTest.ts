@@ -3,7 +3,7 @@
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 import {EmscriptenService} from "../src/emscripten";
-import VampTestPlugin from '../ext/VampTestPluginModule';
+import VampTestPlugin from '../src/ext/VampTestPluginModule';
 import {AdapterFlags} from "../src/core";
 import {LoadResponse, LoadRequest} from "../src/core";
 import {fromSeconds} from "../src/time";

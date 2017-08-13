@@ -1,4 +1,4 @@
-import {EmscriptenModule} from '../src/emscripten'
+import {EmscriptenModule} from '../emscripten'
 
 export const VampTestPlugin: () => EmscriptenModule;
 export default VampTestPlugin;
