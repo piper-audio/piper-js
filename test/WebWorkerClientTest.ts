@@ -164,6 +164,6 @@ describe('WebWorkerClient', () => {
                 return response instanceof Error
                     && response.message === '123: Oh, bother!';
             })
-        }).should.eventually.eql([true, true, true, true, false]);
+        }).should.eventually.eql([true, true, true, true, true]);
     });
 });
