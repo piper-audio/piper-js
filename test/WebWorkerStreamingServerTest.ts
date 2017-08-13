@@ -92,8 +92,8 @@ class MockService implements StreamingService, Mock {
     }
 }
 
-type MessageHandler = (ev: MessageEvent) => any;
-class StubWorkerScope implements DedicatedWorkerGlobalScope {
+export type MessageHandler = (ev: MessageEvent) => any;
+export class StubWorkerScope implements DedicatedWorkerGlobalScope {
     private responseHandler: MessageHandler;
     onmessage: MessageHandler;
 
