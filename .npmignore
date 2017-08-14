@@ -6,3 +6,5 @@ tsconfig*
 .nycrc
 .babelrc
 .appveyor.yml
+coverage/
+.nyc_output
