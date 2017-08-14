@@ -1,5 +1,5 @@
 import {ProcessInput} from './core';
-import {fromFrames} from './time';
+import {fromFrames, fromSeconds, Timestamp, toSeconds} from './time';
 
 export type AudioData = Float32Array[];
 export type FramedAudio = IterableIterator<AudioData>;
@@ -44,12 +44,17 @@ export function* segment(blockSize: number,
 
 export function* toProcessInputStream(
     stream: AudioStream,
-    stepSize: number
+    stepSize: number,
+    offset?: Timestamp
 ): IterableIterator<ProcessInput> {
     let nFrame: number = 0;
     for (let frame of stream.frames) {
+        const initialTimeStamp = fromFrames(nFrame, stream.format.sampleRate);
+        const timestamp = offset ? fromSeconds(
+            toSeconds(initialTimeStamp) + toSeconds(offset)
+        ) : initialTimeStamp;
         yield {
-            timestamp: fromFrames(nFrame, stream.format.sampleRate),
+            timestamp,
             inputBuffers: frame
         };
         nFrame += stepSize;
