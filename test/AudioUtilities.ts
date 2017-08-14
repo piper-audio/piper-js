@@ -2,10 +2,8 @@
 /**
  * Created by lucas on 02/09/2016.
  */
-import {Timestamp, fromFrames} from "../src/time";
-import {FeatureSet} from "../src/core";
 import {ProcessInput} from "../src/core";
-import {FeatureList} from '../src/core';
+import {segment, toProcessInputStream} from "../src/audio";
 
 export interface AudioBuffer {
     sampleRate: number,
@@ -51,29 +49,25 @@ export class AudioBufferStub implements AudioBuffer {
     }
 }
 
-export function* segmentAudioBuffer(blockSize: number,
+function bufferToAudioData(buffer: AudioBuffer): Float32Array[] {
+    const nChannels = buffer.numberOfChannels;
+    const channels = new Array<Float32Array>(nChannels);
+    for (let i = 0; i < nChannels; ++i) {
+        channels[i] = buffer.getChannelData(i);
+    }
+    return channels;
+}
+
+export function segmentAudioBuffer(blockSize: number,
                                     stepSize: number,
                                     audioBuffer: AudioBuffer): IterableIterator<ProcessInput> {
-    let nStep: number = 0;
-    const nSteps: number = audioBuffer.length / stepSize;
-    const nChannels: number = audioBuffer.numberOfChannels;
-    const channels: number[] = [...Array(nChannels).keys()];
-
-    while (nStep < nSteps) {
-        const start: number = nStep * stepSize;
-        const stop: number = start + blockSize;
-        const currentTimestamp: Timestamp = fromFrames(nStep++ * stepSize, audioBuffer.sampleRate);
-        const audioData: Float32Array[] = channels.map(channel => audioBuffer.getChannelData(channel));
-        yield {
-            timestamp: currentTimestamp,
-            inputBuffers: audioData.map(channelData => {
-                const block = channelData.subarray(start, stop);
-                return block.length === blockSize
-                    ? channelData.subarray(start, stop)
-                    : Float32Array.of(...block, ...new Float32Array(blockSize - block.length));
-            })
-        };
-    }
+    return toProcessInputStream({
+        frames: segment(blockSize, stepSize, bufferToAudioData(audioBuffer)),
+        format: {
+            channelCount: audioBuffer.numberOfChannels,
+            sampleRate: audioBuffer.sampleRate
+        }
+    }, stepSize);
 }
 
 export function* lfo(sampleRate: number, frequency: number, amplitude: number = 1.0): IterableIterator<number> {
