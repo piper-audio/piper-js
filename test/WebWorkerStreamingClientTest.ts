@@ -150,7 +150,7 @@ describe("WebWorkerStreamingClient", () => {
             shouldFail
         ).then(rejected => rejected.length === shouldFail.length)
             .should.eventually.be.true;
-    });
+    }).timeout(2500);
 
     it("rejects from list when error response received from worker", () => {
         const errorWorker = createStubWorker(function () {
