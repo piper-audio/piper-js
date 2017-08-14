@@ -181,14 +181,16 @@ interface ExtractorState {
 }
 export class WebWorkerServer {
     private scope: DedicatedWorkerGlobalScope;
-    private service: SynchronousService;
+    private createService: () => SynchronousService;
     private handleToState: Map<ExtractorHandle, ExtractorState>;
+    private handleToService: Map<ExtractorHandle, SynchronousService>;
 
     constructor(workerScope: DedicatedWorkerGlobalScope,
-                service: SynchronousService) {
+                serviceFactory: () => SynchronousService) {
         this.scope = workerScope;
-        this.service = service;
+        this.createService = serviceFactory;
         this.handleToState = new Map();
+        this.handleToService = new Map();
         // TODO reduce dupe with web-worker-streaming
         const onMessageToWrap: (ev: MessageEvent) => any = this.scope.onmessage;
         this.scope.onmessage = (e: MessageEvent) => {
@@ -199,17 +201,30 @@ export class WebWorkerServer {
         };
     }
 
+    private getService(handle?: ExtractorHandle): SynchronousService {
+        if (handle != null) {
+            if (this.handleToService.has(handle)) {
+                return this.handleToService.get(handle);
+            } else {
+                this.handleToService.set(handle, this.createService());
+            }
+        }
+        return this.createService(); // will be garbage collected if not stored
+    }
+
     private routeRequest(request: RequestMessage<any>): void {
         try {
             switch (request.method) {
                 case 'list':
                     this.sendResponse(
                         request,
-                        this.service.list(request.params)
+                        this.getService().list(request.params)
                     );
                     break;
                 case 'load': {
-                    const res = this.service.load(request.params);
+                    const service = this.createService();
+                    const res = service.load(request.params);
+                    this.handleToService.set(res.handle, service);
                     this.handleToState.set(res.handle, {
                         sampleRate: request.params.inputSampleRate,
                         framing: {stepSize: null, blockSize: null}
@@ -220,8 +235,9 @@ export class WebWorkerServer {
                     );
                     break;
                 }
-                case 'configure':
-                    const config = this.service.configure(request.params);
+                case 'configure': {
+                    const service = this.getService(request.params.handle);
+                    const config = service.configure(request.params);
                     if (this.handleToState.has(config.handle)) {
                         const current = this.handleToState.get(config.handle);
                         this.handleToState.set(config.handle, {
@@ -234,20 +250,26 @@ export class WebWorkerServer {
                         config
                     );
                     break;
-                case 'process':
+                }
+                case 'process': {
+                    const handle = request.params.handle;
                     const features = handleProcess(
                         request.params,
                         this.handleToState.get(request.params.handle),
-                        (req) => this.service.process(req)
+                        (req) => this.getService(handle).process(req)
                     );
                     this.sendResponse(
                         request,
                         features
                     );
                     break;
+                }
                 case 'finish': {
-                    const res = this.service.finish(request.params);
+                    const res = this.getService(
+                        request.params.handle
+                    ).finish(request.params);
                     this.handleToState.delete(res.handle);
+                    this.handleToService.delete(res.handle);
                     this.sendResponse(
                         request,
                         res
@@ -276,7 +298,8 @@ export class WebWorkerServer {
         if (this.isValidRequestShape(request)) {
             this.routeRequest(request);
         } else {
-            this.sendError(request, 'Invalid request');
+            const handle = request && request.params && request.params.handle;
+            this.sendError(request, 'Invalid request', handle);
         }
     }
 
@@ -284,7 +307,13 @@ export class WebWorkerServer {
         return req.params != null && req.id != null && req.method != null;
     }
 
-    private sendError(info: ResponseInfo, message: string) {
+    private sendError(info: ResponseInfo,
+                      message: string,
+                      handle?: ExtractorHandle) {
+        if (handle != null) {
+            this.handleToState.delete(handle);
+            this.handleToService.delete(handle);
+        }
         this.sendMessage<ErrorResponse>({
             id: info.id,
             method: info.method,

@@ -156,7 +156,7 @@ function verifyExpectations(message: RequestMessage<any>,
                             service?: SynchronousService & Mock): void {
     service = service ? service : new MockService();
     const workerScope = new StubWorkerScope(testHandler(service, done));
-    new WebWorkerServer(workerScope, service);
+    new WebWorkerServer(workerScope, () => service);
     workerScope.sendMessage(message);
 }
 
@@ -175,7 +175,7 @@ describe('WebWorkerServer', () => {
         workerScope.onmessage = (ev) => {
             ev.data.id = "stub";
         };
-        new WebWorkerServer(workerScope, service);
+        new WebWorkerServer(workerScope, () => service);
         workerScope.sendMessage({
             id: "0",
             method: "list",
@@ -334,7 +334,7 @@ class LocalStubWorkerScope implements DedicatedWorkerGlobalScope {
     constructor(service: SynchronousService, worker?: StubWorker) {
         this.piperServer = new WebWorkerServer(
             this,
-            service
+            () => service
         );
         this.worker = worker;
     }
