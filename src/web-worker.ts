@@ -1,7 +1,7 @@
 import {
     ConfigurationRequest,
-    ConfigurationResponse,
-    FinishRequest,
+    ConfigurationResponse, ExtractorHandle, FeatureSet,
+    FinishRequest, Framing,
     ListRequest,
     ListResponse,
     LoadRequest,
@@ -20,6 +20,7 @@ import {
     SuccessfulResponse
 } from "./protocols/web-worker";
 import {RequestIdProvider} from "./clients/web-worker-streaming";
+import {segment, toProcessInputStream} from "./audio";
 
 export class WebWorkerService implements Service {
     private pending: ResponseInfo & {running: boolean};
@@ -114,14 +115,80 @@ export class WebWorkerService implements Service {
     }
 }
 
+type ProcessHandler = (request: ProcessRequest) => ProcessResponse;
+function handleProcess(request: ProcessRequest,
+                       state: ExtractorState,
+                       process: ProcessHandler): ProcessResponse {
+    const {framing} = state || {framing: null};
+    const hasCustomFraming = framing
+        && framing.stepSize != null && framing.blockSize != null;
+    const nChannels = request.processInput.inputBuffers.length;
+    const shouldPerformMultiple = hasCustomFraming
+        && nChannels
+        && request.processInput.inputBuffers[0].length !== framing.blockSize;
+    return shouldPerformMultiple ?
+        processMultiple(request, state, process): process(request);
+}
+
+function processMultiple(request: ProcessRequest,
+                         state: ExtractorState,
+                         process: ProcessHandler): ProcessResponse {
+    const {framing, sampleRate} = state;
+    // TODO should offset by the timestamp in the request
+    const blocks = toProcessInputStream(
+        {
+            frames: segment(
+                framing.blockSize,
+                framing.stepSize,
+                request.processInput.inputBuffers
+            ),
+            format: {
+                channelCount: request.processInput.inputBuffers.length,
+                sampleRate
+            }
+        },
+        framing.stepSize,
+        request.processInput.timestamp
+    );
+    const combined: FeatureSet = new Map();
+    for (const processInput of blocks) {
+      const res = process({
+          handle: request.handle,
+          processInput
+      });
+      combine(res.features, combined);
+    }
+    return {
+        handle: request.handle,
+        features: combined
+    };
+}
+
+function combine(inSet: FeatureSet, outSet: FeatureSet) {
+    inSet.forEach((value, key) => {
+        if (outSet.has(key)) {
+            outSet.get(key).push(...value);
+        } else {
+            outSet.set(key, value);
+        }
+    });
+    return outSet;
+}
+
+interface ExtractorState {
+    sampleRate: number;
+    framing: Framing;
+}
 export class WebWorkerServer {
     private scope: DedicatedWorkerGlobalScope;
     private service: SynchronousService;
+    private handleToState: Map<ExtractorHandle, ExtractorState>;
 
     constructor(workerScope: DedicatedWorkerGlobalScope,
                 service: SynchronousService) {
         this.scope = workerScope;
         this.service = service;
+        this.handleToState = new Map();
         // TODO reduce dupe with web-worker-streaming
         const onMessageToWrap: (ev: MessageEvent) => any = this.scope.onmessage;
         this.scope.onmessage = (e: MessageEvent) => {
@@ -141,30 +208,52 @@ export class WebWorkerServer {
                         this.service.list(request.params)
                     );
                     break;
-                case 'load':
+                case 'load': {
+                    const res = this.service.load(request.params);
+                    this.handleToState.set(res.handle, {
+                        sampleRate: request.params.inputSampleRate,
+                        framing: {stepSize: null, blockSize: null}
+                    });
                     this.sendResponse(
                         request,
-                        this.service.load(request.params)
+                        res
                     );
                     break;
+                }
                 case 'configure':
+                    const config = this.service.configure(request.params);
+                    if (this.handleToState.has(config.handle)) {
+                        const current = this.handleToState.get(config.handle);
+                        this.handleToState.set(config.handle, {
+                            sampleRate: current.sampleRate,
+                            framing: config.framing
+                        });
+                    }
                     this.sendResponse(
                         request,
-                        this.service.configure(request.params)
+                        config
                     );
                     break;
                 case 'process':
+                    const features = handleProcess(
+                        request.params,
+                        this.handleToState.get(request.params.handle),
+                        (req) => this.service.process(req)
+                    );
                     this.sendResponse(
                         request,
-                        this.service.process(request.params)
+                        features
                     );
                     break;
-                case 'finish':
+                case 'finish': {
+                    const res = this.service.finish(request.params);
+                    this.handleToState.delete(res.handle);
                     this.sendResponse(
                         request,
-                        this.service.finish(request.params)
+                        res
                     );
                     break;
+                }
                 default:
                     this.sendError(request, 'Invalid request type');
             }

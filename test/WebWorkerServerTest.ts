@@ -17,8 +17,14 @@ import {
     SynchronousService
 } from "../src/core";
 import {RequestMessage, WebMethod} from "../src/protocols/web-worker";
-import {WebWorkerServer} from "../src/web-worker";
+import {WebWorkerServer, WebWorkerService} from "../src/web-worker";
 import {PassThroughExtractor} from "./fixtures/FrequencyDomainExtractorStub";
+import {
+    OneShotExtractionClient,
+    OneShotExtractionScheme
+} from "../src/one-shot";
+import {countingIdProvider} from "../src/clients/web-worker-streaming";
+import {DedicatedWorkerGlobalScope} from "../src/servers/web-worker-streaming";
 
 type Request = ListRequest
     | ConfigurationRequest
@@ -28,9 +34,13 @@ type Request = ListRequest
 interface Mock {
     wasCalledWith(request: Request,
                   method: WebMethod): boolean;
+    getCallLogFor(method: WebMethod): Request[];
 }
 
 class ThrowingService implements SynchronousService, Mock {
+    getCallLogFor(method: WebMethod): Request[] {
+        return undefined;
+    }
     wasCalledWith(request: Request, method: WebMethod): boolean {
         throw new Error("Method not implemented.");
     }
@@ -80,9 +90,15 @@ class MockService implements SynchronousService, Mock {
         }) !== "undefined";
     }
 
+    getCallLogFor(method: WebMethod): Request[] {
+        return this.callLog[method];
+    }
+
     list(request: ListRequest): ListResponse {
         this.callLog.list.push(request);
-        return {available: []};
+        return {available: [
+            PassThroughExtractor.getMetaData()
+        ]};
     }
 
     load(request: LoadRequest): LoadResponse {
@@ -263,5 +279,93 @@ describe('WebWorkerServer', () => {
         }, done, new ThrowingService());
     });
 
+    it('calls process multiple times when inputBuffers > blockSize', () => {
+        // easier to just do an integration test here
+        const audioData = [Float32Array.of(
+            -0.5, 0.5, 0.5, 0.5,
+            0, 0, 0 , 0,
+            0.5, 0.5, 0.5, 0.5,
+            1, 1, 1, 1
+        )];
+        const audioFormat = {
+            channelCount: 1,
+            sampleRate: 16
+        };
+        const worker = new StubWorker();
+        const mock = new MockService();
+        const workerScope = new LocalStubWorkerScope(mock, worker);
+        worker.setScope(workerScope);
 
+        const client = new OneShotExtractionClient(
+            new WebWorkerService(
+                worker as any,
+                countingIdProvider(0)
+            ),
+            OneShotExtractionScheme.REMOTE
+        );
+
+        // should probably actually add getting the configured framing
+        // in the OneShotResponse, like for StreamingResponse
+        const passThroughDefaultFraming = {blockSize: 4, stepSize: 2};
+
+        return client.process({
+            audioData,
+            audioFormat,
+            key: 'stub:passthrough',
+            outputId: 'passthrough'
+        }).then(res => {
+            // empty array, just because stub process outputs nothing
+            chai.expect(res.features.collected).to.eql([]);
+            // verify process was at least called the right amount of times
+            // for the data
+            chai.expect(
+                mock.getCallLogFor('process').length
+            ).to.eql(audioData[0].length / passThroughDefaultFraming.stepSize);
+        });
+    });
 });
+
+
+class LocalStubWorkerScope implements DedicatedWorkerGlobalScope {
+    private piperServer: WebWorkerServer;
+    private worker: StubWorker;
+    onmessage: (this: this, ev: MessageEvent) => any;
+
+    constructor(service: SynchronousService, worker?: StubWorker) {
+        this.piperServer = new WebWorkerServer(
+            this,
+            service
+        );
+        this.worker = worker;
+    }
+
+    postMessage(data: any): void {
+        this.worker.onmessage({
+            data
+        } as any);
+    }
+
+    importScripts(uri: string): void {
+        throw new Error("Method not implemented.");
+    }
+}
+
+class StubWorker implements Partial<Worker> {
+    private workerScope: LocalStubWorkerScope;
+
+    constructor(workerScope?: LocalStubWorkerScope) {
+        this.workerScope = workerScope;
+    }
+
+    setScope(workerScope: LocalStubWorkerScope) {
+        this.workerScope = workerScope;
+    }
+
+    onmessage: (ev: MessageEvent) => any;
+
+    postMessage(message: any, transfer?: any[]): void {
+        this.workerScope.onmessage({
+            data: message
+        } as any);
+    }
+}

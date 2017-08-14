@@ -383,10 +383,16 @@ export function loadAndConfigure(request: OneShotExtractionRequest,
         .then(configure(request))
 }
 
+export enum OneShotExtractionScheme {
+    LOCAL,
+    REMOTE
+}
 export class OneShotExtractionClient implements OneShotExtractionService {
     private client: Service;
+    private scheme: OneShotExtractionScheme;
 
-    constructor(service: Service) {
+    constructor(service: Service, scheme = OneShotExtractionScheme.LOCAL) {
+        this.scheme = scheme;
         this.client = new Client(service);
     }
 
@@ -411,14 +417,18 @@ export class OneShotExtractionClient implements OneShotExtractionService {
 
         // TODO implement something better than batchProcess?
         return (res: OneShotConfigurationResponse) => {
-            const blocks = toProcessInputStream({
-                frames: segment(
-                    res.configuredBlockSize,
-                    res.configuredStepSize,
-                    request.audioData
-                ),
-                format: request.audioFormat
-            }, res.configuredStepSize);
+            const blocks = this.scheme === OneShotExtractionScheme.LOCAL ?
+                toProcessInputStream({
+                    frames: segment(
+                        res.configuredBlockSize,
+                        res.configuredStepSize,
+                        request.audioData
+                    ),
+                    format: request.audioFormat
+                }, res.configuredStepSize) : [{
+                    timestamp: {s: 0, n: 0},
+                    inputBuffers: request.audioData
+                }];
 
             return batchProcess(
                 blocks,
