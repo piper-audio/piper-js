@@ -1,15 +1,15 @@
 /**
  * Created by lucas on 10/04/2017.
  */
-import {StreamingResponse, StreamingService} from "../StreamingService";
-import {ListRequest, ListResponse} from "../Piper";
-import {SimpleRequest} from "../HigherLevelUtilities";
+import {StreamingResponse, StreamingService} from "../streaming";
+import {ListRequest, ListResponse} from "../core";
+import {OneShotExtractionRequest} from "../one-shot";
 import {Observable} from "rxjs";
 import {
     ErrorResponse,
     RequestId, RequestMessage, ResponseData,
     ResponseMessage, SuccessfulResponse, WebMethod
-} from "../protocols/WebWorkerProtocol";
+} from "../protocols/web-worker";
 
 
 export type RequestIdProvider = Iterator<RequestId>;
@@ -69,15 +69,15 @@ export class WebWorkerStreamingClient implements StreamingService {
         return list$.toPromise();
     }
 
-    process(request: SimpleRequest): Observable<StreamingResponse> {
+    process(request: OneShotExtractionRequest): Observable<StreamingResponse> {
         return this.createFeatureStream(request);
     }
 
-    private createFeatureStream(request: SimpleRequest)
+    private createFeatureStream(request: OneShotExtractionRequest)
     : Observable<StreamingResponse> {
         const id: RequestId = this.idProvider.next().value;
 
-        return this.createResponseObservable<SimpleRequest>({
+        return this.createResponseObservable<OneShotExtractionRequest>({
                 id: id,
                 method: "process",
                 params: request

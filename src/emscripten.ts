@@ -3,19 +3,30 @@
  */
 import {
     ProcessRequest,
-    Service, ListRequest, ListResponse, LoadResponse, LoadRequest,
-    ConfigurationRequest, ConfigurationResponse, ProcessResponse,
-    FinishResponse, FinishRequest, ExtractorHandle, SynchronousService
-} from "./Piper";
+    ListRequest,
+    ListResponse,
+    LoadResponse,
+    LoadRequest,
+    ConfigurationRequest,
+    ConfigurationResponse,
+    ProcessResponse,
+    FinishResponse,
+    FinishRequest,
+    ExtractorHandle,
+    SynchronousService,
+    FeatureExtractor,
+    AdapterFlags,
+    ConfiguredOutputDescriptor,
+    ExtractorConfiguration,
+    Configuration
+} from "./core";
 import {
-    Serialise, Deserialise
-} from "./JsonProtocol";
+    Serialise, Parse
+} from "./protocols/json";
 import {
-    ConfigurationResponse as Configured, Configuration, ProcessInput, FeatureExtractor,
-    AdapterFlags, ConfiguredOutputDescriptor
-} from "./FeatureExtractor";
-import {FeatureSet} from "./Feature";
-import {FakeAsyncService} from "./FeatureExtractorService";
+    ProcessInput} from "./core";
+import {FeatureSet} from "./core";
+import {FakeAsyncService} from "./core";
 
 export interface EmscriptenModule {
     cwrap(ident: string, returnType: string, argTypes: string[]): Function;
@@ -36,15 +47,16 @@ export enum Allocator {
     ALLOC_NONE
 }
 
-export class PiperVampFeatureExtractor implements FeatureExtractor {
+export class EmscriptenFeatureExtractor extends FeatureExtractor {
     private module: EmscriptenModule;
     private handle: ExtractorHandle;
     private defaultConfig: Configuration;
 
     constructor(module: EmscriptenModule, sampleRate: number, pluginKey?: string) {
+        super();
         this.module = module;
         pluginKey = pluginKey ? pluginKey : list(module, {}).available[0].key;
-        const response: LoadResponse = Deserialise.LoadResponse(
+        const response: LoadResponse = Parse.LoadResponse(
             jsonRequest(module, Serialise.LoadRequest({
                 key: pluginKey,
                 inputSampleRate: sampleRate,
@@ -55,8 +67,8 @@ export class PiperVampFeatureExtractor implements FeatureExtractor {
         this.handle = response.handle;
     }
 
-    configure(configuration: Configuration): Configured {
-        const response: ConfigurationResponse = Deserialise.ConfigurationResponse(
+    configure(configuration: Configuration): ExtractorConfiguration {
+        const response: ConfigurationResponse = Parse.ConfigurationResponse(
             jsonRequest(this.module, Serialise.ConfigurationRequest({
                 handle: this.handle,
                 configuration: configuration
@@ -76,7 +88,7 @@ export class PiperVampFeatureExtractor implements FeatureExtractor {
     }
 
     process(block: ProcessInput): FeatureSet {
-        return Deserialise.ProcessResponse(
+        return Parse.ProcessResponse(
             rawProcess(this.module, {
                 handle: this.handle,
                 processInput: block
@@ -85,14 +97,14 @@ export class PiperVampFeatureExtractor implements FeatureExtractor {
     }
 
     finish(): FeatureSet {
-        const response: FinishResponse = Deserialise.FinishResponse(
+        const response: FinishResponse = Parse.FinishResponse(
             jsonRequest(this.module, Serialise.FinishRequest({handle: this.handle}))
         );
         return response.features;
     }
 }
 
-export class PiperVampSynchronousService implements SynchronousService {
+export class EmscriptenSynchronousService implements SynchronousService {
     private module: EmscriptenModule;
 
     constructor(module: EmscriptenModule) {
@@ -104,39 +116,39 @@ export class PiperVampSynchronousService implements SynchronousService {
     }
 
     load(request: LoadRequest): LoadResponse {
-        return Deserialise.LoadResponse(
+        return Parse.LoadResponse(
             jsonRequest(this.module, Serialise.LoadRequest(request))
         );
     }
 
     configure(request: ConfigurationRequest): ConfigurationResponse {
-        return Deserialise.ConfigurationResponse(
+        return Parse.ConfigurationResponse(
             jsonRequest(this.module, Serialise.ConfigurationRequest(request))
         );
     }
 
     process(request: ProcessRequest): ProcessResponse {
-        return Deserialise.ProcessResponse(rawProcess(this.module, request));
+        return Parse.ProcessResponse(rawProcess(this.module, request));
     }
 
     finish(request: FinishRequest): ProcessResponse {
-        return Deserialise.FinishResponse(
+        return Parse.FinishResponse(
             jsonRequest(this.module, Serialise.FinishRequest(request))
         );
     }
 }
 
-export class PiperVampService extends FakeAsyncService {
+export class EmscriptenService extends FakeAsyncService {
     constructor(module: EmscriptenModule) {
-        super(new PiperVampSynchronousService(module));
+        super(new EmscriptenSynchronousService(module));
     }
 }
 
 export function list(module: EmscriptenModule, request: ListRequest): ListResponse {
-    return Deserialise.ListResponse(jsonRequest(module, Serialise.ListRequest(request)));
+    return Parse.ListResponse(jsonRequest(module, Serialise.ListRequest(request)));
 }
 
-const freeJson = (emscripten: EmscriptenModule, ptr: Pointer): void => emscripten.ccall(
+const freeJson = (module: EmscriptenModule, ptr: Pointer): void => module.ccall(
     "piperFreeJson",
     "void",
     ["number"],
@@ -164,8 +176,8 @@ function jsonRequest(emscripten: EmscriptenModule, request: string): string {
     return jsonString;
 }
 
-function rawProcess(emscripten: EmscriptenModule, request: ProcessRequest): string {
-    const doProcess = emscripten.cwrap(
+function rawProcess(module: EmscriptenModule, request: ProcessRequest): string {
+    const doProcess = module.cwrap(
         "piperProcessRaw",
         "number",
         ["number", "number", "number", "number"]
@@ -173,14 +185,14 @@ function rawProcess(emscripten: EmscriptenModule, request: ProcessRequest): stri
 
     const nChannels: number = request.processInput.inputBuffers.length;
     const nFrames: number = request.processInput.inputBuffers[0].length;
-    const buffersPtr: Pointer = emscripten._malloc(nChannels * 4);
+    const buffersPtr: Pointer = module._malloc(nChannels * 4);
     const buffers: Uint32Array = new Uint32Array(
-        emscripten.HEAPU8.buffer, buffersPtr, nChannels);
+        module.HEAPU8.buffer, buffersPtr, nChannels);
 
     for (let i = 0; i < nChannels; ++i) {
-        const framesPtr: Pointer = emscripten._malloc(nFrames * 4);
+        const framesPtr: Pointer = module._malloc(nFrames * 4);
         const frames: Float32Array = new Float32Array(
-            emscripten.HEAPU8.buffer, framesPtr, nFrames);
+            module.HEAPU8.buffer, framesPtr, nFrames);
         frames.set(request.processInput.inputBuffers[i]);
         buffers[i] = framesPtr;
     }
@@ -193,12 +205,12 @@ function rawProcess(emscripten: EmscriptenModule, request: ProcessRequest): stri
     );
 
     for (let i = 0; i < nChannels; ++i) {
-        emscripten._free(buffers[i]);
+        module._free(buffers[i]);
     }
 
-    emscripten._free(buffersPtr);
+    module._free(buffersPtr);
 
-    const jsonString: string = emscripten.Pointer_stringify(responseJson);
-    freeJson(emscripten, responseJson);
+    const jsonString: string = module.Pointer_stringify(responseJson);
+    freeJson(module, responseJson);
     return jsonString;
 }

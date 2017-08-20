@@ -2,14 +2,14 @@
  * Created by lucas on 23/11/2016.
  */
 import * as chai from "chai";
-import {segment} from "../src/HigherLevelUtilities";
+import {segment} from "../src/audio";
 import {
     ProcessRequest, ProcessResponse, ListRequest,
     ListResponse
-} from "../src/Piper";
-import {Serialise, Deserialise} from "../src/JsonProtocol";
-import {FeatureList} from "../src/Feature";
-import {InputDomain} from '../src/FeatureExtractor';
+} from "../src/core";
+import {Serialise, Parse} from "../src/protocols/json";
+import {FeatureList} from "../src/core";
+import {InputDomain} from '../src/core';
 chai.should();
 
 describe("Serialise.ProcessRequest()", () => {
@@ -51,7 +51,7 @@ describe("Serialise.ProcessRequest()", () => {
     });
 });
 
-describe("Deserialise.ProcessRequest()", () => {
+describe("Parse.ProcessRequest()", () => {
     const expected: ProcessRequest = {
         handle: 2,
         processInput: {
@@ -91,16 +91,16 @@ describe("Deserialise.ProcessRequest()", () => {
         }
     };
     it("can parse base-64 process request, straight from an object", () => {
-        Deserialise.ProcessRequest(base64Request).should.eql(expected);
+        Parse.ProcessRequest(base64Request).should.eql(expected);
     });
     it("can parse base-64 process request, straight from a JSON string", () => {
-        Deserialise.ProcessRequest(JSON.stringify(base64Request)).should.eql(expected);
+        Parse.ProcessRequest(JSON.stringify(base64Request)).should.eql(expected);
     });
     it("can parse a process request (array), straight from an object", () => {
-        Deserialise.ProcessRequest(arrayRequest).should.eql(expected);
+        Parse.ProcessRequest(arrayRequest).should.eql(expected);
     });
     it("can parse process requests (array), straight from a JSON string", () => {
-        Deserialise.ProcessRequest(JSON.stringify(arrayRequest)).should.eql(expected);
+        Parse.ProcessRequest(JSON.stringify(arrayRequest)).should.eql(expected);
     });
 });
 
@@ -274,14 +274,14 @@ describe("Various optional behaviour of (de)serialisation functions", () => {
                 ]]
             ])
         };
-        Deserialise.ProcessResponse(response).should.eql(expected);
-        [...Deserialise.ProcessResponse(response).features.entries()]
+        Parse.ProcessResponse(response).should.eql(expected);
+        [...Parse.ProcessResponse(response).features.entries()]
             .should.eql([...expected.features.entries()]);
-        Deserialise.ProcessResponse(JSON.stringify(response)).should.eql(expected);
-        [...Deserialise.ProcessResponse(JSON.stringify(response)).features]
+        Parse.ProcessResponse(JSON.stringify(response)).should.eql(expected);
+        [...Parse.ProcessResponse(JSON.stringify(response)).features]
             .should.eql([...expected.features]);
         // try a request to make sure params are tested
-        Deserialise.FinishRequest(JSON.stringify({
+        Parse.FinishRequest(JSON.stringify({
             method: "finish",
             params: {
                 handle: 1
@@ -292,7 +292,7 @@ describe("Various optional behaviour of (de)serialisation functions", () => {
     });
 });
 
-describe("Deserialise.ListResponse()", () => {
+describe("Parse.ListResponse()", () => {
     it("Populates staticOutputInfo when present", () => {
         const message = {
             method: "list",
@@ -327,8 +327,8 @@ describe("Deserialise.ListResponse()", () => {
                 )
             ]
         };
-        Deserialise.ListResponse(message).should.eql(expected);
-        const responseWithStaticInfo = Deserialise.ListResponse({
+        Parse.ListResponse(message).should.eql(expected);
+        const responseWithStaticInfo = Parse.ListResponse({
             method: "list",
             result: {
                 available: [

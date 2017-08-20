@@ -1,11 +1,14 @@
 
 
 import {
-    FeatureExtractor, ConfigurationResponse,
-    Configuration, ConfiguredOutputDescriptor, OutputIdentifier, SampleType,
-    ProcessInput, StaticData, InputDomain
-} from "../../src/FeatureExtractor";
-import {FeatureSet, FeatureList} from "../../src/Feature";
+    ProcessInput} from "../../src/core";
+import {
+    Configuration,
+    ConfiguredOutputDescriptor, ExtractorConfiguration,
+    FeatureExtractor, FeatureSet, InputDomain, OutputIdentifier,
+    SampleType, StaticData
+} from "../../src/core";
+import {FeatureList} from '../../src/core';
 export class FrequencyDomainExtractorStub implements FeatureExtractor {
     private binCount: number;
 
@@ -13,7 +16,7 @@ export class FrequencyDomainExtractorStub implements FeatureExtractor {
         this.binCount = 0;
     }
 
-    configure(configuration: Configuration): ConfigurationResponse {
+    configure(configuration: Configuration): ExtractorConfiguration {
         this.binCount = 1 + 0.5 * configuration.framing.blockSize;
         const descriptor: ConfiguredOutputDescriptor = {
             binCount: this.binCount,
@@ -101,7 +104,7 @@ export class PassThroughExtractor implements FeatureExtractor {
         };
     }
 
-    configure(configuration: Configuration): ConfigurationResponse {
+    configure(configuration: Configuration): ExtractorConfiguration {
         return {
             outputs: new Map<string, ConfiguredOutputDescriptor>([
                 ["passthrough", {

@@ -4,27 +4,27 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
-    AudioStreamFormat,
     MatrixFeature,
     VectorFeature
-} from "../src/HigherLevelUtilities";
+} from "../src/one-shot";
 import {Observable} from "rxjs";
 import {
     PiperStreamingService,
     StreamingService,
     StreamingResponse,
     collect
-} from "../src/StreamingService";
-import {KissRealFft} from "../src/fft/RealFft";
+} from "../src/streaming";
+import {KissRealFft} from "../src/fft";
 import {
-    FeatureExtractorFactory,
     FeatureExtractorService
-} from "../src/FeatureExtractorService";
+} from "../src/core";
 import {
     FeatureExtractorStub,
     MetaDataStub
 } from "./fixtures/FeatureExtractorStub";
-import {FeatureList} from '../src/Feature';
+import {FeatureExtractorFactory, FeatureList} from '../src/core';
+import {AudioStreamFormat} from '../src/audio';
+import {KissFft} from '../src/fft/KissFftModule';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -48,7 +48,7 @@ const samples = [
 
 const service: StreamingService = new PiperStreamingService(
     new FeatureExtractorService(
-        (size: number) => new KissRealFft(size),
+        (size: number) => new KissRealFft(size, KissFft),
         ...extractorsToCreate
     )
 );

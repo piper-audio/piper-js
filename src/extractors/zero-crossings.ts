@@ -2,12 +2,16 @@
  * Created by lucas on 25/08/2016.
  */
 import {
-    FeatureExtractor, ConfigurationResponse,
-    Configuration, OutputIdentifier, ConfiguredOutputDescriptor, SampleType,
     ProcessInput
-} from "../FeatureExtractor";
-import {FeatureSet, FeatureList} from "../Feature";
-import {fromFrames} from "../Timestamp";
+} from "../core";
+import {
+    Configuration,
+    ConfiguredOutputDescriptor, ExtractorConfiguration,
+    FeatureExtractor, FeatureSet, OutputIdentifier,
+    SampleType
+} from "../core";
+import {fromFrames} from "../time";
+import {FeatureList} from '../core';
 
 
 export default class ZeroCrossings implements FeatureExtractor {
@@ -19,7 +23,7 @@ export default class ZeroCrossings implements FeatureExtractor {
         this.previousSample = 0;
     }
 
-    configure(configuration: Configuration): ConfigurationResponse {
+    configure(configuration: Configuration): ExtractorConfiguration {
         return {
             outputs: new Map<OutputIdentifier, ConfiguredOutputDescriptor>([
                 ["counts", {
@@ -61,13 +65,20 @@ export default class ZeroCrossings implements FeatureExtractor {
         channel.forEach((sample, nSample) => {
             if (this.hasCrossedAxis(sample)) {
                 ++count;
-                crossingPoints.push({timestamp: fromFrames(nSample, this.inputSampleRate)});
+                crossingPoints.push({
+                    timestamp: fromFrames(nSample, this.inputSampleRate)
+                });
             }
             this.previousSample = sample;
         });
 
-        returnFeatures.set("counts", [{featureValues: new Float32Array([count])}]);
-        if (crossingPoints.length > 0) returnFeatures.set("crossings", crossingPoints);
+        returnFeatures.set(
+            "counts",
+            [{featureValues: new Float32Array([count])}]
+        );
+        if (crossingPoints.length > 0) {
+            returnFeatures.set("crossings", crossingPoints);
+        }
         return returnFeatures;
     }
 

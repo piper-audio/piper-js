@@ -5,7 +5,7 @@ import * as chai from "chai";
 import {
     cyclicShiftInPlace, applyHannWindowTo,
     memoise, hann
-} from "../src/FftUtilities";
+} from "../src/fft";
 chai.should();
 
 describe("Cyclic shift", () => {

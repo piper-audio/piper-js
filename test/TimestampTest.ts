@@ -1,6 +1,6 @@
 
 import chai = require("chai");
-import { Timestamp, fromSeconds, toSeconds, fromFrames, toFrames, toTextHMSm, toTextHMS, toTextMsec, canonicalise, ZERO_TIME } from "../src/Timestamp";
+import { Timestamp, fromSeconds, toSeconds, fromFrames, toFrames, toTextHMSm, toTextHMS, toTextMsec, canonicalise, ZERO_TIME } from "../src/time";
 
 describe("Timestamp", () => {
 

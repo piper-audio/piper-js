@@ -2,13 +2,16 @@
  * Created by lucast on 08/09/2016.
  */
 import chai = require("chai");
-import {OutputDescriptor, SampleType} from "../src/FeatureExtractor";
-import {Timestamp} from "../src/Timestamp";
-import {Feature} from "../src/Feature";
+import {OutputDescriptor} from "../src/core";
+import {Timestamp} from "../src/time";
+import {Feature, SampleType} from "../src/core";
 import {
-    FeatureTimeAdjuster, VariableSampleRateFeatureTimeAdjuster,
-    FixedSampleRateFeatureTimeAdjuster, OneSamplePerStepFeatureTimeAdjuster
-} from "../src/FeatureTimeAdjuster";
+    OneSamplePerStepFeatureTimeAdjuster
+} from "../src/adjusters";
+import {
+    FeatureTimeAdjuster, FixedSampleRateFeatureTimeAdjuster,
+    VariableSampleRateFeatureTimeAdjuster
+} from '../src/adjusters';
 chai.should();
 
 function createOutputDescriptor(hasDuration: boolean, sampleRate: number, sampleType: SampleType) {

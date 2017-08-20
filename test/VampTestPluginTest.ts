@@ -2,21 +2,21 @@
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import {PiperVampService} from "../src/PiperVampService";
-import VampTestPlugin from '../ext/VampTestPluginModule';
-import {AdapterFlags} from "../src/FeatureExtractor";
-import {LoadResponse, LoadRequest} from "../src/Piper";
-import {fromSeconds} from "../src/Timestamp";
-import {FeatureList} from "../src/Feature";
+import {EmscriptenService} from "../src/emscripten";
+import VampTestPlugin from '../src/ext/VampTestPluginModule';
+import {AdapterFlags} from "../src/core";
+import {LoadResponse, LoadRequest} from "../src/core";
+import {fromSeconds} from "../src/time";
+import {FeatureList} from "../src/core";
 
 import {
-    PiperSimpleClient,
-    SimpleRequest,
+    OneShotExtractionClient,
+    OneShotExtractionRequest,
     VectorFeature,
     MatrixFeature,
     TracksFeature
-} from "../src/HigherLevelUtilities";
-import {collect, PiperStreamingService} from "../src/StreamingService";
+} from "../src/one-shot";
+import {collect, PiperStreamingService} from "../src/streaming";
 
 var expect = chai.expect;
 chai.should();
@@ -39,7 +39,7 @@ describe('VampTestPlugin', () => {
         return buf;
     });
     
-    const service = new PiperVampService(VampTestPlugin());
+    const service = new EmscriptenService(VampTestPlugin());
 
     const loadResponse: Promise<LoadResponse> =
         service.list({}).then((resp) => {
@@ -56,11 +56,11 @@ describe('VampTestPlugin', () => {
         });
     });
 
-    const client = new PiperSimpleClient(service);
+    const client = new OneShotExtractionClient(service);
 
     const makeRequest = ((n: number, output: string) => {
         const buf = inputData(n);
-        const request : SimpleRequest = {
+        const request : OneShotExtractionRequest = {
             audioData: [buf],
             audioFormat: { channelCount: 1, sampleRate: rate },
             key: key,

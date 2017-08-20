@@ -3,11 +3,14 @@
  */
 import * as chai from "chai";
 import {
-    ProcessInputBuffersAdjuster,
-    ProcessInputAdjuster, ProcessInputTimestampAdjuster
-} from "../src/ProcessInputAdjuster";
-import {Configuration} from "../src/FeatureExtractor";
-import {fromSeconds} from "../src/Timestamp";
+    ProcessInputTimestampAdjuster
+} from "../src/adjusters";
+import {Configuration} from "../src/core";
+import {fromSeconds} from "../src/time";
+import {
+    ProcessInputAdjuster,
+    ProcessInputBuffersAdjuster
+} from '../src/adjusters';
 chai.should();
 
 describe("ProcessInputBuffersAdjuster", () => {

@@ -5,20 +5,27 @@
 
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
-import {FeatureSet, FeatureList} from "../src/Feature";
-import {Timestamp} from "../src/Timestamp";
-import {batchProcess} from "../src/HigherLevelUtilities";
-import VampExamplePlugins from "../ext/VampExamplePluginsModule";
 import {
-    PiperVampService,
-    PiperVampFeatureExtractor
-} from "../src/PiperVampService";
+    AdapterFlags,
+    FeatureExtractor, FeatureSet, InputDomain,
+    SampleType, StaticData
+} from "../src/core";
+import {Timestamp} from "../src/time";
+import {batchProcess} from "../src/one-shot";
+import VampExamplePlugins from "../src/ext/VampExamplePluginsModule";
+import {
+    EmscriptenService,
+    EmscriptenFeatureExtractor
+} from "../src/emscripten";
 import fs = require("fs");
-import {SampleType, ProcessInput, StaticData, AdapterFlags, InputDomain, FeatureExtractor} from "../src/FeatureExtractor";
-import {LoadResponse, LoadRequest, ConfigurationResponse, Service} from "../src/Piper";
-import {PiperClient} from "../src/PiperClient";
-import {EmscriptenModule} from "../src/PiperVampService";
-import VampTestPluginModule from "../ext/VampTestPluginModule";
+import {ProcessInput} from "../src/core";
+import {
+    LoadResponse, LoadRequest, ConfigurationResponse, Service,
+    FeatureList
+} from "../src/core";
+import {Client} from "../src/core";
+import {EmscriptenModule} from "../src/emscripten";
+import VampTestPluginModule from "../src/ext/VampTestPluginModule";
 import {
     createEmscriptenCleanerWithNodeGlobal,
     EmscriptenListenerCleaner
@@ -39,7 +46,7 @@ const objToMap = (obj: {[key: string]: any}): Map<string, any> => {
 
 describe("PiperVampServiceTest", () => {
     afterEach(() => cleaner.clean());
-    const client: Service = new PiperClient(new PiperVampService(VampExamplePlugins()));
+    const client: Service = new Client(new EmscriptenService(VampExamplePlugins()));
 
     const loadFixture = (name : string) => {
         // avoid sharing things through use of require
@@ -178,28 +185,28 @@ describe("PiperVampServiceTest", () => {
     });
 });
 
-describe("PiperVampFeatureExtractor", () => {
+describe("EmscriptenFeatureExtractor", () => {
     afterEach(() => cleaner.clean());
     it("Can construct a plugin with a valid key", () => {
         const module: EmscriptenModule = VampTestPluginModule();
-        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             module, 16, "vamp-test-plugin:vamp-test-plugin"
         );
         return extractor.should.exist;
     });
 
     it("Throws on construction with invalid key", () => {
-        chai.expect(() => new PiperVampFeatureExtractor(
+        chai.expect(() => new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "invalid-key",
         )).to.throw(Error);
     });
 
     it("Uses the first available extractor when no key is provided", () => {
-        return new PiperVampFeatureExtractor(VampTestPluginModule(), 16).should.exist;
+        return new EmscriptenFeatureExtractor(VampTestPluginModule(), 16).should.exist;
     });
 
     it("Should provide a default configuration", () => {
-        const config = new PiperVampFeatureExtractor(
+        const config = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         ).getDefaultConfiguration();
         return (config.framing.hasOwnProperty("blockSize")
@@ -208,7 +215,7 @@ describe("PiperVampFeatureExtractor", () => {
     });
 
     it("Should be configurable", () => {
-        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         const res = extractor.configure({
@@ -226,7 +233,7 @@ describe("PiperVampFeatureExtractor", () => {
     });
 
     it("Should process a block", () => {
-        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         extractor.configure({
@@ -243,7 +250,7 @@ describe("PiperVampFeatureExtractor", () => {
     });
 
     it("should return remaining features and clear up", () => {
-        const extractor: FeatureExtractor = new PiperVampFeatureExtractor(
+        const extractor: FeatureExtractor = new EmscriptenFeatureExtractor(
             VampTestPluginModule(), 16, "vamp-test-plugin:vamp-test-plugin"
         );
         extractor.configure({

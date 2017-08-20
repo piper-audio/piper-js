@@ -3,10 +3,10 @@
  */
 
 import chai = require('chai');
-import {ProcessInput} from "../src/FeatureExtractor";
-import ZeroCrossings from "../src/extractors/ZeroCrossings";
-import {FeatureSet} from "../src/Feature";
-import {fromFrames} from "../src/Timestamp";
+import {ProcessInput} from "../src/core";
+import ZeroCrossings from "../src/extractors/zero-crossings";
+import {FeatureSet} from "../src/core";
+import {fromFrames} from "../src/time";
 chai.should();
 
 describe('ZeroCrossings', () => {

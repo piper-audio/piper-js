@@ -6,8 +6,8 @@ import chaiAsPromised = require("chai-as-promised");
 chai.should();
 chai.use(chaiAsPromised);
 
-import {Feature, FeatureSet, FeatureList} from "../src/Feature";
-import {ProcessInput} from "../src/FeatureExtractor";
+import {FeatureSet} from "../src/core";
+import {ProcessInput} from "../src/core";
 import {
     lfo,
     generateSineWave,
@@ -15,9 +15,11 @@ import {
     AudioBufferStub,
     AudioBuffer
 } from "./AudioUtilities";
-import {FeatureExtractor} from "../src/FeatureExtractor";
+import {FeatureExtractor} from "../src/core";
 import {FeatureExtractorStub} from "./fixtures/FeatureExtractorStub";
-import {batchProcess} from "../src/HigherLevelUtilities";
+import {batchProcess} from "../src/one-shot";
+import {Feature, FeatureList} from '../src/core';
+import {toProcessInputStream, segment} from "../src/audio";
 
 describe("BatchBlockProcess", () => {
     it("should aggregate features extracted from multiple blocks", () => {
@@ -100,5 +102,30 @@ describe("lfo", () => {
         expectedSine.forEach((sample: number) => {
             isRoughlyEqual(sineA.next().value, sample);
         });
+    });
+});
+
+describe("toProcessInputStream", () => {
+    it("can offset all frames by a timestamp", () => {
+        const audioData = [Float32Array.of(
+            -0.5, 0.5, 0.5, 0.5,
+            0, 0, 0 , 0,
+            0.5, 0.5, 0.5, 0.5,
+            1, 1, 1, 1
+        )];
+        const audioFormat = {
+            channelCount: 1,
+            sampleRate: 16
+        };
+        const inputStream = toProcessInputStream({
+            frames: segment(4, 4, audioData),
+            format: audioFormat
+        }, 4, {s: 1, n: 250000000});
+        [...inputStream].map(input => input.timestamp).should.eql([
+            {s: 1, n: 250000000},
+            {s: 1, n: 500000000},
+            {s: 1, n: 750000000},
+            {s: 2, n: 0}
+        ]);
     });
 });

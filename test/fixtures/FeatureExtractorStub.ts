@@ -1,8 +1,12 @@
 import {
-    Configuration, ConfigurationResponse, FeatureExtractor, ProcessInput, StaticData, InputDomain, OutputIdentifier,
-    ConfiguredOutputDescriptor, SampleType
-} from "../../src/FeatureExtractor";
-import {FeatureSet, Feature} from "../../src/Feature";
+    ProcessInput} from "../../src/core";
+import {
+    Configuration,
+    ConfiguredOutputDescriptor, ExtractorConfiguration,
+    FeatureExtractor, FeatureSet, InputDomain, OutputIdentifier,
+    SampleType, StaticData
+} from "../../src/core";
+import {Feature} from '../../src/core';
 
 export class FeatureExtractorStub implements FeatureExtractor {
     private cumulativeSum: number;
@@ -12,7 +16,7 @@ export class FeatureExtractorStub implements FeatureExtractor {
         this.includeConditionalOutput = includeConditionalOutput;
     }
 
-    configure(configuration: Configuration): ConfigurationResponse {
+    configure(configuration: Configuration): ExtractorConfiguration {
         const descriptor: ConfiguredOutputDescriptor = {
             binCount: 1,
             sampleType: SampleType.OneSamplePerStep,

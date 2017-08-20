@@ -5,25 +5,35 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {
-    LoadResponse, ConfigurationResponse,
-    ConfigurationRequest, ProcessRequest, ProcessResponse, LoadRequest, Service,
-    FinishRequest, ListResponse
-} from "../src/Piper";
+    LoadResponse,
+    ConfigurationResponse,
+    ConfigurationRequest,
+    ProcessRequest,
+    ProcessResponse,
+    LoadRequest,
+    ListResponse,
+    AdapterFlags,
+    StaticData,
+    FeatureExtractorFactory
+} from "../src/core";
 import {
-    FeatureExtractorFactory,
     FeatureExtractorService
-} from "../src/FeatureExtractorService";
-import {StaticData, Configuration, AdapterFlags} from "../src/FeatureExtractor";
+} from "../src/core";
+import {Configuration} from "../src/core";
 import {
     FeatureExtractorStub,
     MetaDataStub
 } from "./fixtures/FeatureExtractorStub";
-import {FeatureSet} from "../src/Feature";
-import {RealFftFactory, KissRealFft} from "../src/fft/RealFft";
+import {FeatureSet} from "../src/core";
+import {KissRealFft} from "../src/fft";
 import {
     FrequencyDomainExtractorStub,
-    FrequencyMetaDataStub, PassThroughExtractor
+    FrequencyMetaDataStub,
+    PassThroughExtractor
 } from "./fixtures/FrequencyDomainExtractorStub";
+import {RealFftFactory} from '../src/fft';
+import {KissFft} from "../src/fft/KissFftModule";
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -34,7 +44,10 @@ describe("FeatureExtractionService", () => {
         metadata: metadata
     };
     const plugins: FeatureExtractorFactory[] = [];
-    const fftFactory: RealFftFactory = (size: number) => new KissRealFft(size);
+    const fftFactory: RealFftFactory = (size: number) => new KissRealFft(
+        size,
+        KissFft
+    );
     plugins.push(factory);
     plugins.push({
         create: () => new FrequencyDomainExtractorStub(),
@@ -152,7 +165,7 @@ describe("FeatureExtractionService", () => {
             return Promise.all([loadResponse.then(configure), loadResponse.then(configure)]).should.be.rejected;
         });
 
-        it("Resolves to a response whose content body is a ConfigurationResponse", () => {
+        it("Resolves to a response whose content body is a ExtractorConfiguration", () => {
             const expectedResponse: ConfigurationResponse = {
                 handle: 1,
                 outputList: MetaDataStub.basicOutputInfo.map(basic => {

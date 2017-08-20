@@ -2,30 +2,30 @@
  * Created by lucas on 31/03/2017.
  */
 import {
+    FeatureList,
     ListRequest,
-    ListResponse,
+    ListResponse, OutputDescriptor,
     Service
-} from "./Piper";
+} from "./core";
 import {
     FeatureCollection,
     loadAndConfigure,
-    segment,
-    SimpleConfigurationResponse,
-    SimpleRequest,
-    toProcessInputStream,
+    OneShotConfigurationResponse,
+    OneShotExtractionRequest,
     reshape
-} from "./HigherLevelUtilities";
+} from "./one-shot";
 import {Observable, Observer} from "rxjs";
-import {PiperClient} from "./PiperClient";
-import {FeatureList, FeatureSet} from "./Feature";
-import {OutputDescriptor, Framing} from './FeatureExtractor';
+import {Client} from "./core";
+import {FeatureSet} from "./core";
+import {Framing} from './core';
+import {segment, toProcessInputStream} from './audio';
 
 export interface StreamingProgress {
     processedBlockCount: number;
     totalBlockCount?: number;
 }
 
-export interface StreamingConfiguration { // based on SimpleConfigurationResponse
+export interface StreamingConfiguration { // based on OneShotConfigurationResponse
     inputSampleRate: number;
     framing: Framing;
     outputDescriptor: OutputDescriptor;
@@ -37,18 +37,18 @@ export interface StreamingResponse {
     configuration?: StreamingConfiguration;
 }
 
-export interface StreamingService {
-    list(request: ListRequest): Promise<ListResponse>;
-    process(request: SimpleRequest): Observable<StreamingResponse>;
+export abstract class StreamingService {
+    abstract list(request: ListRequest): Promise<ListResponse>;
+    abstract process(request: OneShotExtractionRequest): Observable<StreamingResponse>;
 }
 
 type FeaturesExtractedHandler = (features: FeatureSet) => void;
 
 // TODO try out AsyncIterator when TypeScript 2.3 released
 // TODO export this? batchProcess could likely be re-implemented using it
-async function segmentAndExtractAsync(request: SimpleRequest,
+async function segmentAndExtractAsync(request: OneShotExtractionRequest,
                                       service: Service,
-                                      config: SimpleConfigurationResponse,
+                                      config: OneShotConfigurationResponse,
                                       onFeaturesExtracted: FeaturesExtractedHandler,
                                       onComplete: () => void): Promise<void> {
 
@@ -86,9 +86,9 @@ async function segmentAndExtractAsync(request: SimpleRequest,
 }
 
 type FeatureStream = Observable<FeatureSet>;
-function streamFeatures(request: SimpleRequest,
+function streamFeatures(request: OneShotExtractionRequest,
                         service: Service,
-                        config: SimpleConfigurationResponse): FeatureStream {
+                        config: OneShotConfigurationResponse): FeatureStream {
     return Observable.create((observer: Observer<FeatureSet>) => {
         segmentAndExtractAsync(
             request,
@@ -135,25 +135,25 @@ export class PiperStreamingService implements StreamingService {
     private client: Service;
 
     constructor(service: Service) {
-        this.client = new PiperClient(service); // TODO should this be injected?
+        this.client = new Client(service); // TODO should this be injected?
     }
 
     list(request: ListRequest): Promise<ListResponse> {
         return this.client.list(request);
     }
 
-    process(request: SimpleRequest): Observable<StreamingResponse> {
+    process(request: OneShotExtractionRequest): Observable<StreamingResponse> {
         return this.createResponseObservable(
             request
         );
     }
 
-    private createResponseObservable(request: SimpleRequest)
+    private createResponseObservable(request: OneShotExtractionRequest)
     : Observable<StreamingResponse> {
         return Observable.fromPromise(loadAndConfigure(
             request,
             this.client
-        )).flatMap((config: SimpleConfigurationResponse) => {
+        )).flatMap((config: OneShotConfigurationResponse) => {
             return streamFeatures(request, this.client, config)
                 .map<FeatureSet, StreamingResponse>((features, i) => {
                     const output: FeatureList = features.get(
