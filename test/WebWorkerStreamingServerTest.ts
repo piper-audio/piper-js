@@ -170,7 +170,7 @@ describe("WebWorkerStreamingServer", () => {
 
     it("Sends error messages for invalid list requests", done => {
         let errors: string[] = [];
-        const doneLog: MochaDone = (err) => {
+        const doneLog: MochaDone = (err: any) => {
             if (err) {
                 errors.push(err);
             }

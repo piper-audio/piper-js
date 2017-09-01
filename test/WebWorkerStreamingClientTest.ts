@@ -175,7 +175,7 @@ describe("WebWorkerStreamingClient", () => {
     it("can handle streaming process messages from the worker", done => {
         const stubWorker = createStubWorker(function () {
 
-            this.onmessage = (message) => {
+            this.onmessage = (message: MessageEvent) => {
                 const request = message.data;
                 const id = request.id;
 
@@ -352,7 +352,7 @@ describe("WebWorkerStreamingClient", () => {
                     ]
                 },
             ];
-            this.onmessage = (message) => {
+            this.onmessage = (message: MessageEvent) => {
                 const response = {
                     id: `${message.data.id}`,
                     method: message.data.method,
@@ -462,7 +462,7 @@ describe("WebWorkerStreamingClient", () => {
 
     it("can process requests after receiving an error response", () => {
         const stubWorker = createStubWorker(function () {
-            this.onmessage = (message) => {
+            this.onmessage = (message: MessageEvent) => {
                 if (message.data.id === 'error') {
                     this.postMessage({
                         id: "error",

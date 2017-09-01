@@ -230,8 +230,8 @@ describe('WebWorkerServer', () => {
                 params: {handle: 0}
             },
         ];
-        let failed: boolean[] = [];
-        const failLog: MochaDone = (err) => {
+        let failed: any[] = [];
+        const failLog: MochaDone = (err: any) => {
             if (err) {
                 failed.push(err);
             }

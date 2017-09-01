@@ -67,7 +67,7 @@ describe('WebWorkerClient', () => {
     });
     it('can process successive requests', () => {
         const worker = createStubWorker(function () {
-            this.onmessage = (message) => {
+            this.onmessage = (message: MessageEvent) => {
                 const request = message.data;
                 this.postMessage({
                     id: request.id,
@@ -125,7 +125,7 @@ describe('WebWorkerClient', () => {
 
     it("rejects when error response received from worker", () => {
         const errorWorker = createStubWorker(function () {
-            this.onmessage = (message) => {
+            this.onmessage = (message: MessageEvent) => {
                 const request = message.data;
                 this.postMessage({
                     id: request.id,
