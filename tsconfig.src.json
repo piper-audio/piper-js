@@ -6,6 +6,7 @@
     "src/ext",
     "plugins",
     "perf",
-    "test"
+    "test",
+    "docs"
   ]
 }
