@@ -30,7 +30,7 @@
     "mir"
   ],
   "author": "Lucas Thompson",
-  "license": "GPL-2.0",
+  "license": "ISC",
   "homepage": "https://github.com/piper-audio/piper-js",
   "dependencies": {
     "@types/base64-js": "^1.2.5",
