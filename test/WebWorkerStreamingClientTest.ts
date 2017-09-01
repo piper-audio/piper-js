@@ -255,8 +255,10 @@ describe("WebWorkerStreamingClient", () => {
             },
             key: "test",
             outputId: "count",
-            blockSize: 1,
-            stepSize: 1
+            framing: {
+                blockSize: 1,
+                stepSize: 1
+            }
         }).do(val => {
             try {
                 val.progress.processedBlockCount.should.eql(nProcessed++)
@@ -391,8 +393,10 @@ describe("WebWorkerStreamingClient", () => {
                 },
                 key: "test",
                 outputId: "count",
-                blockSize: 1,
-                stepSize: 1
+                framing: {
+                    blockSize: 1,
+                    stepSize: 1
+                }
             }).toPromise(),
             client.list({from: ['two']}),
         ]).should.eventually.eql([

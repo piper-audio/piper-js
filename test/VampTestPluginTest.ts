@@ -65,8 +65,10 @@ describe('VampTestPlugin', () => {
             audioFormat: { channelCount: 1, sampleRate: rate },
             key: key,
             outputId: output,
-            blockSize,
-            stepSize,
+            framing: {
+                blockSize,
+                stepSize
+            }
         };
         return request;
     });

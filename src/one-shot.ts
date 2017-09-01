@@ -2,7 +2,9 @@
  * Created by lucas on 07/11/2016.
  */
 import {
-    ProcessInput} from "./core";
+    Framing,
+    ProcessInput
+} from "./core";
 import {
     AdapterFlags, Configuration, ConfiguredOutputDescriptor,
     ExtractorHandle,
@@ -64,8 +66,7 @@ export interface OneShotExtractionRequest {
     key: string;
     outputId?: OutputIdentifier;
     parameterValues?: Parameters;
-    stepSize?: number;
-    blockSize?: number;
+    framing?: Framing;
 }
 
 export interface OneShotExtractionResponse {
@@ -341,11 +342,15 @@ export function loadAndConfigure(request: OneShotExtractionRequest,
 
     const configure = (request: OneShotExtractionRequest) =>
         (res: LoadResponse): Promise<OneShotConfigurationResponse> => {
+            const framing = request.framing || {
+                blockSize: null,
+                stepSize: null
+            };
             const config = determineConfiguration(
                 res.defaultConfiguration,
                 {
-                    blockSize: request.blockSize,
-                    stepSize: request.stepSize,
+                    blockSize: framing.blockSize,
+                    stepSize: framing.stepSize,
                     channelCount: request.audioFormat.channelCount,
                     parameterValues: request.parameterValues
                 }
